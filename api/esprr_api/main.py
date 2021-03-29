@@ -13,8 +13,8 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.rq import RqIntegration
 
 
-from . import auth, __version__, settings, storage, queuing
-from .routers import systems, user, parameters, jobs
+from . import auth, __version__, settings, storage
+from .routers import systems, user
 
 
 app = FastAPI(title="Expected Solar Performance and Ramp Rate Tool")
@@ -48,7 +48,7 @@ class LogFilter(logging.Filter):
 @app.on_event("startup")
 async def startup_event():  # pragma: no cover
     storage.engine.connect()
-    queuing.verify_redis_conn()
+    # queuing.verify_redis_conn()
     await auth.get_auth_key()
     for handler in logging.getLogger("uvicorn.access").handlers:
         handler.addFilter(LogFilter)

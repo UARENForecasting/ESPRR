@@ -3,7 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 import pytest
 
 
-from solarperformanceinsight_api import auth, settings
+from esprr_api import auth, settings
 
 
 pytestmark = pytest.mark.asyncio

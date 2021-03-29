@@ -1,5 +1,6 @@
 cryptography==3.4.6
 fastapi==0.63.0
+httpx==0.17.1
 numcodecs==0.7.3
 numpy==1.20.1
 pandas==1.2.3

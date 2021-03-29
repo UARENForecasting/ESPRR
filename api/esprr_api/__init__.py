@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     auth_key: Json
     auth_audience: str = "https://esprr.x.energy.arizona.edu/api"
     auth_issuer: str = "https://esprr.us.auth0.com/"
-    auth_client_id: str = "G7Cag1LvitX0sOUOrYz03xv6xyl3bE9s"
+    auth_client_id: str = "uM1davP9zfXrUCM5KGWMcsSHcLsKbuwS"
 
     traces_sample_rate: Optional[float] = None
 
