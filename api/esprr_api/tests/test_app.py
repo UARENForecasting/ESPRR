@@ -7,7 +7,7 @@ import pytest
 import schemathesis
 
 
-from solarperformanceinsight_api.main import app
+from esprr_api.main import app
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
@@ -22,8 +22,7 @@ def with_auth(request):
 
 def before_generate_path_parameters(context, strategy):
     return strategy.filter(
-        lambda x: not unquote(x.get("system_id", "a")).startswith("\n")
-        and not unquote(x.get("job_id", "a")).startswith("\n")
+        lambda x: True if x is None else not unquote(x.get("system_id", "a")).startswith("\n")
     )
 
 

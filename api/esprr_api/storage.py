@@ -159,10 +159,6 @@ class StorageInterface:
             connection.rollback()
             raise
         else:
-            if self._add_job_result_called and not self._final_job_status_set:
-                raise StorageTransactionError(
-                    "Job status must be set in a transaction adding job results"
-                )
             if self.commit:
                 connection.commit()
         finally:

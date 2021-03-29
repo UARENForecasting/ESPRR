@@ -88,7 +88,7 @@ def nocommit_transaction(mocker):
 
 @pytest.fixture(scope="module")
 def auth0_id():
-    return "auth0|5fa9596ccf64f9006e841a3a"
+    return "auth0|6061d0dfc96e2800685cb001"
 
 
 @pytest.fixture(scope="module")
@@ -121,32 +121,3 @@ def stored_system(system_def, system_id):
         modified_at=extime,
         definition=system_def,
     )
-
-
-@pytest.fixture()
-def fixed_tracking():
-    return models.FixedTracking(tilt=32, azimuth=180.9)
-
-
-@pytest.fixture()
-def single_axis_tracking():
-    return models.SingleAxisTracking(
-        axis_tilt=0, axis_azimuth=179.8, backtracking=False, gcr=1.8
-    )
-
-
-@pytest.fixture(params=["fixed_axis", "single_axis", "multi_array_fixed"])
-def either_tracker(request, system_def, fixed_tracking, single_axis_tracking):
-    inv = system_def.inverters[0]
-    if request.param == "fixed_axis":
-        inv.arrays[0].tracking = fixed_tracking
-        return inv, PVSystem, False
-    elif request.param == "multi_array_fixed":
-        inv.arrays[0].tracking = fixed_tracking
-        arr1 = deepcopy(inv.arrays[0])
-        arr1.name = "Array 2"
-        inv.arrays.append(arr1)
-        return inv, PVSystem, True
-    else:
-        inv.arrays[0].tracking = single_axis_tracking
-        return inv, SingleAxisTracker, False
