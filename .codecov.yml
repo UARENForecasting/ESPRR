@@ -1,0 +1,30 @@
+codecov:
+  notify:
+    wait_for_ci: no
+
+coverage:
+  status:
+    patch:
+      default:
+        target: '100'
+    project:
+      default:
+        target: '90'
+      api:
+        target: '95'
+        flags:
+          - python
+      dashboard:
+        target: '80'
+        flags:
+          - javascript
+
+  flags:
+    python:
+      paths:
+        - api
+      carryforward: true
+    javascript:
+      paths:
+        - dashboard
+      carryforward: true
