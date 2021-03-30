@@ -62,7 +62,7 @@ def test_update_system(client, system_def, system_id, mocker, alter):
 
 
 def test_update_other_system(client, other_system_id, system_def):
-    system_def.ac_capacity = 119.
+    system_def.ac_capacity = 119.0
     system_def.name = "New Name"
     response = client.post(f"/systems/{other_system_id}", data=system_def.json())
     assert response.status_code == 404

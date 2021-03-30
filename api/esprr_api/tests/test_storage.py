@@ -220,7 +220,12 @@ def test_get_system_wrong_owner(
 
 
 def test_update_system(
-    storage_interface, add_example_db_data, stored_system, system_id, system_def, nocommit_transaction
+    storage_interface,
+    add_example_db_data,
+    stored_system,
+    system_id,
+    system_def,
+    nocommit_transaction,
 ):
     now = dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc, microsecond=0)
     system_def.ac_capacity = 9.9
@@ -298,5 +303,3 @@ def test_get_user_new(storage_interface, mocker, cleanup_user):
     assert out.auth0_id == "newuser"
     assert out.object_type == "user"
     create.assert_called()
-
-

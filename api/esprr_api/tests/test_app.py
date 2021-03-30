@@ -22,7 +22,9 @@ def with_auth(request):
 
 def before_generate_path_parameters(context, strategy):
     return strategy.filter(
-        lambda x: True if x is None else not unquote(x.get("system_id", "a")).startswith("\n")
+        lambda x: True
+        if x is None
+        else not unquote(x.get("system_id", "a")).startswith("\n")
     )
 
 

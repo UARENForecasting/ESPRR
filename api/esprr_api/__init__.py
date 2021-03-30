@@ -5,9 +5,7 @@ from ._version import version as __version__  # NOQA
 
 class Settings(BaseSettings):
     auth_token_url: str = "https://esprr.us.auth0.com/oauth/token"
-    auth_jwk_url: str = (
-        "https://esprr.us.auth0.com/.well-known/jwks.json"
-    )
+    auth_jwk_url: str = "https://esprr.us.auth0.com/.well-known/jwks.json"
     auth_key: Json
     auth_audience: str = "https://esprr.x.energy.arizona.edu/api"
     auth_issuer: str = "https://esprr.us.auth0.com/"

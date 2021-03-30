@@ -1,12 +1,9 @@
-from copy import deepcopy
-import datetime as dt
 from functools import partial
 import re
 
 
 from hypothesis import given, example, assume
 from hypothesis.strategies import floats, booleans, composite, from_regex
-import pandas as pd
 from pydantic import BaseModel, ValidationError
 import pytest
 
@@ -120,4 +117,3 @@ def test_singleaxis_tracking_outside(atg, backtracking):
         models.SingleAxisTracking(
             axis_tilt=tilt, axis_azimuth=azimuth, gcr=gcr, backtracking=backtracking
         )
-

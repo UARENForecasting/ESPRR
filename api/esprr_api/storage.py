@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List, Callable, Dict, Any, Tuple, Optional
+from typing import List, Callable, Dict, Any
 from uuid import UUID
 
 
@@ -268,4 +268,3 @@ class StorageInterface:
     ) -> models.StoredObjectID:
         self._call_procedure("update_system", system_id, system_def.json())
         return models.StoredObjectID(object_id=system_id, object_type="system")
-
