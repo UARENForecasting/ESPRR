@@ -408,11 +408,14 @@ begin
   set @extime = timestamp('2020-12-01 01:23');
   set @sysdef = '{
        "name": "Test PV System",
-       "nw_corner": [34.9, -112.9],
-       "se_corner": [33.0, -111.0],
+       "boundary": {
+           "nw_corner": {"latitude": 34.9, "longitude": -112.9},
+           "se_corner": {"latitude": 33.0, "longitude": -111.0}
+       },
        "ac_capacity": 10.0,
-       "ac_dc_ratio": 0.8,
+       "dc_ac_ratio": 1.2,
        "per_inverter_ac_capacity": 1.0,
+       "albedo": 0.2,
        "tracking": {
          "tilt": 20.0,
          "azimuth": 180.0

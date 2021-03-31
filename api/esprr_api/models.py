@@ -12,11 +12,20 @@ import pytz
 SYSTEM_ID = "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
 SYSTEM_EXAMPLE = dict(
     name="Test PV System",
-    nw_corner=[34.9, -112.9],
-    se_corner=[33.0, -111.0],
+    boundary=dict(
+        nw_corner=dict(
+            latitude=34.9,
+            longitude=-112.9,
+        ),
+        se_corner=dict(
+            latitude=33.0,
+            longitude=-111.0,
+        ),
+    ),
     ac_capacity=10.0,
-    ac_dc_ratio=0.8,
+    dc_ac_ratio=1.2,
     per_inverter_ac_capacity=1.0,
+    albedo=0.2,
     tracking=dict(
         tilt=20.0,
         azimuth=180.0,
