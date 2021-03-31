@@ -1,5 +1,5 @@
 import datetime as dt
-from typing import Any, List, Union
+from typing import Any, Union
 
 
 import pvlib  # type: ignore
@@ -29,7 +29,6 @@ TIMEZONES = [
     if not tz.startswith("US/") and tz not in ("America/Nuuk", "Antarctica/McMurdo")
 ] + [tz for tz in pytz.all_timezones if tz.startswith("Etc/GMT") and tz != "Etc/GMT0"]
 SURFACE_ALBEDOS = pvlib.irradiance.SURFACE_ALBEDOS
-TEMPERATURE_PARAMETERS = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS
 
 
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, underscore
@@ -94,6 +93,22 @@ class SingleAxisTracking(ThisBase):
     )
 
 
+class LatLon(ThisBase):
+    latitude: float = Field(
+        ..., description="Latitude of the system in degrees North", ge=24, le=50
+    )
+    longitude: float = Field(
+        ..., description="Longitude of the system in degrees East", ge=-126, le=-65
+    )
+
+
+class BoundingBox(ThisBase):
+    """Bounding box of the PV array"""
+
+    nw_corner: LatLon = Field(..., description="NW corner of the bounding box.")
+    se_corner: LatLon = Field(..., description="SE corner of the bounding box.")
+
+
 class PVSystem(ThisBase):
     """Parameters for an entire PV system at some location"""
 
@@ -101,19 +116,22 @@ class PVSystem(ThisBase):
         ...,
         description="Name of the system",
     )
-    # use w/ boxes from dataset to
-    nw_corner: List[float] = Field(..., min_items=2, max_items=2)
-    se_corner: List[float] = Field(..., min_items=2, max_items=2)
+    boundary: BoundingBox
     # find central lat/lons and lookup elevation from lat/lon
-    ac_capacity: float
-    ac_dc_ratio: float
+    ac_capacity: float = Field(
+        ..., description="Total AC capcity of the plant in MW", gt=0
+    )
+    dc_ac_ratio: float = Field(..., description="Ratio of DC to AC capacity ", gt=0)
     # split into multiple inverters based on capacity and location
-    # use a typical value 1.0 to maybe 5
-    per_inverter_ac_capacity: float
     # losses all set
-    # albedo?
+    albedo: float = Field(
+        ..., description="Albedo of the surface around the array", ge=0
+    )
     tracking: Union[FixedTracking, SingleAxisTracking] = Field(
         ..., description="Parameters describing single-axis tracking or fixed mounting"
+    )
+    per_inverter_ac_capacity: float = Field(
+        1.0, description="Rated AC capacity for each inverter", gt=0
     )
 
     class Config:
