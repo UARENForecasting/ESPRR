@@ -1,5 +1,5 @@
 import datetime as dt
-from typing import Any, List, Union
+from typing import Any, Union
 
 
 import pvlib  # type: ignore
@@ -12,11 +12,19 @@ import pytz
 SYSTEM_ID = "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
 SYSTEM_EXAMPLE = dict(
     name="Test PV System",
-    nw_corner=[34.9, -112.9],
-    se_corner=[33.0, -111.0],
+    boundary=dict(
+        nw_corner=dict(
+            latitude=34.9,
+            longitude=-112.9,
+        ),
+        se_corner=dict(
+            latitude=33.0,
+            longitude=-111.0,
+        ),
+    ),
     ac_capacity=10.0,
-    ac_dc_ratio=0.8,
-    per_inverter_ac_capacity=1.0,
+    dc_ac_ratio=1.2,
+    albedo=0.2,
     tracking=dict(
         tilt=20.0,
         azimuth=180.0,
@@ -29,7 +37,6 @@ TIMEZONES = [
     if not tz.startswith("US/") and tz not in ("America/Nuuk", "Antarctica/McMurdo")
 ] + [tz for tz in pytz.all_timezones if tz.startswith("Etc/GMT") and tz != "Etc/GMT0"]
 SURFACE_ALBEDOS = pvlib.irradiance.SURFACE_ALBEDOS
-TEMPERATURE_PARAMETERS = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS
 
 
 # allows word chars, space, comma, apostrophe, hyphen, parentheses, underscore
@@ -94,6 +101,22 @@ class SingleAxisTracking(ThisBase):
     )
 
 
+class LatLon(ThisBase):
+    latitude: float = Field(
+        ..., description="Latitude of the system in degrees North", ge=24, le=50
+    )
+    longitude: float = Field(
+        ..., description="Longitude of the system in degrees East", ge=-126, le=-65
+    )
+
+
+class BoundingBox(ThisBase):
+    """Bounding box of the PV array"""
+
+    nw_corner: LatLon = Field(..., description="NW corner of the bounding box.")
+    se_corner: LatLon = Field(..., description="SE corner of the bounding box.")
+
+
 class PVSystem(ThisBase):
     """Parameters for an entire PV system at some location"""
 
@@ -101,17 +124,17 @@ class PVSystem(ThisBase):
         ...,
         description="Name of the system",
     )
-    # use w/ boxes from dataset to
-    nw_corner: List[float] = Field(..., min_items=2, max_items=2)
-    se_corner: List[float] = Field(..., min_items=2, max_items=2)
+    boundary: BoundingBox
     # find central lat/lons and lookup elevation from lat/lon
-    ac_capacity: float
-    ac_dc_ratio: float
+    ac_capacity: float = Field(
+        ..., description="Total AC capcity of the plant in MW", gt=0
+    )
+    dc_ac_ratio: float = Field(..., description="Ratio of DC to AC capacity ", gt=0)
     # split into multiple inverters based on capacity and location
-    # use a typical value 1.0 to maybe 5
-    per_inverter_ac_capacity: float
     # losses all set
-    # albedo?
+    albedo: float = Field(
+        ..., description="Albedo of the surface around the array", ge=0
+    )
     tracking: Union[FixedTracking, SingleAxisTracking] = Field(
         ..., description="Parameters describing single-axis tracking or fixed mounting"
     )
