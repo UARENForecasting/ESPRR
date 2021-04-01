@@ -24,7 +24,6 @@ SYSTEM_EXAMPLE = dict(
     ),
     ac_capacity=10.0,
     dc_ac_ratio=1.2,
-    per_inverter_ac_capacity=1.0,
     albedo=0.2,
     tracking=dict(
         tilt=20.0,
@@ -138,9 +137,6 @@ class PVSystem(ThisBase):
     )
     tracking: Union[FixedTracking, SingleAxisTracking] = Field(
         ..., description="Parameters describing single-axis tracking or fixed mounting"
-    )
-    per_inverter_ac_capacity: float = Field(
-        1.0, description="Rated AC capacity for each inverter", gt=0
     )
 
     class Config:

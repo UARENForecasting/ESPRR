@@ -15,7 +15,6 @@ begin
        },
        "ac_capacity": 10.0,
        "dc_ac_ratio": 1.2,
-       "per_inverter_ac_capacity": 1.0,
        "albedo": 0.2,
        "tracking": {
          "tilt": 20.0,
