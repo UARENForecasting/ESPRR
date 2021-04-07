@@ -1,6 +1,12 @@
 cryptography==3.4.6
 fastapi==0.63.0
 httpx==0.17.1
+geopandas==0.9.0
+shapely==1.7.1
+h5py==3.2.1
+dask==2021.4.0
+pyproj==3.0.1
+fiona==1.8.18
 numcodecs==0.7.3
 numpy==1.20.1
 pandas==1.2.3
