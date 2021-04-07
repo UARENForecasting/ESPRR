@@ -44,7 +44,7 @@ def main():
             da.from_array(irradiance_file[var])[:, limits],
             dims=["time_idx", "spatial_idx"],
             attrs={k: str(v) for k, v in vattr.items()},
-        ).chunk((times.shape[0]), 96)
+        ).chunk((times.shape[0], 96))
         data[var].encoding = {"compressor": compressor}
     for var in ("air_temperature", "wind_speed"):
         vattr = dict(weather_file[var].attrs)
