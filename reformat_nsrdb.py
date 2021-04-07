@@ -43,7 +43,7 @@ def main():
         data[var] = xr.DataArray(
             da.from_array(irradiance_file[var])[:, limits],
             dims=["time_idx", "spatial_idx"],
-            attrs=vattr,
+            attrs={k: str(v) for k, v in vattr.items()},
         ).chunk((times.shape[0]), 96)
         data[var].encoding = {"compressor": compressor}
     for var in ("air_temperature", "wind_speed"):
@@ -53,7 +53,7 @@ def main():
             xr.DataArray(
                 da.from_array(weather_file[var])[:, limits],
                 dims=["time_idx", "spatial_idx"],
-                attrs=vattr,
+                attrs={k: str(v) for k, v in vattr.items()},
             )
             .astype("float32")
             .chunk((times.shape[0], 96))
