@@ -4,7 +4,7 @@ from typing import ContextManager, Optional, List, NamedTuple
 
 
 import geopandas  # type: ignore
-from shapely import geometry
+from shapely import geometry  # type: ignore
 import xarray as xr
 
 
@@ -40,7 +40,7 @@ class NSRDBDataset:
         # mypy workaround
         @contextmanager
         def opener():
-            with xr.open_zarr(self.data_path, mode="r") as ds:
+            with xr.open_zarr(self.data_path) as ds:
                 self._dataset = ds
                 yield ds
             self._dataset = None
@@ -54,13 +54,13 @@ class NSRDBDataset:
             index = ds.spatial_idx.values
         pts = geopandas.points_from_xy(lons, lats)
         self._grid = geopandas.GeoSeries(pts, index=index, crs="EPSG:4326")
-        self._grid.sindex  # load the index tree
+        self._grid.sindex.query(geometry.Point(-110.1, 32.2))  # load the index tree
 
     @property
     def grid(self) -> geopandas.GeoSeries:
         if self._grid is None:
             raise AttributeError("Grid only available after `load_grid` call")
-        return self._grid.copy()  # don't want any accidental modifications
+        return self._grid
 
     def find_system_locations(
         self, pvsystem: models.PVSystem
@@ -86,10 +86,12 @@ class NSRDBDataset:
 
         # now take intersection of system rect and grid boxes
         # has effect of cutting grid boxes overlapping edge of system rect
-        intersecting_grid_boxes = possible_grid_boxes.insersection(rect)
+        intersecting_grid_boxes = possible_grid_boxes.intersection(system_rect)
 
         # find the area of each grid box in the km^2 using appropriate projection
-        area_ser = intersecting_grid_boxes.to_crs(CRS).area
+        area_ser = intersecting_grid_boxes.to_crs(CRS).area.sort_index()
+        # drop points that have insignificant areas
+        area_ser = area_ser[area_ser > area_ser.max() / 1000]
         area_ser /= area_ser.sum()
 
         points = [
