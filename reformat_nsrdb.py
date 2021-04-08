@@ -9,6 +9,8 @@ import xarray as xr
 import zarr
 
 
+# restrict data to this lat, lon range
+# nsrdb had no data over the ocean, so not a regular grid
 BOUNDARIES = ((31.0, 38.0), (-118.01, -103.01))
 
 
@@ -16,6 +18,7 @@ def load_file(fname):
     data = np.fromfile(fname, ">i2", 3601 * 3601).reshape((3601, 3601))
     lat = int(fname.split("/")[-1][1:3])
     lon = int(fname.split("/")[-1][4:7]) * -1
+    # Files are named like N32W110 which span from 32 to 33N and -110 to -109 W
     da = (
         xr.DataArray(
             data,
@@ -23,13 +26,17 @@ def load_file(fname):
             coords=[np.linspace(lat + 1, lat, 3601), np.linspace(lon, lon + 1, 3601)],
         )
         .to_dataset(name="elevation")
-        .isel(lat=slice(None, None, 72), lon=slice(36, None, 72))
+        .isel(
+            lat=slice(None, None, 72), lon=slice(36, None, 72)
+        )  # only keep points at nsrdb grid
     )
     return da
 
 
 def load_elevation_ds():
-    srtm_dir = Path("/d4/uaren/srtm1/")
+    srtm_dir = Path(
+        "/d4/uaren/srtm1/"
+    )  # files downloaded from AWS s3://elevation-tiles-prod/skadi
     elevations = None
     for f in srtm_dir.glob("*.hgt"):
         da = load_file(str(f))
@@ -41,6 +48,7 @@ def load_elevation_ds():
 
 
 def main():
+    # files from AWS s3://nrel-pds-nsrdb/conus/ ~2TB each
     irradiance_file = h5py.File(
         "/d4/uaren/nsrdb/h5/nsrdb_conus_irradiance_2019.h5", mode="r"
     )
