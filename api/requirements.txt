@@ -2,6 +2,7 @@ cryptography==3.4.7
 fastapi==0.63.0
 httpx==0.17.1
 geopandas==0.9.0
+pygeos==0.9.0
 shapely==1.7.1
 h5py==3.2.1
 dask==2021.3.1

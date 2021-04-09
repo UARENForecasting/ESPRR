@@ -4,6 +4,7 @@ import re
 
 from hypothesis import given, example, assume
 from hypothesis.strategies import floats, booleans, composite, from_regex
+import pandas as pd
 from pydantic import BaseModel, ValidationError
 import pytest
 
@@ -117,3 +118,74 @@ def test_singleaxis_tracking_outside(atg, backtracking):
         models.SingleAxisTracking(
             axis_tilt=tilt, axis_azimuth=azimuth, gcr=gcr, backtracking=backtracking
         )
+
+
+@pytest.mark.parametrize(
+    "nw,se",
+    [
+        (dict(latitude=32.1, longitude=-110.0), dict(latitude=32.1, longitude=-110.0)),
+        (dict(latitude=32.1, longitude=-110.0), dict(latitude=32.2, longitude=-110.0)),
+        (dict(latitude=32.1, longitude=-110.0), dict(latitude=32.1, longitude=-110.3)),
+        pytest.param(
+            dict(latitude=32.1, longitude=-110.0),
+            dict(latitude=32.1 - 1.1e-6, longitude=-110.0 + 1.1e-6),
+            marks=pytest.mark.xfail(strict=True),
+        ),
+    ],
+)
+def test_boundingbox_limits(nw, se):
+    with pytest.raises(ValidationError):
+        models.BoundingBox(
+            nw_corner=nw,
+            se_corner=se,
+        )
+
+
+good_df = pd.DataFrame(
+    {"ghi": 0, "dni": 0, "dhi": 0, "temp_air": 0, "wind_speed": 0},  # type: ignore
+    index=pd.DatetimeIndex([pd.Timestamp("2021-04-04T00:00Z")]),  # type: ignore
+)
+
+
+@pytest.mark.parametrize(
+    "inp",
+    [
+        dict(),
+        dict(
+            location=dict(latitude=0, longitude=1.9, altitude="no"),
+            fraction_of_total=0.1,
+            weather_data=good_df,
+        ),
+        dict(
+            location=dict(latitude=0, longitude=1.9, altitude=3818),
+            fraction_of_total="invalid",
+            weather_data=good_df,
+        ),
+        dict(
+            location=dict(latitude=0, longitude=1.9, altitude=3818),
+            fraction_of_total=0.38,
+            weather_data=good_df.rename(columns={"ghi": "notok"}),
+        ),
+        dict(
+            location=dict(latitude=0, longitude=1.9, altitude=3818),
+            fraction_of_total=0.38,
+            weather_data=good_df.reset_index(drop=True),
+        ),
+        dict(
+            location=dict(latitude=0, longitude=1.9, altitude=3818),
+            fraction_of_total=0.38,
+            weather_data=0,
+        ),
+        pytest.param(
+            dict(
+                location=dict(latitude=0, longitude=1.9, altitude=3818),
+                fraction_of_total=0.38,
+                weather_data=good_df,
+            ),
+            marks=pytest.mark.xfail(strict=True),
+        ),
+    ],
+)
+def test_systemdata(inp):
+    with pytest.raises(ValidationError):
+        models.SystemData(**inp)

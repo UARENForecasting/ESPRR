@@ -2,8 +2,9 @@ import datetime as dt
 from typing import Any, Union
 
 
+import pandas as pd
 import pvlib  # type: ignore
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator, validator
 from pydantic.fields import Undefined
 from pydantic.types import UUID
 import pytz
@@ -14,12 +15,12 @@ SYSTEM_EXAMPLE = dict(
     name="Test PV System",
     boundary=dict(
         nw_corner=dict(
-            latitude=34.9,
-            longitude=-112.9,
+            latitude=32.05,
+            longitude=-110.95,
         ),
         se_corner=dict(
-            latitude=33.0,
-            longitude=-111.0,
+            latitude=32.01,
+            longitude=-110.85,
         ),
     ),
     ac_capacity=10.0,
@@ -103,10 +104,13 @@ class SingleAxisTracking(ThisBase):
 
 class LatLon(ThisBase):
     latitude: float = Field(
-        ..., description="Latitude of the system in degrees North", ge=24, le=50
+        ..., description="Latitude of the system in degrees North", ge=31.0, le=38.0
     )
     longitude: float = Field(
-        ..., description="Longitude of the system in degrees East", ge=-126, le=-65
+        ...,
+        description="Longitude of the system in degrees East",
+        ge=-118.01,
+        le=-103.01,
     )
 
 
@@ -115,6 +119,17 @@ class BoundingBox(ThisBase):
 
     nw_corner: LatLon = Field(..., description="NW corner of the bounding box.")
     se_corner: LatLon = Field(..., description="SE corner of the bounding box.")
+
+    @root_validator(skip_on_failure=True)
+    def validate_extended_box(cls, values):
+        nw_corner = values["nw_corner"]
+        se_corner = values["se_corner"]
+        if (
+            abs(nw_corner.latitude - se_corner.latitude) < 1e-6
+            or abs(nw_corner.longitude - se_corner.longitude) < 1e-6
+        ):
+            raise ValueError("Bounding box is too small for a meaningful result")
+        return values
 
 
 class PVSystem(ThisBase):
@@ -196,3 +211,38 @@ class UserInfo(StoredObject):
     """Information about the current user"""
 
     auth0_id: str = Field(..., description="User ID from Auth 0")
+
+
+class Location(ThisBase):
+    latitude: float
+    longitude: float
+    altitude: float
+
+
+class SystemData(ThisBase):
+    class Config:
+        arbitrary_types_allowed = True
+
+    location: Location = Field(
+        ..., description="Values to create a pvlib.location.Location"
+    )
+    fraction_of_total: float = Field(
+        ..., description="Fraction of total power for this data"
+    )
+    weather_data: pd.DataFrame = Field(
+        ...,
+        description=(
+            "Has 'ghi', 'dni', 'dhi', 'temp_air', and 'wind_speed' columns with "
+            " a DatetimeIndex"
+        ),
+    )
+
+    @validator("weather_data")
+    def weather_df(cls, v):
+        if not isinstance(v.index, pd.DatetimeIndex):
+            raise TypeError("Must have pd.DatetimeIndex")
+        if not set(v.columns) == {"ghi", "dni", "dhi", "temp_air", "wind_speed"}:
+            raise ValueError(
+                "Columns must be 'ghi', 'dni', 'dhi', 'temp_air' and 'wind_speed'"
+            )
+        return v

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 from pydantic import BaseSettings, Json
 from ._version import version as __version__  # NOQA
@@ -26,6 +27,8 @@ class Settings(BaseSettings):
     redis_username: Optional[str] = None
     redis_password: Optional[str] = None
     redis_health_check_interval: int = 10
+
+    nsrdb_data_path: Path = Path("/d4/uaren/nsrdb/nsrdb_2019.zarr")
 
     sync_jobs_period: int = 15
 
