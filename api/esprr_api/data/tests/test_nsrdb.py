@@ -7,18 +7,6 @@ import xarray as xr
 
 
 from esprr_api import models
-from esprr_api.data import nsrdb
-
-
-@pytest.fixture()
-def dataset(nsrdb_data):
-    return nsrdb.NSRDBDataset(nsrdb_data)
-
-
-@pytest.fixture()
-def ready_dataset(dataset):
-    dataset.load_grid()
-    return dataset
 
 
 def test_open_dataset(dataset):

@@ -1,23 +1,18 @@
-from base64 import b64decode
 from contextlib import contextmanager
-from copy import deepcopy
 import datetime as dt
 from pathlib import Path
 import tarfile
 import tempfile
-from uuid import UUID, uuid1
+from uuid import UUID
 
 
-from fakeredis import FakeRedis  # type: ignore
 from fastapi.testclient import TestClient
 import httpx
-from pvlib.pvsystem import PVSystem  # type: ignore
-from pvlib.tracking import SingleAxisTracker  # type: ignore
 import pymysql
 import pytest
-from rq import Queue  # type: ignore
 
 
+from esprr_api.data import nsrdb
 from esprr_api.main import app
 from esprr_api import settings, models, storage
 
@@ -134,3 +129,14 @@ def nsrdb_data(pytestconfig):
         tar = tarfile.open(tar_path, "r")
         tar.extractall(out_path)
         yield out_path / "nsrdb.zarr"
+
+
+@pytest.fixture()
+def dataset(nsrdb_data):
+    return nsrdb.NSRDBDataset(nsrdb_data)
+
+
+@pytest.fixture()
+def ready_dataset(dataset):
+    dataset.load_grid()
+    return dataset
