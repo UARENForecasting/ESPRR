@@ -142,8 +142,8 @@ def test_boundingbox_limits(nw, se):
 
 
 good_df = pd.DataFrame(
-    {"ghi": 0, "dni": 0, "dhi": 0, "temp_air": 0, "wind_speed": 0},
-    index=pd.DatetimeIndex([pd.Timestamp("2021-04-04T00:00Z")]),
+    {"ghi": 0, "dni": 0, "dhi": 0, "temp_air": 0, "wind_speed": 0},  # type: ignore
+    index=pd.DatetimeIndex([pd.Timestamp("2021-04-04T00:00Z")]),  # type: ignore
 )
 
 

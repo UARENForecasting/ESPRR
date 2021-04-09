@@ -1,7 +1,7 @@
-import geopandas
+import geopandas  # type: ignore
 import pandas as pd
 import pytest
-from shapely import geometry
+from shapely import geometry  # type: ignore
 from types import GeneratorType
 import xarray as xr
 
