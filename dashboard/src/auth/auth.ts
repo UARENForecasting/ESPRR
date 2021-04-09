@@ -26,7 +26,7 @@ export const useAuth0 = ({
   onRedirectCallback = DEFAULT_REDIRECT_CALLBACK,
   redirectUri = window.location.origin,
   ...options
-}) => {
+}): VueAuth => {
   if (instance) return instance;
 
   // The 'instance' is simply a Vue object
@@ -38,7 +38,7 @@ export const useAuth0 = ({
 
 // Create a simple Vue plugin to expose the wrapper object throughout the application
 export const Auth0Plugin = {
-  install(Vue: VueConstructor, options: Auth0PluginOptions) {
+  install(Vue: VueConstructor, options: Auth0PluginOptions): void {
     Vue.prototype.$auth = useAuth0(options);
   },
 };

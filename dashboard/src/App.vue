@@ -1,17 +1,34 @@
+<!-- -->
 <template>
   <div id="app">
-    <div id="nav">
-      <span v-if="!$auth.loading && $auth.isAuthenticated">
-        <router-link to="/">Systems</router-link> |
-      </span>
-    </div>
-    <span v-if="$auth.isAuthenticated">
-      <button @click="logout">Log out</button>
-    </span>
-    <span v-else>
-      <button @click="login">Log in</button>
-    </span>
-    <router-view />
+    <header class="container">
+      <!-- flex header with center aligned content -->
+      <h1>ESPRR</h1>
+
+      <div id="nav">
+        <template v-if="$auth.isAuthenticated">
+          <router-link to="/">Systems</router-link> 
+        </template>
+      </div>
+
+      <!-- Login/Logout at right of navbar-->
+      <div id="nav-right">
+      <template v-if="$auth.isAuthenticated">
+        <button class="auth-button" @click="logout">Log out</button>
+      </template>
+      <template v-else>
+        <button class="auth-button"  @click="login">Log in</button>
+      </template>
+      </div>
+    </header>
+
+    <template v-if="!$auth.loading">
+      <!-- Only load render after we can check authentication -->
+      <router-view />
+    </template>
+
+    <!-- Display loading indicator -->
+    <template v-else> Loading... </template>
   </div>
 </template>
 <script lang="ts">
@@ -30,16 +47,30 @@ export default class App extends Vue {
 }
 </script>
 
-<style>
+<style scoped>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
 }
 
+header.container {
+  background: #DDD;
+  border-bottom: 5px solid #BBB;
+  padding: 1em;
+  align-items: center;
+}
+header h1 {
+  color: white;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
 #nav {
+  flex: flex-grow;
   padding: 30px;
 }
 
@@ -50,5 +81,13 @@ export default class App extends Vue {
 
 #nav a.router-link-exact-active {
   color: #42b983;
+}
+
+#nav-right {
+  margin-left: auto;
+}
+
+.auth-button {
+  justify-self: right;
 }
 </style>
