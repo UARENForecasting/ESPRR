@@ -14,7 +14,7 @@ def compute_ac_power(system: models.PVSystem, data: models.SystemData) -> pd.Ser
     background dataset
     """
     location = Location(**data.location.dict())
-    fractional_capacity = system.ac_capacity * 1e6 * data.fraction_of_total
+    fractional_capacity = system.ac_capacity * data.fraction_of_total
     eta = 0.96
     pvsyst_params = dict(
         albedo=system.albedo,
@@ -46,7 +46,7 @@ def compute_ac_power(system: models.PVSystem, data: models.SystemData) -> pd.Ser
 
     mc = ModelChain.with_pvwatts(system=pvsystem, location=location)
     mc.run_model(data.weather_data)
-    ac = mc.results.ac / 1e6  # MW
+    ac = mc.results.ac
     return ac
 
 
@@ -55,7 +55,7 @@ def compute_total_system_power(
 ) -> pd.Series:
     """Compute the total AC power from the weather data and fractional capacity of each grid
     box the system contains"""
-    out: pd.Series[float] = pd.Series([], name="ac")  # type: ignore
+    out: pd.Series[float] = pd.Series([], name="ac", dtype="float64")  # type: ignore
     for data in dataset.generate_data(system):
         part = compute_ac_power(system, data)
         if out.empty:  # type: ignore
