@@ -10,8 +10,8 @@ begin
   set @sysdef = '{
        "name": "Test PV System",
        "boundary": {
-           "nw_corner": {"latitude": 34.9, "longitude": -112.9},
-           "se_corner": {"latitude": 33.0, "longitude": -111.0}
+           "nw_corner": {"latitude": 32.05, "longitude": -110.95},
+           "se_corner": {"latitude": 32.01, "longitude": -110.85}
        },
        "ac_capacity": 10.0,
        "dc_ac_ratio": 1.2,
