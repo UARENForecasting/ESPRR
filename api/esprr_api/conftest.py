@@ -2,6 +2,9 @@ from base64 import b64decode
 from contextlib import contextmanager
 from copy import deepcopy
 import datetime as dt
+from pathlib import Path
+import tarfile
+import tempfile
 from uuid import UUID, uuid1
 
 
@@ -121,3 +124,13 @@ def stored_system(system_def, system_id):
         modified_at=extime,
         definition=system_def,
     )
+
+
+@pytest.fixture(scope="session")
+def nsrdb_data(pytestconfig):
+    tar_path = Path(pytestconfig.rootdir) / "esprr_api/data/nsrdb.zarr.tar"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_path = Path(tmpdir)
+        tar = tarfile.open(tar_path, "r")
+        tar.extractall(out_path)
+        yield out_path / "nsrdb.zarr"
