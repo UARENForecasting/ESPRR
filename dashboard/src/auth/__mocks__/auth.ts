@@ -1,6 +1,19 @@
 /* istanbul ignore file */
-/*
- * Module for mocking Auth0 plugin during testing.
+/* Provides default mock values for auth module. This is only useful
+ * when we want to mount the entire app via main.ts.
+ *
+ * Default will be an authenticated user.
+ *
+ * Use by calling jest.mock("@/auth/auth") in test.
+ *
+ * Values may be altered by mocking the implementation of the install
+ * function to supply a different $auth object.
+ *
+ * Note that when import main, a vue app is initialized on the DOM,
+ * so tests should be placed in separate spec files. This is to
+ * initialize a fresh DOM/app between tests.
+ *
+ * For testing individual components, use `tests/units/mockauth.ts`.
  */
 const user = {
   email: "testing@esprr.x.energy.arizona.edu",
