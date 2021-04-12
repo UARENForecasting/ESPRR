@@ -35,8 +35,7 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "./jest-setup.ts"
+    "tests/**/*.tsx"
   ],
   "exclude": [
     "node_modules"

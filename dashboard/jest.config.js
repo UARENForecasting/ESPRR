@@ -6,5 +6,4 @@ module.exports = {
   moduleNameMapper: {
     "\\.(css|less)$": "<rootDir>/tests/cssstub.js",
   },
-  setupFilesAfterEnv: ["<rootDir>/jest-setup.ts"],
 };
