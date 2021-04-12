@@ -19,9 +19,10 @@ const DEFAULT_REDIRECT_CALLBACK = (appState: { targetUrl: string }) =>
 let instance: VueAuth;
 
 /** Returns the current instance of the SDK */
-export const getInstance = () => instance;
+export const getInstance = (): VueAuth => instance;
 
 /** Creates an instance of the Auth0 SDK. If one has already been created, it returns that instance */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 export const useAuth0 = ({
   onRedirectCallback = DEFAULT_REDIRECT_CALLBACK,
   redirectUri = window.location.origin,

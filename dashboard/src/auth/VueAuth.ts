@@ -30,13 +30,13 @@ export class VueAuth extends Vue {
   popupOpen = false;
   error?: Error;
 
-  async getUser() {
+  async getUser(): Promise<User> {
     // @ts-expect-error ignore possibly null
     return new User(await this.auth0Client?.getUser());
   }
 
   /** Authenticates the user using a popup window */
-  async loginWithPopup(o: PopupLoginOptions) {
+  async loginWithPopup(o: PopupLoginOptions): Promise<void> {
     this.popupOpen = true;
 
     try {
@@ -53,27 +53,27 @@ export class VueAuth extends Vue {
   }
 
   /** Authenticates the user using the redirect method */
-  loginWithRedirect(o?: RedirectLoginOptions) {
+  loginWithRedirect(o?: RedirectLoginOptions): Promise<void> {
     return this.auth0Client?.loginWithRedirect(o);
   }
 
   /** Returns all the claims present in the ID token */
-  getIdTokenClaims(o?: GetIdTokenClaimsOptions) {
+  getIdTokenClaims(o?: GetIdTokenClaimsOptions): Promise<IdToken> {
     return this.auth0Client?.getIdTokenClaims(o);
   }
 
   /** Returns the access token. If the token is invalid or missing, a new one is retrieved */
-  getTokenSilently(o?: GetTokenSilentlyOptions) {
+  getTokenSilently(o?: GetTokenSilentlyOptions): Promise<any> {
     return this.auth0Client?.getTokenSilently(o);
   }
 
   /** Gets the access token using a popup window */
-  getTokenWithPopup(o?: GetTokenWithPopupOptions) {
+  getTokenWithPopup(o?: GetTokenWithPopupOptions): Promise<string> {
     return this.auth0Client?.getTokenWithPopup(o);
   }
 
   /** Logs the user out and removes their session on the authorization server */
-  logout(o?: LogoutOptions) {
+  logout(o?: LogoutOptions): Promise<void> {
     return this.auth0Client?.logout(o);
   }
 
@@ -82,7 +82,7 @@ export class VueAuth extends Vue {
     onRedirectCallback: RedirectCallback,
     redirectUri: string,
     auth0Options: Auth0Options
-  ) {
+  ): void {
     // Create a new instance of the SDK client using members of the given options object
     const clientOptions = {
       domain: auth0Options.domain,

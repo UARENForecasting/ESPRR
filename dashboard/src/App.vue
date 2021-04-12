@@ -24,7 +24,10 @@
     <main>
       <template v-if="!$auth.loading">
         <!-- Only load render after we can check authentication -->
-        <router-view />
+        <template v-if="$auth.isAuthenticated">
+          <router-view />
+        </template>
+        <template v-else> Please login to access ESPRR. </template>
       </template>
 
       <!-- Display loading indicator -->
@@ -37,10 +40,10 @@ import { Component, Vue } from "vue-property-decorator";
 
 @Component
 export default class App extends Vue {
-  login() {
+  login(): void {
     this.$auth.loginWithRedirect();
   }
-  logout() {
+  logout(): void {
     this.$auth.logout({
       returnTo: window.location.origin,
     });
