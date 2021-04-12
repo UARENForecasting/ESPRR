@@ -50,6 +50,11 @@ def system_def():
 
 
 @pytest.fixture(scope="session")
+def system_hash():
+    return "3d5423d4ca558b5c0d820f4280a34f25"
+
+
+@pytest.fixture(scope="session")
 def otherid():
     return str(uuid1())
 

@@ -163,3 +163,9 @@ def test_delete_system_bad_id(cursor, auth0_id):
     with pytest.raises(OperationalError) as err:
         cursor.execute("call delete_system(%s, %s)", (auth0_id, str(uuid1())))
     assert err.value.args[0] == 1142
+
+
+def test_get_system_hash(cursor, auth0_id, system_id, system_hash):
+    cursor.execute(f'call get_system_hash("{auth0_id}", "{system_id}")')
+    out = cursor.fetchone()[0]
+    assert out == system_hash

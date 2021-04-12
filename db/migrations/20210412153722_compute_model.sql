@@ -120,46 +120,79 @@ grant execute on procedure `update_system_data` to 'apiuser'@'%';
 
 -- get data status
 create definer = 'select_objects'@'localhost'
-  procedure get_system_data_status (auth0id varchar(32), systemid char(36),
-    datasetin varchar(32))
-    comment 'Check the status of the system data'
+  function get_system_data_status (binid binary(16), datasetin varchar(32))
+    returns varchar(32)
+    reads sql data sql security definer
+  begin
+    declare timeseries_status boolean default (exists(
+      select 1 from system_data where system_id = binid and dataset = datasetin
+      and timeseries is not null));
+    declare stats_status boolean default (exists(
+      select 1 from system_data where system_id = binid and dataset = datasetin
+      and statistics is not null));	
+
+    if timeseries_status and stats_status then
+      return 'complete';
+    elseif timeseries_status and not stats_status then
+      return 'statistics missing';
+    elseif not timeseries_status and stats_status then
+      return 'timeseries missing';
+    else
+      return 'prepared';
+    end if;
+  end;
+grant execute on function `get_system_data_status` to 'select_objects'@'localhost';
+
+
+create definer = 'select_objects'@'localhost'
+  procedure get_system_data_meta (auth0id varchar(32), systemid char(36),
+    datasetid varchar(32))
+    comment 'Get the system data metadata'
     reads sql data sql security definer
   begin
     declare binid binary(16) default (uuid_to_bin(systemid, 1));
     declare allowed boolean default (check_users_system(auth0id, systemid));
-    declare row_present boolean;
-    declare timeseries_status boolean default FALSE;
-    declare stats_status boolean default FALSE;
+    declare row_present boolean default (exists(
+      select 1 from system_data where system_id = binid and dataset = datasetid));
+
 
     if allowed then
-      set row_present = exists(
-        select 1 from system_data where system_id = binid and dataset = datasetin);
-      set timeseries_status = exists(
-        select 1 from system_data where system_id = binid and dataset = datasetin
-	and timeseries is not null);
-      set stats_status = exists(
-        select 1 from system_data where system_id = binid and dataset = datasetin
-	and statistics is not null);	
-      if not row_present then
-        select 'missing' as status;
+      if row_present then
+        select bin_to_uuid(system_id, 1) as system_id,
+          dataset, version, hex(system_hash) as system_hash,
+          get_system_data_status(binid, datasetid) as status,
+          created_at, modified_at
+	from system_data where system_id = binid and dataset = datasetid;
       else
-        if timeseries_status and stats_status then
-          select 'complete' as status;
-        elseif timeseries_status and not stats_status then
-          select 'statistics missing' as status;
-        elseif not timeseries_status and stats_status then
-          select 'timeseries missing' as status;
-        else
-  	  select 'prepared' as status;
-	end if;
+        select systemid as system_id, datasetid as dataset,
+	null as version, null as system_hash, 'missing' as status,
+	null as created_at, null as modified_at;
       end if;
     else
-      signal sqlstate '42000' set message_text = 'Getting system data status denied',
+      signal sqlstate '42000' set message_text = 'Getting system data metadata denied',
         mysql_errno = 1142;
-    end if;        
+    end if;
   end;
-grant execute on procedure `get_system_data_status` to 'select_objects'@'localhost';
-grant execute on procedure `get_system_data_status` to 'apiuser'@'%';
+grant execute on procedure `get_system_data_meta` to 'select_objects'@'localhost';
+grant execute on procedure `get_system_data_meta` to 'apiuser'@'%';
+
+
+create definer = 'select_objects'@'localhost'
+  procedure get_system_hash(auth0id varchar(32), systemid char(36))
+  reads sql data sql security definer
+begin
+  declare binid binary(16) default (uuid_to_bin(systemid, 1));
+  declare allowed boolean default (check_users_system(auth0id, systemid));
+
+  if allowed then
+    select md5(definition) as system_hash from systems where id = binid;
+  else
+    signal sqlstate '42000' set message_text = 'Getting system hash denied',
+      mysql_errno = 1142;
+  end if;
+end;
+grant execute on procedure `get_system_hash` to 'select_objects'@'localhost';
+grant execute on procedure `get_system_hash` to 'apiuser'@'%';
 
 
 create procedure _add_example_data_1()
@@ -167,8 +200,11 @@ create procedure _add_example_data_1()
 begin
   set @sysid = uuid_to_bin('6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9', 1);
   set @extime = timestamp('2020-12-01 01:23');
-  insert into system_data (system_id, dataset, created_at, modified_at) values (
-    @sysid, 'nsrdb_2019', @extime, @extime);
+  set @syshash = (select unhex(md5(definition)) from systems where id = @sysid);
+  insert into system_data (system_id, dataset, version, system_hash, timeseries, statistics, created_at, modified_at) values (
+    @sysid, 'NSRDB 2019', 'v0.1', unhex('3d5423d4ca558b5c0d820f4280a34f25'),
+    'timeseries data', 'statistics', @extime, @extime
+    );
 end;
 
 
@@ -183,11 +219,13 @@ end;
 -- migrate:down
 drop procedure add_example_data;
 create procedure add_example_data()
-begin;
+begin
   call _add_example_data_0();
 end;
-drop procedure _add_example_data_1();
-drop procedure get_system_data_status;
+drop procedure get_system_hash;
+drop procedure _add_example_data_1;
+drop procedure get_system_data_meta;
+drop function get_system_data_status;
 drop procedure update_system_data;
 drop procedure create_system_data;
 drop procedure get_system_statistics;

@@ -222,29 +222,40 @@ def test_get_system_statistics_bad_user(
         "timeseries missing",
     ],
 )
-def test_get_system_status(system_id, cursor, dataset, auth0_id):
-    cursor.execute(
-        f'call get_system_data_status("{auth0_id}", "{system_id}", "{dataset}")'
+def test_get_system_meta(system_id, dictcursor, dataset, auth0_id):
+    dictcursor.execute(
+        f'call get_system_data_meta("{auth0_id}", "{system_id}", "{dataset}")'
     )
-    assert cursor.fetchone()[0] == dataset
+    res = dictcursor.fetchone()
+    assert res["status"] == dataset
+    assert res["created_at"] <= res["modified_at"]
+    assert res["system_id"] == system_id
+    assert res["dataset"] == dataset
+    assert res["version"] is None
+    assert res["system_hash"] is None
 
 
-def test_get_system_status_missing(cursor, auth0_id, system_id):
-    cursor.execute(f'call get_system_data_status("{auth0_id}", "{system_id}", "nope")')
-    assert cursor.fetchone()[0] == "missing"
+def test_get_system_meta_missing(dictcursor, auth0_id, system_id):
+    dictcursor.execute(
+        f'call get_system_data_meta("{auth0_id}", "{system_id}", "nope")'
+    )
+    res = dictcursor.fetchone()
+    assert res["status"] == "missing"
+    assert res["created_at"] is None
+    assert res["modified_at"] is None
 
 
-def test_get_system_status_bad_user(cursor, system_id, bad_user):
+def test_get_system_meta_bad_user(cursor, system_id, bad_user):
     with pytest.raises(OperationalError) as err:
         cursor.execute(
-            f'call get_system_data_status("{bad_user}", "{system_id}", "prepared")'
+            f'call get_system_data_meta("{bad_user}", "{system_id}", "prepared")'
         )
     assert err.value.args[0] == 1142
 
 
-def test_get_system_status_bad_id(cursor, system_id, auth0_id, otherid):
+def test_get_system_meta_bad_id(cursor, system_id, auth0_id, otherid):
     with pytest.raises(OperationalError) as err:
         cursor.execute(
-            f'call get_system_data_status("{auth0_id}", "{otherid}", "prepared")'
+            f'call get_system_data_meta("{auth0_id}", "{otherid}", "prepared")'
         )
     assert err.value.args[0] == 1142
