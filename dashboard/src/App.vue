@@ -7,28 +7,29 @@
 
       <div id="nav">
         <template v-if="$auth.isAuthenticated">
-          <router-link to="/">Systems</router-link> 
+          <router-link to="/">Systems</router-link>
         </template>
       </div>
 
       <!-- Login/Logout at right of navbar-->
       <div id="nav-right">
-      <template v-if="$auth.isAuthenticated">
-        <button class="auth-button" @click="logout">Log out</button>
-      </template>
-      <template v-else>
-        <button class="auth-button"  @click="login">Log in</button>
-      </template>
+        <template v-if="$auth.isAuthenticated">
+          <button class="auth-button" @click="logout">Log out</button>
+        </template>
+        <template v-else>
+          <button class="auth-button" @click="login">Log in</button>
+        </template>
       </div>
     </header>
+    <main>
+      <template v-if="!$auth.loading">
+        <!-- Only load render after we can check authentication -->
+        <router-view />
+      </template>
 
-    <template v-if="!$auth.loading">
-      <!-- Only load render after we can check authentication -->
-      <router-view />
-    </template>
-
-    <!-- Display loading indicator -->
-    <template v-else> Loading... </template>
+      <!-- Display loading indicator -->
+      <template v-else> Loading... </template>
+    </main>
   </div>
 </template>
 <script lang="ts">
@@ -56,17 +57,14 @@ export default class App extends Vue {
 }
 
 header.container {
-  background: #DDD;
-  border-bottom: 5px solid #BBB;
+  background: #ddd;
+  border-bottom: 5px solid #bbb;
   padding: 1em;
   align-items: center;
 }
 header h1 {
   color: white;
-  text-shadow:
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
     1px 1px 0 #000;
 }
 #nav {
