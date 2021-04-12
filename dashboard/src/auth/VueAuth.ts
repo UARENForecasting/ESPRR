@@ -53,27 +53,27 @@ export class VueAuth extends Vue {
   }
 
   /** Authenticates the user using the redirect method */
-  loginWithRedirect(o?: RedirectLoginOptions): Promise<void> {
+  loginWithRedirect(o?: RedirectLoginOptions): any {
     return this.auth0Client?.loginWithRedirect(o);
   }
 
   /** Returns all the claims present in the ID token */
-  getIdTokenClaims(o?: GetIdTokenClaimsOptions): Promise<IdToken> {
+  getIdTokenClaims(o?: GetIdTokenClaimsOptions): any {
     return this.auth0Client?.getIdTokenClaims(o);
   }
 
   /** Returns the access token. If the token is invalid or missing, a new one is retrieved */
-  getTokenSilently(o?: GetTokenSilentlyOptions): Promise<any> {
+  getTokenSilently(o?: GetTokenSilentlyOptions): any {
     return this.auth0Client?.getTokenSilently(o);
   }
 
   /** Gets the access token using a popup window */
-  getTokenWithPopup(o?: GetTokenWithPopupOptions): Promise<string> {
+  getTokenWithPopup(o?: GetTokenWithPopupOptions): any {
     return this.auth0Client?.getTokenWithPopup(o);
   }
 
   /** Logs the user out and removes their session on the authorization server */
-  logout(o?: LogoutOptions): Promise<void> {
+  logout(o?: LogoutOptions): void {
     return this.auth0Client?.logout(o);
   }
 
@@ -82,7 +82,7 @@ export class VueAuth extends Vue {
     onRedirectCallback: RedirectCallback,
     redirectUri: string,
     auth0Options: Auth0Options
-  ): void {
+  ): Promise<void> {
     // Create a new instance of the SDK client using members of the given options object
     const clientOptions = {
       domain: auth0Options.domain,
