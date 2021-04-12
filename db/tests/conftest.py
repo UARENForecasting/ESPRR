@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import os
 from uuid import uuid1
@@ -72,12 +73,26 @@ def standard_test_data(
         "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s, %s)",
         (system_id, user_id, *system_def),
     )
+    extime = dt.datetime(2020, 1, 3, 12, 34)
+    curs.executemany(
+        "insert into system_data (system_id, dataset, timeseries, statistics, created_at, modified_at) "
+        "values (uuid_to_bin(%s, 1), %s, %s, %s, %s, %s)",
+        [
+            (system_id, "prepared", None, None, extime, extime),
+            (system_id, "complete", "timeseries", "stats", extime, extime),
+            (system_id, "timeseries missing", None, "stats", extime, extime),
+            (system_id, "statistics missing", "timeseries", None, extime, extime),
+        ],
+    )
     connection.commit()
     yield
     curs.executemany(
         "delete from users where id = uuid_to_bin(%s, 1)", (user_id, otherid)
     )
     curs.execute("delete from systems where id = uuid_to_bin(%s, 1)", system_id)
+    curs.execute(
+        "delete from system_data where system_id = uuid_to_bin(%s, 1)", system_id
+    )
     connection.commit()
 
 
