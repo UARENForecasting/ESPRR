@@ -221,7 +221,6 @@ thead tr {
 tr {
   display: grid;
   padding: 0.5em;
-  background-color: #ddd;
   grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
@@ -241,7 +240,7 @@ th {
 }
 
 tr.selected-site {
-  background-color: white;
+  background-color: #ddd;
 }
 
 table {
