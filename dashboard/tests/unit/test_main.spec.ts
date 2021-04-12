@@ -1,9 +1,13 @@
-jest.mock("../../src/auth/auth");
-jest.mock("../../src/api/systems");
+import flushPromises from "flush-promises";
+
+jest.mock("@/auth/auth");
+jest.mock("@/api/systems");
 
 describe("Test main", () => {
   it("home", async () => {
     document.body.innerHTML = '<div id="app"></div>';
+
+    await flushPromises();
     require("../../src/main");
 
     // @ts-expect-error possible null
