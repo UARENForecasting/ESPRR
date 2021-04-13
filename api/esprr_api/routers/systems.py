@@ -1,9 +1,8 @@
 import logging
-from typing import List, Optional, Tuple, Union, Type
+from typing import List, Optional, Union
 
 
-from accept_types import AcceptableType
-from fastapi import APIRouter, Response, Request, Depends, Path, Header, HTTPException
+from fastapi import APIRouter, Response, Request, Depends, Path, Header
 from pydantic.types import UUID
 
 
