@@ -27,7 +27,7 @@
         <template v-if="$auth.isAuthenticated">
           <router-view />
         </template>
-        <template v-else> Please login to access ESPRR. </template>
+        <template v-else> Please log in to access ESPRR. </template>
       </template>
 
       <!-- Display loading indicator -->
