@@ -327,11 +327,6 @@ def test_get_system_hash_dne(storage_interface, add_example_db_data):
     assert err.value.status_code == 404
 
 
-@pytest.fixture()
-def dataset_name():
-    return "NSRDB_2019"
-
-
 def test_create_system_model_data(
     storage_interface, add_example_db_data, system_id, system_def, dataset_name
 ):
@@ -420,7 +415,12 @@ def test_get_system_model_meta_dne(
 
 
 def test_update_system_model_data(
-    storage_interface, add_example_db_data, dataset_name, system_id
+    storage_interface,
+    add_example_db_data,
+    dataset_name,
+    system_id,
+    timeseries_bytes,
+    statistics_bytes,
 ):
     extime = dt.datetime(2020, 12, 1, 1, 23, tzinfo=dt.timezone.utc)
     before = models.SystemDataMeta(
@@ -434,10 +434,11 @@ def test_update_system_model_data(
     )
     with storage_interface.start_transaction() as st:
         assert (
-            st.get_system_model_timeseries(system_id, dataset_name)
-            == b"timeseries data"
+            st.get_system_model_timeseries(system_id, dataset_name) == timeseries_bytes
         )
-        assert st.get_system_model_statistics(system_id, dataset_name) == b"statistics"
+        assert (
+            st.get_system_model_statistics(system_id, dataset_name) == statistics_bytes
+        )
         assert st.get_system_model_meta(system_id, dataset_name) == before
         st.update_system_model_data(
             system_id, dataset_name, "a" * 32, b"new timeseries", b"new stats"
@@ -488,11 +489,11 @@ def test_update_system_model_data_wrong_owner(
 
 
 def test_get_system_model_timeseries(
-    storage_interface, add_example_db_data, system_id, dataset_name
+    storage_interface, add_example_db_data, system_id, dataset_name, timeseries_bytes
 ):
     with storage_interface.start_transaction() as st:
         out = st.get_system_model_timeseries(system_id, dataset_name)
-    assert out == b"timeseries data"
+    assert out == timeseries_bytes
 
 
 def test_get_system_model_timeseries_dne(
@@ -514,11 +515,11 @@ def test_get_system_model_timeseries_wrong_owner(
 
 
 def test_get_system_model_statistics(
-    storage_interface, add_example_db_data, system_id, dataset_name
+    storage_interface, add_example_db_data, system_id, dataset_name, statistics_bytes
 ):
     with storage_interface.start_transaction() as st:
         out = st.get_system_model_statistics(system_id, dataset_name)
-    assert out == b"statistics"
+    assert out == statistics_bytes
 
 
 def test_get_system_model_statistics_dne(

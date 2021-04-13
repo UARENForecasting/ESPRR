@@ -38,6 +38,9 @@ def test_api(case, with_auth, auth_token):
             case.headers = upd
         else:
             case.headers.update(upd)
+    else:
+        if "Authorization" in case.headers:
+            del case.headers["Authorization"]
     response = case.call_asgi()
     case.validate_response(response)
 
@@ -52,5 +55,8 @@ def test_api_post(case, with_auth, auth_token):
             case.headers = upd
         else:
             case.headers.update(upd)
+    else:
+        if "Authorization" in case.headers:
+            del case.headers["Authorization"]
     response = case.call_asgi()
     case.validate_response(response)
