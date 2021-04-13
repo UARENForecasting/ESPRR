@@ -109,6 +109,7 @@
               </ul>
             </li>
           </ul>
+          <mappy-map/>
         </template>
       </div>
     </div>
@@ -131,7 +132,11 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+
 import * as SystemsAPI from "@/api/systems";
+import MappyMap from "@/components/Map.vue";
+
+Vue.component("mappy-map", MappyMap);
 
 @Component
 export default class Systems extends Vue {

@@ -11,10 +11,12 @@
   "dependencies": {
     "@auth0/auth0-spa-js": "^1.14.0",
     "core-js": "^3.6.5",
+    "leaflet": "^1.7.1",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2",
-    "vue-router": "^3.2.0"
+    "vue-router": "^3.2.0",
+    "vue2-leaflet": "^2.7.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",
