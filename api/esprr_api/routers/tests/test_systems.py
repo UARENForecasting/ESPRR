@@ -1,6 +1,7 @@
 """Test some select system endpoint interaction. The majority of testing
 is done via schemathesis in ../../tests/test_app.py
 """
+from copy import deepcopy
 from io import BytesIO
 import json
 import string
@@ -166,6 +167,29 @@ def test_get_system_model_status(client, system_id, dataset_name):
     }
 
 
+def test_get_system_model_status_running(client, system_id, dataset_name, mocker):
+    val = models.SystemDataMeta(
+        **{
+            "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+            "dataset": "NSRDB_2019",
+            "version": "v0.1",
+            "system_modified": False,
+            "status": "queued",
+            "created_at": "2020-12-01T01:23:00+00:00",
+            "modified_at": "2020-12-01T01:23:00+00:00",
+        }
+    )
+    mocker.patch(
+        "esprr_api.storage.StorageInterface.get_system_model_meta", return_value=val
+    )
+    mocker.patch("esprr_api.queuing.QueueManager.job_is_running", return_value=True)
+    resp = client.get(f"/systems/{system_id}/data/{dataset_name}")
+    assert resp.status_code == 200
+    exp = deepcopy(val)
+    exp.status = "running"
+    assert resp.json() == json.loads(exp.json())
+
+
 def test_get_system_model_status_dne(client, other_system_id, dataset_name, system_id):
     resp = client.get(f"/systems/{other_system_id}/data/{dataset_name}")
     assert resp.status_code == 404
@@ -227,3 +251,47 @@ def test_get_system_model_statistics_csv(
     )
     assert resp.status_code == 200
     assert resp.text == statistics_csv
+
+
+def test_get_create_run_system(
+    client, system_def, nocommit_transaction, system_id, dataset_name, async_queue
+):
+    r1 = client.get("/systems/")
+    assert len(r1.json()) == 1
+    assert r1.json()[0]["object_id"] == system_id
+    r2 = client.delete(f"/systems/{system_id}")
+    assert r2.status_code == 204
+    resp = client.post("/systems/", json=system_def.dict())
+    assert resp.status_code == 201
+
+    sysid = resp.json()["object_id"]
+
+    r3 = client.get(f"/systems/{sysid}/data/{dataset_name}")
+    assert r3.status_code == 404
+
+    cmpr = client.post(f"/systems/{sysid}/data/{dataset_name}")
+    assert cmpr.status_code == 202
+
+    # multiple times, no effect
+    cmpr = client.post(f"/systems/{sysid}/data/{dataset_name}")
+    assert cmpr.status_code == 202
+
+    r4 = client.get(f"/systems/{sysid}/data/{dataset_name}")
+    assert r4.status_code == 200
+    assert r4.json()["status"] == "queued"
+    assert len(async_queue.jobs) == 1
+    assert async_queue.jobs[0].id == f"{sysid}:{dataset_name}"
+
+
+def test_run_system_model_simple(client, system_id, dataset_name, async_queue):
+    assert len(async_queue.jobs) == 0
+    resp = client.post(f"/systems/{system_id}/data/{dataset_name}")
+    assert resp.status_code == 202
+
+    assert len(async_queue.jobs) == 1
+    assert async_queue.jobs[0].id == f"{system_id}:{dataset_name}"
+
+
+def test_run_system_model_dne(client, other_system_id, dataset_name):
+    resp = client.post(f"/systems/{other_system_id}/data/{dataset_name}")
+    assert resp.status_code == 404

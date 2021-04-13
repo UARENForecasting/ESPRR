@@ -280,7 +280,7 @@ class StorageInterface:
         return out
 
     @ensure_user_exists
-    def create_system_model_data(self, system_id: UUID, dataset: models.DatasetEnum):
+    def create_system_model_data(self, system_id: UUID, dataset: models.DatasetEnum):q
         self._call_procedure("create_system_data", system_id, dataset)
 
     def get_system_model_meta(
@@ -295,6 +295,9 @@ class StorageInterface:
             out["system_modified"] = stored_hash.lower() != current_hash
         else:
             out["system_modified"] = False
+        # present "prepared" status as "queued"
+        if out["status"] == "prepared":
+            out["status"] = "queued"
         return models.SystemDataMeta(**out)
 
     def update_system_model_data(

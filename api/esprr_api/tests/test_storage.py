@@ -337,7 +337,7 @@ def test_create_system_model_data(
             st.get_system_model_meta(sysid, dataset_name)
         st.create_system_model_data(sysid, dataset_name)
         out = st.get_system_model_meta(sysid, dataset_name)
-    assert out.status == "prepared"
+    assert out.status == "queued"
     assert out.dataset == dataset_name
     assert out.system_id == sysid
     assert out.version is None

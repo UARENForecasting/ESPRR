@@ -1,3 +1,6 @@
+from uuid import UUID
+
+
 import pandas as pd
 from pvlib.location import Location  # type: ignore
 from pvlib.pvsystem import PVSystem  # type: ignore
@@ -63,3 +66,7 @@ def compute_total_system_power(
         else:
             out += part
     return out
+
+
+def run_job(system_id: UUID, dataset_name: models.DatasetEnum, user: str):
+    pass

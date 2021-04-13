@@ -254,8 +254,8 @@ class DatasetEnum(str, Enum):
 
 
 class DataStatusEnum(str, Enum):
-    prepared = "prepared"
     queued = "queued"
+    running = "running"
     complete = "complete"
     statistics_missing = "statistics missing"
     timeseries_missing = "timeseries missing"

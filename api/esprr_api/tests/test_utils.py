@@ -217,5 +217,5 @@ def test_dump_arrow_bytes(df):
     tbl = pa.Table.from_pandas(df)
     out = utils.dump_arrow_bytes(tbl)
     assert isinstance(out, bytes)
-    new = pa.feather.read_feather(BytesIO(out))
+    new = pd.read_feather(BytesIO(out))
     pd.testing.assert_frame_equal(df, new)
