@@ -183,16 +183,57 @@ class CSVResponse(Response):
     media_type = "text/csv"
 
 
+def _get_return_type(
+    accept: Optional[str],
+) -> Tuple[Union[Type[CSVResponse], Type[ArrowResponse]], str]:
+    if accept is None:
+        accept = "*/*"
+    type_ = AcceptableType(accept)
+
+    if type_.matches("text/csv"):
+        return CSVResponse, "text/csv"
+    elif type_.matches("application/vnd.apache.arrow.file"):
+        return ArrowResponse, "application/vnd.apache.arrow.file"
+    else:
+        raise HTTPException(
+            status_code=406,
+            detail="Only 'text/csv' or 'application/vnd.apache.arrow.file' acceptable",
+        )
+
+
+def _convert_data(
+    data: bytes,
+    requested_mimetype: str,
+    response_class: Union[Type[ArrowResponse], Type[CSVResponse]],
+) -> Union[ArrowResponse, CSVResponse]:
+    if requested_mimetype == "application/vnd.apache.arrow.file":
+        return response_class(data)
+    else:
+        try:
+            df = utils.read_arrow(data)  # type: ignore
+        except HTTPException:
+            logger.exception("Read arrow failed")
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Unable to convert data saved as Apache Arrow format, "
+                    "try retrieving as application/vnd.apache.arrow.file and converting"
+                ),
+            )
+        csv = df.to_csv(None, index=False)
+        return response_class(csv)
+
+
 @router.get(
     "/{system_id}/data/{dataset}/timeseries",
     responses=default_get_responses,
 )
-async def get_system_model_timeseries(
+def get_system_model_timeseries(
     system_id: UUID = syspath,
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
-) -> Union[CSVResponse, ArrowResponse, Response]:
+) -> Union[CSVResponse, ArrowResponse]:
     pass
 
 
@@ -200,7 +241,7 @@ async def get_system_model_timeseries(
     "/{system_id}/data/{dataset}/statistics",
     responses=default_get_responses,
 )
-async def get_system_model_statistics(
+def get_system_model_statistics(
     system_id: UUID = syspath,
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),

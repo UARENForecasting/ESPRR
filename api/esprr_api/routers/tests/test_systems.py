@@ -1,16 +1,20 @@
 """Test some select system endpoint interaction. The majority of testing
 is done via schemathesis in ../../tests/test_app.py
 """
+from io import BytesIO
 import json
 import string
 from urllib.parse import quote
 import uuid
 
 
+from fastapi import HTTPException
+import pandas as pd
 import pytest
 
 
 from esprr_api import models, storage
+from esprr_api.routers import systems
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
@@ -104,3 +108,54 @@ def test_get_system_whitespace(client, char):
         assert resp.status_code == 200
     else:
         assert resp.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        ("text/csv", (systems.CSVResponse, "text/csv")),
+        ("text/*", (systems.CSVResponse, "text/csv")),
+        ("*/*", (systems.CSVResponse, "text/csv")),
+        (
+            "application/vnd.apache.arrow.file",
+            (systems.ArrowResponse, "application/vnd.apache.arrow.file"),
+        ),
+        ("application/*", (systems.ArrowResponse, "application/vnd.apache.arrow.file")),
+        (None, (systems.CSVResponse, "text/csv")),
+        pytest.param(
+            "application/json",
+            (),
+            marks=pytest.mark.xfail(strict=True, raises=HTTPException),
+        ),
+    ],
+)
+def test_get_return_type(inp, exp):
+    assert systems._get_return_type(inp) == exp
+
+
+def test_convert_data():
+    out = systems._convert_data(
+        b"thisiswrong",
+        "application/vnd.apache.arrow.file",
+        lambda x: x,
+    )
+    assert out == b"thisiswrong"
+    df = pd.DataFrame({"a": [0, 1], "b": [2, 3]})
+    iob = BytesIO()
+    df.to_feather(iob)
+    iob.seek(0)
+    arr = iob.read()
+    out = systems._convert_data(arr, "text/csv", lambda x: x)
+    assert (
+        out
+        == """a,b
+0,2
+1,3
+"""
+    )
+
+
+def test_convert_job_data_invalid():
+    with pytest.raises(HTTPException) as err:
+        systems._convert_data(b"thisiswrong", "text/csv", lambda x: x)
+    assert err.value.status_code == 500
