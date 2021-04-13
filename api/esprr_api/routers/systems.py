@@ -1,5 +1,9 @@
-from typing import List
-from fastapi import APIRouter, Response, Request, Depends, Path
+import logging
+from typing import List, Optional, Tuple, Union, Type
+
+
+from accept_types import AcceptableType
+from fastapi import APIRouter, Response, Request, Depends, Path, Header, HTTPException
 from pydantic.types import UUID
 
 
@@ -9,6 +13,7 @@ from ..storage import StorageInterface
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -76,6 +81,9 @@ async def check_system(
     return
 
 
+syspath = Path(..., description="ID of system to get", example=models.SYSTEM_ID)
+
+
 @router.get(
     "/{system_id}",
     response_model=models.StoredPVSystem,
@@ -85,9 +93,7 @@ async def check_system(
     },
 )
 async def get_system(
-    system_id: UUID = Path(
-        ..., description="ID of system to get", example=models.SYSTEM_ID
-    ),
+    system_id: UUID = syspath,
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.StoredPVSystem:
     """Get a single PV System"""
@@ -99,9 +105,7 @@ async def get_system(
     "/{system_id}", responses={**default_get_responses, 204: {}}, status_code=204
 )
 async def delete_system(
-    system_id: UUID = Path(
-        ..., description="ID of system to delete", example=models.SYSTEM_ID
-    ),
+    system_id: UUID = syspath,
     storage: StorageInterface = Depends(StorageInterface),
 ):
     """Delete a PV system"""
@@ -122,9 +126,7 @@ async def update_system(
     system: models.PVSystem,
     response: Response,
     request: Request,
-    system_id: UUID = Path(
-        ..., description="ID of system to update", example=models.SYSTEM_ID
-    ),
+    system_id: UUID = syspath,
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.StoredObjectID:
     """Update a PV System"""
@@ -134,3 +136,73 @@ async def update_system(
             "get_system", system_id=system_id
         )
         return out
+
+
+datasetpath = Path(
+    ...,
+    description="Background dataset used to compute expected power",
+    example="NSRDB_2019",
+)
+
+
+@router.get(
+    "/{system_id}/data/{dataset}",
+    response_model=models.SystemDataMeta,
+    responses=default_get_responses,
+)
+async def get_system_model_status(
+    system_id: UUID = syspath,
+    dataset: models.DatasetEnum = datasetpath,
+    storage: StorageInterface = Depends(StorageInterface),
+) -> models.SystemDataMeta:
+    with storage.start_transaction() as st:
+        out = st.get_system_model_meta(system_id, dataset)
+    return out
+
+
+@router.post(
+    "/{system_id}/data/{dataset}",
+    status_code=202,
+    responses={**default_get_responses, 202: {}},
+)
+async def run_system_model(
+    system_id: UUID = syspath,
+    dataset: models.DatasetEnum = datasetpath,
+    storage: StorageInterface = Depends(StorageInterface),
+):
+    # create item in db, add to queue
+    pass
+
+
+class ArrowResponse(Response):
+    media_type = "application/vnd.apache.arrow.file"
+
+
+class CSVResponse(Response):
+    media_type = "text/csv"
+
+
+@router.get(
+    "/{system_id}/data/{dataset}/timeseries",
+    responses=default_get_responses,
+)
+async def get_system_model_timeseries(
+    system_id: UUID = syspath,
+    dataset: models.DatasetEnum = datasetpath,
+    storage: StorageInterface = Depends(StorageInterface),
+    accept: Optional[str] = Header(None),
+) -> Union[CSVResponse, ArrowResponse, Response]:
+    pass
+
+
+@router.get(
+    "/{system_id}/data/{dataset}/statistics",
+    responses=default_get_responses,
+)
+async def get_system_model_statistics(
+    system_id: UUID = syspath,
+    dataset: models.DatasetEnum = datasetpath,
+    storage: StorageInterface = Depends(StorageInterface),
+    accept: Optional[str] = Header(None),
+) -> Union[CSVResponse, ArrowResponse, Response]:
+    pass

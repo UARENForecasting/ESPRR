@@ -349,6 +349,15 @@ def test_create_system_model_data(
     assert not out.system_modified
 
 
+def test_create_system_model_data_existing(
+    storage_interface, add_example_db_data, system_id, dataset_name
+):
+    with pytest.raises(HTTPException) as err:
+        with storage_interface.start_transaction() as st:
+            st.create_system_model_data(system_id, dataset_name)
+    assert err.value.status_code == 409
+
+
 def test_create_system_model_data_dne(
     storage_interface, add_example_db_data, dataset_name
 ):

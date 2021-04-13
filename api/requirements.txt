@@ -1,3 +1,4 @@
+accept-types==0.4.1
 cryptography==3.4.7
 fastapi==0.63.0
 httpx==0.17.1
