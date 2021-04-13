@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 export async function listSystems(
   token: string
 ): Promise<Array<Record<string, any>>> {

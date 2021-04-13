@@ -16,11 +16,13 @@ export const authGuard: NavigationGuard = (to, from, next) => {
   };
 
   // If loading has already finished, check our auth state using `fn()`
+  /* istanbul ignore next */
   if (!authService.loading) {
     return fn();
   }
 
   // Watch for the loading property to change before we check isAuthenticated
+  /* istanbul ignore next */
   authService.$watch("loading", (loading: boolean) => {
     if (loading === false) {
       return fn();

@@ -14,6 +14,7 @@ Vue.use(Auth0Plugin, {
   clientId,
   audience,
   onredirectCallback: (appState: { targetUrl: string }) => {
+    /* istanbul ignore next */
     router.push(
       appState && appState.targetUrl
         ? appState.targetUrl

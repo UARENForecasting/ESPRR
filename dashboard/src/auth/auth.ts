@@ -1,4 +1,5 @@
 /* istanbul ignore file */
+
 // Copyright (c) 2020 RisingStack
 import { VueConstructor } from "vue";
 import { VueAuth, Auth0Options, RedirectCallback } from "./VueAuth";
