@@ -43,7 +43,9 @@
           <!-- Probably create a component to display details and map location-->
           <ul ckass="details-list" v-if="selected">
             <li><b>Name: </b>{{ selected.definition.name }}</li>
-            <li><b>AC Capacity (MW): </b>{{ selected.definition.ac_capacity }}</li>
+            <li>
+              <b>AC Capacity (MW): </b>{{ selected.definition.ac_capacity }}
+            </li>
             <li><b>DC/AC Ratio: </b>{{ selected.definition.dc_ac_ratio }}</li>
             <li><b>Albedo: </b>{{ selected.definition.albedo }}</li>
             <li>

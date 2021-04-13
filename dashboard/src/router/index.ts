@@ -1,8 +1,7 @@
-import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Systems from "../views/Systems.vue";
-
-Vue.use(VueRouter);
+import SystemDefinition from "../views/SystemDefinition.vue";
+import { authGuard } from "../auth/authGuard";
 
 const routes: Array<RouteConfig> = [
   {
@@ -10,15 +9,12 @@ const routes: Array<RouteConfig> = [
     name: "Systems",
     component: Systems,
   },
-  //{
-  //  path: "/about",
-  //  name: "About",
-  //  // route level code-splitting
-  //  // this generates a separate chunk (about.[hash].js) for this route
-  //  // which is lazy-loaded when the route is visited.
-  //  component: () =>
-  //    import(/* webpackChunkName: "about" */ "../views/About.vue"),
-  //},
+  {
+    path: "/newsystem",
+    name: "New System",
+    component: SystemDefinition,
+    beforeEnter: authGuard,
+  },
 ];
 
 const router = new VueRouter({
