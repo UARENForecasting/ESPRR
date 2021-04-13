@@ -1,0 +1,61 @@
+name: Test Javascript
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'dashboard/**'
+    branches:
+      - main
+
+jobs:
+  test-javascript:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '14'
+
+      - name: Install
+        run:  |
+          cd dashboard
+          npm install
+
+      - name: Test
+        run: |
+          npm run --prefix dashboard test:unit
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+	  token: ${{ secrets.CODECOV_TOKEN  }}
+          flags: javascript
+          files: ./dashboard/coverage/lcov.info
+          fail_ci_if_error: true
+        if: ${{ always() }}
+
+      - name: Check build errors
+        run: |
+          npm run --prefix dashboard build
+
+  lint-javascript:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '14'
+      - name: Install
+        run:  |
+          cd dashboard
+          npm install
+
+      - name: Lint
+        run: |
+          cd dashboard
+          npm run lint
