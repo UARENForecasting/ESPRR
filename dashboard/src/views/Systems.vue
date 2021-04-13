@@ -138,7 +138,7 @@ export default class Systems extends Vue {
 <style>
 div.grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 2fr;
 }
 
 .details,
@@ -167,7 +167,7 @@ tbody tr:hover {
 tr {
   display: grid;
   padding: 0.5em;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 2fr 1fr;
 }
 
 th {
