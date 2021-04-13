@@ -1,13 +1,14 @@
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Type, Union
 
 
-from fastapi import APIRouter, Response, Request, Depends, Path, Header
+from accept_types import AcceptableType  # type: ignore
+from fastapi import APIRouter, Response, Request, Depends, Path, Header, HTTPException
 from pydantic.types import UUID
 
 
 from . import default_get_responses
-from .. import models
+from .. import models, utils
 from ..storage import StorageInterface
 
 
@@ -23,7 +24,7 @@ async def list_systems(
 ) -> List[models.StoredPVSystem]:
     """List available PV systems"""
     with storage.start_transaction() as st:
-        out = st.list_systems()
+        out: List[models.StoredPVSystem] = st.list_systems()
         return out
 
 
@@ -61,7 +62,7 @@ async def create_system(
 ) -> models.StoredObjectID:
     """Create a new PV System"""
     with storage.start_transaction() as st:
-        id_ = st.create_system(system)
+        id_: models.StoredObjectID = st.create_system(system)
         response.headers["Location"] = request.url_for(
             "get_system", system_id=id_.object_id
         )
@@ -97,7 +98,8 @@ async def get_system(
 ) -> models.StoredPVSystem:
     """Get a single PV System"""
     with storage.start_transaction() as st:
-        return st.get_system(system_id)
+        out: models.StoredPVSystem = st.get_system(system_id)
+    return out
 
 
 @router.delete(
@@ -130,7 +132,7 @@ async def update_system(
 ) -> models.StoredObjectID:
     """Update a PV System"""
     with storage.start_transaction() as st:
-        out = st.update_system(system_id, system)
+        out: models.StoredObjectID = st.update_system(system_id, system)
         response.headers["Location"] = request.url_for(
             "get_system", system_id=system_id
         )
@@ -155,7 +157,7 @@ async def get_system_model_status(
     storage: StorageInterface = Depends(StorageInterface),
 ) -> models.SystemDataMeta:
     with storage.start_transaction() as st:
-        out = st.get_system_model_meta(system_id, dataset)
+        out: models.SystemDataMeta = st.get_system_model_meta(system_id, dataset)
     return out
 
 
@@ -203,5 +205,5 @@ async def get_system_model_statistics(
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
-) -> Union[CSVResponse, ArrowResponse, Response]:
+) -> Union[CSVResponse, ArrowResponse]:
     pass

@@ -204,7 +204,8 @@ class StorageInterface:
             new_args = args
         query = f'CALL {procedure_name}({",".join(["%s"] * len(new_args))})'
         self.try_query(query, new_args)
-        return self.cursor.fetchall()
+        out: dict = self.cursor.fetchall()
+        return out
 
     def _call_procedure_for_single(
         self,
@@ -215,7 +216,7 @@ class StorageInterface:
         """Wrapper handling try/except logic when a single value is expected"""
         # adapted from the SolarForecastArbiter API under the above MIT license
         try:
-            result = self._call_procedure(
+            result: dict = self._call_procedure(
                 procedure_name,
                 *args,
                 with_current_user=with_current_user,
@@ -225,7 +226,10 @@ class StorageInterface:
         return result
 
     def create_user_if_not_exists(self) -> str:
-        return self._call_procedure_for_single("create_user_if_not_exists")["user_id"]
+        out: str = self._call_procedure_for_single("create_user_if_not_exists")[
+            "user_id"
+        ]
+        return out
 
     @ensure_user_exists
     def get_user(self) -> models.UserInfo:
@@ -270,9 +274,10 @@ class StorageInterface:
         return models.StoredObjectID(object_id=system_id, object_type="system")
 
     def get_system_hash(self, system_id: UUID) -> str:
-        return self._call_procedure_for_single("get_system_hash", system_id)[
+        out: str = self._call_procedure_for_single("get_system_hash", system_id)[
             "system_hash"
         ]
+        return out
 
     @ensure_user_exists
     def create_system_model_data(self, system_id: UUID, dataset: models.DatasetEnum):
@@ -316,7 +321,8 @@ class StorageInterface:
         res = self._call_procedure_for_single(
             "get_system_timeseries", system_id, dataset
         )
-        return res["timeseries"]
+        out: bytes = res["timeseries"]
+        return out
 
     def get_system_model_statistics(
         self, system_id: UUID, dataset: models.DatasetEnum
@@ -324,4 +330,5 @@ class StorageInterface:
         res = self._call_procedure_for_single(
             "get_system_statistics", system_id, dataset
         )
-        return res["statistics"]
+        out: bytes = res["statistics"]
+        return out

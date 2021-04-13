@@ -6,7 +6,6 @@ from io import BytesIO
 from fastapi import HTTPException
 import pandas as pd
 import pyarrow as pa
-from pyarrow import feather
 import pytest
 
 
@@ -218,5 +217,5 @@ def test_dump_arrow_bytes(df):
     tbl = pa.Table.from_pandas(df)
     out = utils.dump_arrow_bytes(tbl)
     assert isinstance(out, bytes)
-    new = feather.read_feather(BytesIO(out))
+    new = pa.feather.read_feather(BytesIO(out))
     pd.testing.assert_frame_equal(df, new)

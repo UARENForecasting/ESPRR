@@ -17,7 +17,7 @@ def read_arrow(content: IO) -> pd.DataFrame:
         table = pa.ipc.open_file(content).read_all()
     except pa.lib.ArrowInvalid as err:
         raise HTTPException(status_code=400, detail=err.args[0])
-    df = table.to_pandas(split_blocks=True)
+    df: pd.DataFrame = table.to_pandas(split_blocks=True)
     return df
 
 
@@ -56,4 +56,5 @@ def dump_arrow_bytes(table: pa.Table) -> bytes:
     writer = pa.ipc.new_file(sink, table.schema)
     writer.write(table)
     writer.close()
-    return sink.getvalue().to_pybytes()
+    out: bytes = sink.getvalue().to_pybytes()
+    return out

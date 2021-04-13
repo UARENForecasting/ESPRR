@@ -46,7 +46,7 @@ def compute_ac_power(system: models.PVSystem, data: models.SystemData) -> pd.Ser
 
     mc = ModelChain.with_pvwatts(system=pvsystem, location=location)
     mc.run_model(data.weather_data)
-    ac = mc.results.ac
+    ac: pd.Series = mc.results.ac
     return ac
 
 

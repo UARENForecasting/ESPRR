@@ -15,5 +15,5 @@ async def get_user_info(
 ) -> models.UserInfo:
     """Get info about the current user"""
     with storage.start_transaction() as st:
-        out = st.get_user()
+        out: models.UserInfo = st.get_user()
         return out
