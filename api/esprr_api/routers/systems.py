@@ -226,7 +226,24 @@ def _convert_data(
 
 @router.get(
     "/{system_id}/data/{dataset}/timeseries",
-    responses=default_get_responses,
+    responses={
+        **default_get_responses,
+        406: {},
+        200: {
+            "content": {
+                "application/vnd.apache.arrow.file": {},
+                "text/csv": {
+                    "example": """time,ac
+2019-01-01 00:00:00+00:00,10.2
+2019-02-01 01:00:00+00:00,8.2
+"""
+                },
+            },
+            "description": (
+                "Return the timeseries data as an Apache Arrow file or a CSV."
+            ),
+        },
+    },
 )
 def get_system_model_timeseries(
     system_id: UUID = syspath,
@@ -234,12 +251,27 @@ def get_system_model_timeseries(
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
 ) -> Union[CSVResponse, ArrowResponse]:
-    pass
+    resp, meta_type = _get_return_type(accept)
+    with storage.start_transaction() as st:
+        data = st.get_system_model_timeseries(system_id, dataset)
+    return _convert_data(data, meta_type, resp)
 
 
 @router.get(
     "/{system_id}/data/{dataset}/statistics",
-    responses=default_get_responses,
+    responses={
+        **default_get_responses,
+        406: {},
+        200: {
+            "content": {
+                "application/vnd.apache.arrow.file": {},
+                "text/csv": {},
+            },
+            "description": (
+                "Return the statistics of the data as an Apache Arrow file or a CSV."
+            ),
+        },
+    },
 )
 def get_system_model_statistics(
     system_id: UUID = syspath,
@@ -247,4 +279,7 @@ def get_system_model_statistics(
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
 ) -> Union[CSVResponse, ArrowResponse]:
-    pass
+    resp, meta_type = _get_return_type(accept)
+    with storage.start_transaction() as st:
+        data = st.get_system_model_statistics(system_id, dataset)
+    return _convert_data(data, meta_type, resp)
