@@ -250,7 +250,7 @@ class SystemData(ThisBase):
 
 
 class DatasetEnum(str, Enum):
-    nsrdb_2019 = "NSRDB 2019"
+    nsrdb_2019 = "NSRDB_2019"
 
 
 class DataStatusEnum(str, Enum):
@@ -274,7 +274,7 @@ class SystemDataMeta(ThisBase):
         schema_extra = {
             "example": {
                 "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-                "dataset": "NSRDB 2019",
+                "dataset": "NSRDB_2019",
                 "version": "v0.1",
                 "system_modified": False,
                 "status": "complete",

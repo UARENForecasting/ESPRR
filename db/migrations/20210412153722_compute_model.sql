@@ -196,7 +196,7 @@ begin
   set @extime = timestamp('2020-12-01 01:23');
   set @syshash = (select unhex(md5(definition)) from systems where id = @sysid);
   insert into system_data (system_id, dataset, version, system_hash, timeseries, statistics, created_at, modified_at) values (
-    @sysid, 'NSRDB 2019', 'v0.1', unhex('29b4855d70dc37601bb31323f9703cf1'),
+    @sysid, 'NSRDB_2019', 'v0.1', unhex('29b4855d70dc37601bb31323f9703cf1'),
     'timeseries data', 'statistics', @extime, @extime
     );
 end;

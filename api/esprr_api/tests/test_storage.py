@@ -328,52 +328,54 @@ def test_get_system_hash_dne(storage_interface, add_example_db_data):
 
 
 @pytest.fixture()
-def dataset():
-    return "NSRDB 2019"
+def dataset_name():
+    return "NSRDB_2019"
 
 
 def test_create_system_model_data(
-    storage_interface, add_example_db_data, system_id, system_def, dataset
+    storage_interface, add_example_db_data, system_id, system_def, dataset_name
 ):
     with storage_interface.start_transaction() as st:
         st.delete_system(system_id)
         sysid = st.create_system(system_def).object_id
         with pytest.raises(HTTPException):
-            st.get_system_model_meta(sysid, dataset)
-        st.create_system_model_data(sysid, dataset)
-        out = st.get_system_model_meta(sysid, dataset)
+            st.get_system_model_meta(sysid, dataset_name)
+        st.create_system_model_data(sysid, dataset_name)
+        out = st.get_system_model_meta(sysid, dataset_name)
     assert out.status == "prepared"
-    assert out.dataset == dataset
+    assert out.dataset == dataset_name
     assert out.system_id == sysid
     assert out.version is None
     assert not out.system_modified
 
 
-def test_create_system_model_data_dne(storage_interface, add_example_db_data, dataset):
+def test_create_system_model_data_dne(
+    storage_interface, add_example_db_data, dataset_name
+):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.create_system_model_data(str(uuid.uuid1()), dataset)
+            st.create_system_model_data(str(uuid.uuid1()), dataset_name)
     assert err.value.status_code == 404
 
 
 def test_create_system_model_data_wrong_owner(
-    storage_interface, add_example_db_data, other_system_id, dataset
+    storage_interface, add_example_db_data, other_system_id, dataset_name
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.create_system_model_data(other_system_id, dataset)
+            st.create_system_model_data(other_system_id, dataset_name)
     assert err.value.status_code == 404
 
 
 def test_get_system_model_meta(
-    storage_interface, add_example_db_data, system_id, dataset
+    storage_interface, add_example_db_data, system_id, dataset_name
 ):
     with storage_interface.start_transaction() as st:
-        out = st.get_system_model_meta(system_id, dataset)
+        out = st.get_system_model_meta(system_id, dataset_name)
     extime = dt.datetime(2020, 12, 1, 1, 23, tzinfo=dt.timezone.utc)
     exp = models.SystemDataMeta(
         system_id=system_id,
-        dataset=dataset,
+        dataset=dataset_name,
         version="v0.1",
         system_modified=False,
         status="complete",
@@ -391,28 +393,30 @@ def test_get_system_model_meta_empty(storage_interface, add_example_db_data, sys
 
 
 def test_get_system_model_meta_wrong_owner(
-    storage_interface, add_example_db_data, other_system_id, dataset
+    storage_interface, add_example_db_data, other_system_id, dataset_name
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.get_system_model_meta(other_system_id, dataset)
+            st.get_system_model_meta(other_system_id, dataset_name)
     assert err.value.status_code == 404
 
 
-def test_get_system_model_meta_dne(storage_interface, add_example_db_data, dataset):
+def test_get_system_model_meta_dne(
+    storage_interface, add_example_db_data, dataset_name
+):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.get_system_model_meta(str(uuid.uuid1()), dataset)
+            st.get_system_model_meta(str(uuid.uuid1()), dataset_name)
     assert err.value.status_code == 404
 
 
 def test_update_system_model_data(
-    storage_interface, add_example_db_data, dataset, system_id
+    storage_interface, add_example_db_data, dataset_name, system_id
 ):
     extime = dt.datetime(2020, 12, 1, 1, 23, tzinfo=dt.timezone.utc)
     before = models.SystemDataMeta(
         system_id=system_id,
-        dataset=dataset,
+        dataset=dataset_name,
         version="v0.1",
         system_modified=False,
         status="complete",
@@ -420,15 +424,20 @@ def test_update_system_model_data(
         modified_at=extime,
     )
     with storage_interface.start_transaction() as st:
-        assert st.get_system_model_timeseries(system_id, dataset) == b"timeseries data"
-        assert st.get_system_model_statistics(system_id, dataset) == b"statistics"
-        assert st.get_system_model_meta(system_id, dataset) == before
-        st.update_system_model_data(
-            system_id, dataset, "a" * 32, b"new timeseries", b"new stats"
+        assert (
+            st.get_system_model_timeseries(system_id, dataset_name)
+            == b"timeseries data"
         )
-        assert st.get_system_model_timeseries(system_id, dataset) == b"new timeseries"
-        assert st.get_system_model_statistics(system_id, dataset) == b"new stats"
-        after = st.get_system_model_meta(system_id, dataset)
+        assert st.get_system_model_statistics(system_id, dataset_name) == b"statistics"
+        assert st.get_system_model_meta(system_id, dataset_name) == before
+        st.update_system_model_data(
+            system_id, dataset_name, "a" * 32, b"new timeseries", b"new stats"
+        )
+        assert (
+            st.get_system_model_timeseries(system_id, dataset_name) == b"new timeseries"
+        )
+        assert st.get_system_model_statistics(system_id, dataset_name) == b"new stats"
+        after = st.get_system_model_meta(system_id, dataset_name)
     assert after.modified_at > extime
     assert after.system_modified
     assert after.status == "complete"
@@ -447,73 +456,75 @@ def test_update_system_model_data_bad_types(
     assert err.value.status_code == 404
 
 
-def test_update_system_model_data_dne(storage_interface, add_example_db_data, dataset):
+def test_update_system_model_data_dne(
+    storage_interface, add_example_db_data, dataset_name
+):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
             st.update_system_model_data(
-                uuid.uuid1(), dataset, "a" * 32, b"new timeseries", b"new stats"
+                uuid.uuid1(), dataset_name, "a" * 32, b"new timeseries", b"new stats"
             )
     assert err.value.status_code == 404
 
 
 def test_update_system_model_data_wrong_owner(
-    storage_interface, add_example_db_data, dataset, other_system_id
+    storage_interface, add_example_db_data, dataset_name, other_system_id
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
             st.update_system_model_data(
-                other_system_id, dataset, "a" * 32, b"new timeseries", b"new stats"
+                other_system_id, dataset_name, "a" * 32, b"new timeseries", b"new stats"
             )
     assert err.value.status_code == 404
 
 
 def test_get_system_model_timeseries(
-    storage_interface, add_example_db_data, system_id, dataset
+    storage_interface, add_example_db_data, system_id, dataset_name
 ):
     with storage_interface.start_transaction() as st:
-        out = st.get_system_model_timeseries(system_id, dataset)
+        out = st.get_system_model_timeseries(system_id, dataset_name)
     assert out == b"timeseries data"
 
 
 def test_get_system_model_timeseries_dne(
-    storage_interface, add_example_db_data, dataset
+    storage_interface, add_example_db_data, dataset_name
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.get_system_model_timeseries(str(uuid.uuid1()), dataset)
+            st.get_system_model_timeseries(str(uuid.uuid1()), dataset_name)
     assert err.value.status_code == 404
 
 
 def test_get_system_model_timeseries_wrong_owner(
-    storage_interface, add_example_db_data, dataset, other_system_id
+    storage_interface, add_example_db_data, dataset_name, other_system_id
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.get_system_model_timeseries(other_system_id, dataset)
+            st.get_system_model_timeseries(other_system_id, dataset_name)
     assert err.value.status_code == 404
 
 
 def test_get_system_model_statistics(
-    storage_interface, add_example_db_data, system_id, dataset
+    storage_interface, add_example_db_data, system_id, dataset_name
 ):
     with storage_interface.start_transaction() as st:
-        out = st.get_system_model_statistics(system_id, dataset)
+        out = st.get_system_model_statistics(system_id, dataset_name)
     assert out == b"statistics"
 
 
 def test_get_system_model_statistics_dne(
-    storage_interface, add_example_db_data, dataset
+    storage_interface, add_example_db_data, dataset_name
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.get_system_model_statistics(str(uuid.uuid1()), dataset)
+            st.get_system_model_statistics(str(uuid.uuid1()), dataset_name)
     assert err.value.status_code == 404
 
 
 def test_get_system_model_statistics_wrong_owner(
-    storage_interface, add_example_db_data, dataset, other_system_id
+    storage_interface, add_example_db_data, dataset_name, other_system_id
 ):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:
-            st.get_system_model_statistics(other_system_id, dataset)
+            st.get_system_model_statistics(other_system_id, dataset_name)
     assert err.value.status_code == 404
