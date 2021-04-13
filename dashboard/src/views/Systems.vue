@@ -8,8 +8,7 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>AC Capacity</th>
-              <th>DC AC Ratio</th>
+              <th>AC Capacity (MW)</th>
               <th>Tracking</th>
             </tr>
           </thead>
@@ -26,7 +25,6 @@
             >
               <td>{{ system.definition.name }}</td>
               <td>{{ system.definition.ac_capacity }}</td>
-              <td>{{ system.definition.dc_ac_ratio }}</td>
               <td>
                 <template v-if="'backtracking' in system.definition.tracking">
                   Single Axis
@@ -45,8 +43,8 @@
           <!-- Probably create a component to display details and map location-->
           <ul ckass="details-list" v-if="selected">
             <li><b>Name: </b>{{ selected.definition.name }}</li>
-            <li><b>AC Capacity: </b>{{ selected.definition.ac_capacity }}</li>
-            <li><b>DC AC Ratio: </b>{{ selected.definition.dc_ac_ratio }}</li>
+            <li><b>AC Capacity (MW): </b>{{ selected.definition.ac_capacity }}</li>
+            <li><b>DC/AC Ratio: </b>{{ selected.definition.dc_ac_ratio }}</li>
             <li><b>Albedo: </b>{{ selected.definition.albedo }}</li>
             <li>
               <b>Tracking: </b>
