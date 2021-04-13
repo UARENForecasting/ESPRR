@@ -7,16 +7,18 @@ import tempfile
 from uuid import UUID
 
 
+from fakeredis import FakeRedis  # type: ignore
 from fastapi.testclient import TestClient
 import httpx
 import pandas as pd
 import pymysql
 import pytest
+from rq import Queue  # type: ignore
 
 
 from esprr_api.data import nsrdb
 from esprr_api.main import app
-from esprr_api import settings, models, storage
+from esprr_api import settings, models, storage, queuing
 
 
 @pytest.fixture(scope="session")
@@ -84,6 +86,20 @@ def nocommit_transaction(mocker):
     )
     yield
     conn.rollback()
+
+
+@pytest.fixture()
+def mock_redis(mocker):
+    faker = FakeRedis()
+    mocker.patch.object(queuing, "_get_redis_conn", return_value=faker)
+    return faker
+
+
+@pytest.fixture()
+def async_queue(mock_redis, mocker):
+    q = Queue("jobs", connection=mock_redis)
+    mocker.patch.object(queuing, "_get_queue", return_value=q)
+    return q
 
 
 @pytest.fixture(scope="module")
