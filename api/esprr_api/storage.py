@@ -44,7 +44,7 @@ from sqlalchemy.engine import create_engine  # type: ignore
 from sqlalchemy.pool import QueuePool  # type: ignore
 
 
-from . import settings, models
+from . import settings, models, __version__
 from .auth import get_user_id
 
 
@@ -268,3 +268,60 @@ class StorageInterface:
     ) -> models.StoredObjectID:
         self._call_procedure("update_system", system_id, system_def.json())
         return models.StoredObjectID(object_id=system_id, object_type="system")
+
+    def get_system_hash(self, system_id: UUID) -> str:
+        return self._call_procedure_for_single("get_system_hash", system_id)[
+            "system_hash"
+        ]
+
+    @ensure_user_exists
+    def create_system_model_data(self, system_id: UUID, dataset: models.DatasetEnum):
+        self._call_procedure("create_system_data", system_id, dataset)
+
+    def get_system_model_meta(
+        self, system_id: UUID, dataset: models.DatasetEnum
+    ) -> models.SystemDataMeta:
+        out = self._call_procedure_for_single(
+            "get_system_data_meta", system_id, dataset
+        )
+        stored_hash = out.pop("system_hash")
+        if stored_hash is not None:
+            current_hash = self.get_system_hash(system_id)
+            out["system_modified"] = stored_hash.lower() != current_hash
+        else:
+            out["system_modified"] = False
+        return models.SystemDataMeta(**out)
+
+    def update_system_model_data(
+        self,
+        system_id: UUID,
+        dataset: models.DatasetEnum,
+        system_hash: str,
+        timeseries_data: bytes,
+        statistics: bytes,
+    ):
+        self._call_procedure(
+            "update_system_data",
+            system_id,
+            dataset,
+            timeseries_data,
+            statistics,
+            __version__,
+            system_hash,
+        )
+
+    def get_system_model_timeseries(
+        self, system_id: UUID, dataset: models.DatasetEnum
+    ) -> bytes:
+        res = self._call_procedure_for_single(
+            "get_system_timeseries", system_id, dataset
+        )
+        return res["timeseries"]
+
+    def get_system_model_statistics(
+        self, system_id: UUID, dataset: models.DatasetEnum
+    ) -> bytes:
+        res = self._call_procedure_for_single(
+            "get_system_statistics", system_id, dataset
+        )
+        return res["statistics"]

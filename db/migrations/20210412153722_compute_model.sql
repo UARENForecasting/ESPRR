@@ -156,18 +156,12 @@ create definer = 'select_objects'@'localhost'
       select 1 from system_data where system_id = binid and dataset = datasetid));
 
 
-    if allowed then
-      if row_present then
-        select bin_to_uuid(system_id, 1) as system_id,
-          dataset, version, hex(system_hash) as system_hash,
-          get_system_data_status(binid, datasetid) as status,
-          created_at, modified_at
-	from system_data where system_id = binid and dataset = datasetid;
-      else
-        select systemid as system_id, datasetid as dataset,
-	null as version, null as system_hash, 'missing' as status,
-	null as created_at, null as modified_at;
-      end if;
+    if allowed and row_present then
+      select bin_to_uuid(system_id, 1) as system_id,
+        dataset, version, hex(system_hash) as system_hash,
+        get_system_data_status(binid, datasetid) as status,
+        created_at, modified_at
+      from system_data where system_id = binid and dataset = datasetid;
     else
       signal sqlstate '42000' set message_text = 'Getting system data metadata denied',
         mysql_errno = 1142;
@@ -202,7 +196,7 @@ begin
   set @extime = timestamp('2020-12-01 01:23');
   set @syshash = (select unhex(md5(definition)) from systems where id = @sysid);
   insert into system_data (system_id, dataset, version, system_hash, timeseries, statistics, created_at, modified_at) values (
-    @sysid, 'NSRDB 2019', 'v0.1', unhex('3d5423d4ca558b5c0d820f4280a34f25'),
+    @sysid, 'NSRDB 2019', 'v0.1', unhex('29b4855d70dc37601bb31323f9703cf1'),
     'timeseries data', 'statistics', @extime, @extime
     );
 end;

@@ -1,5 +1,6 @@
 import datetime as dt
-from typing import Any, Union
+from enum import Enum
+from typing import Any, Union, Optional
 
 
 import pandas as pd
@@ -246,3 +247,38 @@ class SystemData(ThisBase):
                 "Columns must be 'ghi', 'dni', 'dhi', 'temp_air' and 'wind_speed'"
             )
         return v
+
+
+class DatasetEnum(str, Enum):
+    nsrdb_2019 = "NSRDB 2019"
+
+
+class DataStatusEnum(str, Enum):
+    prepared = "prepared"
+    queued = "queued"
+    complete = "complete"
+    statistics_missing = "statistics missing"
+    timeseries_missing = "timeseries missing"
+
+
+class SystemDataMeta(ThisBase):
+    system_id: UUID
+    dataset: DatasetEnum
+    version: Optional[str]
+    system_modified: bool
+    status: DataStatusEnum
+    created_at: dt.datetime
+    modified_at: dt.datetime
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "system_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "dataset": "NSRDB 2019",
+                "version": "v0.1",
+                "system_modified": False,
+                "status": "complete",
+                "created_at": "2020-12-01T01:23:00+00:00",
+                "modified_at": "2020-12-01T01:23:00+00:00",
+            }
+        }

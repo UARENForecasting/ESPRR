@@ -236,13 +236,11 @@ def test_get_system_meta(system_id, dictcursor, dataset, auth0_id):
 
 
 def test_get_system_meta_missing(dictcursor, auth0_id, system_id):
-    dictcursor.execute(
-        f'call get_system_data_meta("{auth0_id}", "{system_id}", "nope")'
-    )
-    res = dictcursor.fetchone()
-    assert res["status"] == "missing"
-    assert res["created_at"] is None
-    assert res["modified_at"] is None
+    with pytest.raises(OperationalError) as err:
+        dictcursor.execute(
+            f'call get_system_data_meta("{auth0_id}", "{system_id}", "nope")'
+        )
+    assert err.value.args[0] == 1142
 
 
 def test_get_system_meta_bad_user(cursor, system_id, bad_user):
