@@ -173,7 +173,7 @@ async def get_system_model_status(
     if out.status == "queued":
         # if queued/prepared and job started by q, "running"
         if qm.job_is_running(system_id, dataset):
-            out.status = "running"
+            out.status = models.DataStatusEnum("running")
     return out
 
 

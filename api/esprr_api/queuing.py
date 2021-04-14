@@ -76,6 +76,7 @@ class QueueManager:
     ) -> Type[Job]:
         # check if job already exists
         key = self.generate_key(system_id, dataset)
+        job: Type[Job]
         try:
             job = Job.fetch(key, connection=self.redis_conn)
         except NoSuchJobError:
