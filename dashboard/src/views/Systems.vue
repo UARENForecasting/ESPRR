@@ -43,8 +43,7 @@
       <div class="details">
         <template v-if="systems.length > 0">
           <h3>System Details</h3>
-          <!-- Probably create a component to display details and map location-->
-          <button @click="deleteSystem">Delete System</button>
+          <button @click="showDeleteDialog = true">Delete System</button>
           <ul ckass="details-list" v-if="selected">
             <li><b>Name: </b>{{ selected.definition.name }}</li>
             <li>
@@ -103,6 +102,20 @@
         </template>
       </div>
     </div>
+    <transition name="fade">
+      <div v-if="showDeleteDialog" id="delete-dialog">
+        <div class="modal-block">
+          <p>
+            Are you sure you want to delete the system
+            {{ selected.definition.name }}?
+          </p>
+          <button class="confirm-deletion" @click="deleteSystem">Yes</button>
+          <button class="cancel-deletion" @click="showDeleteDialog = false">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -114,6 +127,7 @@ import * as SystemsAPI from "@/api/systems";
 export default class Systems extends Vue {
   systems!: Record<string, any>[];
   selected!: Record<string, any>;
+  showDeleteDialog!: boolean;
 
   created(): void {
     // When the component is created, load the systems list.
@@ -124,6 +138,7 @@ export default class Systems extends Vue {
     return {
       systems: [],
       selected: null,
+      showDeleteDialog: false
     };
   }
 
@@ -207,6 +222,25 @@ table {
   border-spacing: 0;
 }
 .new-system-link {
+  display: inline-block;
+}
+#delete-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: block;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+#delete-dialog .modal-block {
+  width: 500px;
+  margin: 35vh auto;
+  padding: 2em;
+  border: 1px solid #000;
+  background-color: #fff;
+}
+#delete-dialog button {
   display: inline-block;
 }
 </style>
