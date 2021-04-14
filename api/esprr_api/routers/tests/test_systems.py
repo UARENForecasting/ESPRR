@@ -298,7 +298,8 @@ def test_run_system_model_dne(client, other_system_id, dataset_name):
     assert resp.status_code == 404
 
 
-def test_full_run_through(client, dataset_name, async_queue):
+def test_full_run_through(client, dataset_name, async_queue, mocker, ready_dataset):
+    mocker.patch("esprr_api.compute._get_dataset", return_value=ready_dataset)
     sys = models.PVSystem(
         name="Full",
         boundary=dict(
