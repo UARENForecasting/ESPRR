@@ -1,13 +1,17 @@
+import calendar
+from functools import partial
 from uuid import UUID
 
 
 from dask.base import tokenize  # type: ignore
 from fastapi import HTTPException
+import numpy as np
 import pandas as pd
 from pvlib.location import Location  # type: ignore
 from pvlib.pvsystem import PVSystem  # type: ignore
 from pvlib.tracking import SingleAxisTracker  # type: ignore
 from pvlib.modelchain import ModelChain  # type: ignore
+from pvlib.solarposition import sun_rise_set_transit_spa, get_solarposition
 
 
 from . import models, storage, utils
@@ -98,6 +102,83 @@ def compute_total_system_power(
             out = part
         else:
             out += part  # type: ignore
+    return out
+
+
+def _ramp_rate(period: int, series: pd.Series, quantile: float):
+
+    five_min_period = period // 5
+    # center? left?
+    out = (
+        series.diff(five_min_period)
+        .dropna()
+        .groupby(lambda x: x.month)
+        .quantile(quantile)
+    )
+    # out *= 60 / period  # convert to hourly ramp rate
+    # ramp rates or absolute ramps?
+    return out
+
+
+def _rise_set_ramps(system, ac_power):
+    system_center = system.boundary._rect.centroid
+    tz = "Etc/GMT+7"
+    index = pd.DatetimeIndex(np.unique(ac_power.index.tz_convert(tz).date)).tz_localize(
+        tz
+    )
+    rise_set_transit = sun_rise_set_transit_spa(index, system_center.y, system_center.x)
+
+    def func(key, group):
+        sign = 1 if key == "sunrise" else -1
+        ref_time = rise_set_transit[key].loc[pd.Timestamp(group.name, tz=tz)]
+        window = (ref_time, ref_time + sign * pd.Timedelta("2h"))
+        return group.loc[min(window) : max(window)].max() / 2
+
+    # find the max value w/in 2 hours of sunrise for every day,
+    # take mean over month
+    # should be using clearsky model?
+    sunrise_ramps = (
+        ac_power.tz_convert(tz)
+        .groupby(lambda x: x.date)
+        .apply(partial(func, "sunrise"))
+        .groupby(lambda x: x.month)
+        .mean()
+    )
+    sunset_ramps = (
+        ac_power.tz_convert(tz)
+        .groupby(lambda x: x.date)
+        .apply(partial(func, "sunset"))
+        .groupby(lambda x: x.month)
+        .mean()
+    )
+    return sunrise_ramps, sunset_ramps
+
+
+def compute_statistics(system: models.PVSystem, ac_power: pd.Series) -> pd.DataFrame:
+    sunrise_ramps, sunset_ramps = _rise_set_ramps(system, ac_power)
+    system_center = system.boundary._rect.centroid
+    zenith = get_solarposition(ac_power.index, system_center.y, system_center.x)[
+        "zenith"
+    ]
+    ac_power[zenith > 87] = np.nan  # for longer, does drop transitional periods
+    out = pd.DataFrame(
+        {
+            "month": calendar.month_name[1:],
+            "sunrise": sunrise_ramps,
+            "sunset": sunset_ramps,
+            # or just take abs and only report 95%?
+            "5-min 95%": _ramp_rate(5, ac_power, 0.95),
+            "10-min 95%": _ramp_rate(10, ac_power, 0.95),
+            "15-min 95%": _ramp_rate(15, ac_power, 0.95),
+            "30-min 95%": _ramp_rate(30, ac_power, 0.95),
+            "60-min 95%": _ramp_rate(60, ac_power, 0.95),
+            "5-min 5%": _ramp_rate(5, ac_power, 0.05),
+            "10-min 5%": _ramp_rate(10, ac_power, 0.05),
+            "15-min 5%": _ramp_rate(15, ac_power, 0.05),
+            "30-min 5%": _ramp_rate(30, ac_power, 0.05),
+            "60-min 5%": _ramp_rate(60, ac_power, 0.05),
+        }
+    )
     return out
 
 
