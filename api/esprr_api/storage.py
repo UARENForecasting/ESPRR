@@ -295,6 +295,9 @@ class StorageInterface:
             out["system_modified"] = stored_hash.lower() != current_hash
         else:
             out["system_modified"] = False
+        # present "prepared" status as "queued"
+        if out["status"] == "prepared":
+            out["status"] = "queued"
         return models.SystemDataMeta(**out)
 
     def update_system_model_data(
@@ -321,6 +324,8 @@ class StorageInterface:
         res = self._call_procedure_for_single(
             "get_system_timeseries", system_id, dataset
         )
+        if res["timeseries"] is None:
+            raise HTTPException(status_code=404, detail="No timeseries data available")
         out: bytes = res["timeseries"]
         return out
 
@@ -330,5 +335,7 @@ class StorageInterface:
         res = self._call_procedure_for_single(
             "get_system_statistics", system_id, dataset
         )
+        if res["statistics"] is None:
+            raise HTTPException(status_code=404, detail="No statistics available")
         out: bytes = res["statistics"]
         return out

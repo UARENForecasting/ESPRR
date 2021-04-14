@@ -48,7 +48,7 @@ def test_api(case, with_auth, auth_token):
 @pytest.mark.usefixtures("nocommit_transaction")
 @schema.parametrize(method=["POST"], operation_id="^(?!.*update.*system.*).*")
 @hypsettings(max_examples=5, suppress_health_check=HealthCheck.all())
-def test_api_post(case, with_auth, auth_token):
+def test_api_post(case, with_auth, auth_token, async_queue):
     if with_auth:
         upd = {"Authorization": f"Bearer {auth_token}"}
         if case.headers is None:

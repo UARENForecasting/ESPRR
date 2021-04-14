@@ -3,12 +3,23 @@ from typing import List, Optional, Tuple, Type, Union
 
 
 from accept_types import AcceptableType  # type: ignore
-from fastapi import APIRouter, Response, Request, Depends, Path, Header, HTTPException
+from fastapi import (
+    APIRouter,
+    Response,
+    Request,
+    Depends,
+    Path,
+    Header,
+    HTTPException,
+    BackgroundTasks,
+)
 from pydantic.types import UUID
 
 
 from . import default_get_responses
 from .. import models, utils
+from ..auth import get_user_id
+from ..queuing import QueueManager
 from ..storage import StorageInterface
 
 
@@ -155,9 +166,14 @@ async def get_system_model_status(
     system_id: UUID = syspath,
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),
+    qm: QueueManager = Depends(QueueManager),
 ) -> models.SystemDataMeta:
     with storage.start_transaction() as st:
         out: models.SystemDataMeta = st.get_system_model_meta(system_id, dataset)
+    if out.status == "queued":
+        # if queued/prepared and job started by q, "running"
+        if qm.job_is_running(system_id, dataset):
+            out.status = models.DataStatusEnum("running")
     return out
 
 
@@ -167,12 +183,20 @@ async def get_system_model_status(
     responses={**default_get_responses, 202: {}},
 )
 async def run_system_model(
+    background_tasks: BackgroundTasks,
     system_id: UUID = syspath,
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),
+    user: str = Depends(get_user_id),
+    qm: QueueManager = Depends(QueueManager),
 ):
-    # create item in db, add to queue
-    pass
+    with storage.start_transaction() as st:
+        try:
+            st.create_system_model_data(system_id, dataset)
+        except HTTPException as err:
+            if err.status_code != 409:
+                raise
+    background_tasks.add_task(qm.enqueue_job, system_id, dataset, user)
 
 
 class ArrowResponse(Response):
