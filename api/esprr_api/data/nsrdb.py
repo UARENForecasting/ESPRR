@@ -49,9 +49,11 @@ class NSRDBDataset:
     def load_grid(self) -> None:
         """Load the NSRDB lat/lon grid into a geopandas.GeoSeries"""
         with self.open_dataset() as ds:
-            lats = ds.lat.values
-            lons = ds.lon.values
-            index = ds.spatial_idx.values
+            # must use single threaded scheduler or forked process in rq may hang
+            sub = ds[["lat", "lon", "spatial_idx"]].compute(scheduler="single-threaded")
+            lats = sub.lat.values
+            lons = sub.lon.values
+            index = sub.spatial_idx.values
         pts = geopandas.points_from_xy(lons, lats)
         self._grid = geopandas.GeoSeries(pts, index=index, crs="EPSG:4326")
         self._grid.sindex.query(geometry.Point(-110.1, 32.2))  # load the index tree
@@ -130,7 +132,11 @@ class NSRDBDataset:
         cols = ["ghi", "dni", "dhi", "wind_speed", "air_temperature"]
         with self.open_dataset() as ds:
             for pt in points:
-                data = ds[cols].sel(spatial_idx=pt.spatial_idx).compute()
+                data = (
+                    ds[cols]
+                    .sel(spatial_idx=pt.spatial_idx)
+                    .compute(scheduler="single-threaded")
+                )
                 loc = models.Location(
                     latitude=data.lat.item(),
                     longitude=data.lon.item(),

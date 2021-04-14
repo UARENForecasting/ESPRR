@@ -280,7 +280,7 @@ class StorageInterface:
         return out
 
     @ensure_user_exists
-    def create_system_model_data(self, system_id: UUID, dataset: models.DatasetEnum):q
+    def create_system_model_data(self, system_id: UUID, dataset: models.DatasetEnum):
         self._call_procedure("create_system_data", system_id, dataset)
 
     def get_system_model_meta(
