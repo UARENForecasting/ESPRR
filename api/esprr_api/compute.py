@@ -1,6 +1,7 @@
 from uuid import UUID
 
 
+from fastapi import HTTPException
 import pandas as pd
 from pvlib.location import Location  # type: ignore
 from pvlib.pvsystem import PVSystem  # type: ignore
@@ -8,7 +9,7 @@ from pvlib.tracking import SingleAxisTracker  # type: ignore
 from pvlib.modelchain import ModelChain  # type: ignore
 
 
-from . import models
+from . import models, storage, utils
 from .data.nsrdb import NSRDBDataset
 
 
@@ -68,5 +69,32 @@ def compute_total_system_power(
     return out
 
 
+def _get_dataset(dataset_name: models.DatasetEnum) -> NSRDBDataset:
+    # will take about two seconds to load grid, could possibly preload
+    # before the RQ fork, but not worth it for now
+    ds = NSRDBDataset()
+    ds.load_grid()
+    return ds
+
+
 def run_job(system_id: UUID, dataset_name: models.DatasetEnum, user: str):
-    pass
+    si = storage.StorageInterface(user=user)
+    with si.start_transaction() as st:
+        try:
+            system = st.get_system(system_id)
+            syshash = st.get_system_hash(system_id)
+        except HTTPException as err:
+            if err.status_code == 404:
+                return
+            else:  # pragma: no cover
+                raise
+    dataset = _get_dataset(dataset_name)
+    ac_power = compute_total_system_power(system.definition, dataset)
+    ac_power.index.name = "time"
+    ac_power.name = "ac_power"
+    ac_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(ac_power.reset_index()))
+    stats_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(pd.DataFrame()))
+    with si.start_transaction() as st:
+        st.update_system_model_data(
+            system_id, dataset_name, syshash, ac_bytes, stats_bytes
+        )
