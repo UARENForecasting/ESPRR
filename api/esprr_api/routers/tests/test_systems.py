@@ -12,6 +12,7 @@ import uuid
 from fastapi import HTTPException
 import pandas as pd
 import pytest
+from rq import SimpleWorker
 
 
 from esprr_api import models, storage
@@ -295,3 +296,66 @@ def test_run_system_model_simple(client, system_id, dataset_name, async_queue):
 def test_run_system_model_dne(client, other_system_id, dataset_name):
     resp = client.post(f"/systems/{other_system_id}/data/{dataset_name}")
     assert resp.status_code == 404
+
+
+def test_full_run_through(client, dataset_name, async_queue):
+    sys = models.PVSystem(
+        name="Full",
+        boundary=dict(
+            nw_corner=dict(
+                latitude=32.04,
+                longitude=-110.9,
+            ),
+            se_corner=dict(latitude=32.03, longitude=-110.88),
+        ),
+        ac_capacity=20.5,
+        dc_ac_ratio=1.3,
+        albedo=0.2,
+        tracking=dict(axis_tilt=0, axis_azimuth=180, backtracking=True, gcr=0.3),
+    )
+
+    resp = client.post("/systems/", json=sys.dict())
+    assert resp.status_code == 201
+    sysid = resp.json()["object_id"]
+
+    chk = client.get(f"/systems/{sysid}/data/{dataset_name}")
+    assert chk.status_code == 404
+    ts = client.get(f"/systems/{sysid}/data/{dataset_name}/timeseries")
+    assert ts.status_code == 404
+    stat = client.get(f"/systems/{sysid}/data/{dataset_name}/statistics")
+    assert stat.status_code == 404
+
+    cmpt = client.post(f"/systems/{sysid}/data/{dataset_name}")
+    assert cmpt.status_code == 202
+
+    r4 = client.get(f"/systems/{sysid}/data/{dataset_name}")
+    assert r4.status_code == 200
+    assert r4.json()["status"] == "queued"
+    assert len(async_queue.jobs) == 1
+    ts = client.get(f"/systems/{sysid}/data/{dataset_name}/timeseries")
+    assert ts.status_code == 404
+    stat = client.get(f"/systems/{sysid}/data/{dataset_name}/statistics")
+    assert stat.status_code == 404
+
+    w = SimpleWorker([async_queue], connection=async_queue.connection)
+    w.work(burst=True)
+
+    r4 = client.get(f"/systems/{sysid}/data/{dataset_name}")
+    assert r4.status_code == 200
+    assert r4.json()["status"] == "complete"
+    assert len(async_queue.jobs) == 0
+
+    ts = client.get(f"/systems/{sysid}/data/{dataset_name}/timeseries")
+    assert ts.status_code == 200
+    stat = client.get(f"/systems/{sysid}/data/{dataset_name}/statistics")
+    assert stat.status_code == 200
+
+    delt = client.delete(f"/systems/{sysid}")
+    assert delt.status_code == 204
+
+    chk = client.get(f"/systems/{sysid}/data/{dataset_name}")
+    assert chk.status_code == 404
+    ts = client.get(f"/systems/{sysid}/data/{dataset_name}/timeseries")
+    assert ts.status_code == 404
+    stat = client.get(f"/systems/{sysid}/data/{dataset_name}/statistics")
+    assert stat.status_code == 404
