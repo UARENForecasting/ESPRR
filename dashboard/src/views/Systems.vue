@@ -1,6 +1,9 @@
 <template>
   <div class="systems" v-if="$auth.isAuthenticated">
     <h2>Systems</h2>
+    <router-link :to="{ name: 'New System' }" class="new-system-link"
+      >Create New System</router-link
+    >
     <hr />
     <div class="grid">
       <div class="systems-table">
@@ -41,6 +44,7 @@
         <template v-if="systems.length > 0">
           <h3>System Details</h3>
           <!-- Probably create a component to display details and map location-->
+          <button @click="deleteSystem">Delete System</button>
           <ul ckass="details-list" v-if="selected">
             <li><b>Name: </b>{{ selected.definition.name }}</li>
             <li>
@@ -132,6 +136,14 @@ export default class Systems extends Vue {
       this.setSelected(this.systems[0]);
     }
   }
+  async deleteSystem(): Promise<void> {
+    if (this.selected) {
+      const token = await this.$auth.getTokenSilently();
+      SystemsAPI.deleteSystem(token, this.selected.object_id)
+        .then(() => this.getSystems())
+        .catch((error: any) => console.error(error));
+    }
+  }
   setSelected(selectedSystem: Record<string, any>): void {
     this.selected = selectedSystem;
   }
@@ -193,5 +205,8 @@ tr.selected-site {
 
 table {
   border-spacing: 0;
+}
+.new-system-link {
+  display: inline-block;
 }
 </style>
