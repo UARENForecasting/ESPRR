@@ -75,15 +75,13 @@ describe("Test Systems list", () => {
     expect(wrapper.findAll("tbody tr").length).toBe(1);
   });
   it("test delete without selection", async () => {
+    // @ts-expect-error ts does not recognize mocked fn
+    listSystems.mockResolvedValueOnce([]);
     const wrapper = mount(Systems, {
       localVue,
       router,
       mocks,
     });
-
-    await flushPromises();
-
-    wrapper.vm.$data.selected = null;
 
     await flushPromises();
 
