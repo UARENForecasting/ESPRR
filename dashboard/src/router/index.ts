@@ -10,9 +10,16 @@ const routes: Array<RouteConfig> = [
     component: Systems,
   },
   {
-    path: "/newsystem",
+    path: "/system/new",
     name: "New System",
     component: SystemDefinition,
+    beforeEnter: authGuard,
+  },
+  {
+    path: "/system/:systemId",
+    name: "Update System",
+    component: SystemDefinition,
+    props: true,
     beforeEnter: authGuard,
   },
 ];

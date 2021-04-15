@@ -1,0 +1,182 @@
+import SystemDefinition from "@/views/SystemDefinition.vue";
+import { $auth } from "./mockauth";
+import { getSystem, createSystem } from "@/api/systems";
+
+import { createLocalVue, mount } from "@vue/test-utils";
+import VueRouter from "vue-router";
+import router from "@/router";
+import flushPromises from "flush-promises";
+
+// use systems mock module
+jest.mock("@/api/systems");
+
+const localVue = createLocalVue();
+localVue.use(VueRouter);
+
+const mocks = { $auth };
+
+describe("Test System Definition", () => {
+  beforeEach(() => {
+    jest.resetModules();
+    // @ts-expect-error ts complains about history on VueRouter
+    if (router.history.current.path != "/system/new") {
+      router.push({ name: "New System" });
+    }
+  });
+  it("Test new system", async () => {
+    const wrapper = mount(SystemDefinition, {
+      localVue,
+      router,
+      mocks,
+    });
+    expect(wrapper.findAll("input").length).toBe(12);
+  });
+  it("Test change tracking", async () => {
+    const wrapper = mount(SystemDefinition, {
+      localVue,
+      router,
+      mocks,
+    });
+
+    wrapper.vm.$data.definition.tracking.tilt = 12;
+    expect(wrapper.vm.$data.definition.tracking).toEqual({
+      tilt: 12,
+      azimuth: 0,
+    });
+
+    // @ts-expect-error access vm
+    wrapper.vm.changeTracking("singleAxis", "fixed");
+    await flushPromises();
+
+    expect(wrapper.vm.$data.definition.tracking).toEqual({
+      axis_tilt: 12,
+      axis_azimuth: 0,
+      gcr: 0,
+      backtracking: false,
+    });
+
+    // @ts-expect-error access vm
+    wrapper.vm.changeTracking("fixed", "singleAxis");
+    await flushPromises();
+
+    expect(wrapper.vm.$data.definition.tracking).toEqual({
+      tilt: 12,
+      azimuth: 0,
+    });
+
+    // @ts-expect-error access vm
+    wrapper.vm.changeTracking("fixed", "fixed");
+    await flushPromises();
+
+    expect(wrapper.vm.$data.definition.tracking).toEqual({
+      tilt: 12,
+      azimuth: 0,
+    });
+  });
+  it("Test save system", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+    });
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    expect(createSystem).toHaveBeenCalled();
+    // @ts-expect-error ts compains about history on VueRouter
+    expect(router.history.current.path).toBe("/");
+    appTarget.remove();
+  });
+  it("Test save system error", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    // @ts-expect-error mock object
+    createSystem.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+    });
+    wrapper.find("button[type='submit']").trigger("click");
+    try {
+      await flushPromises();
+    } catch (error) {
+      expect(error).toBe("error");
+    }
+
+    // @ts-expect-error ts compains about history on VueRouter
+    expect(router.history.current.path).toBe("/system/new");
+    appTarget.remove();
+  });
+  it("Test update system fixed system", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      },
+    });
+    await flushPromises();
+    // @ts-expect-error value exists on html element
+    expect(wrapper.find("input").element.value).toBe("Test PV System");
+    appTarget.remove();
+  });
+  it("Test update system single axis system", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
+      },
+    });
+    await flushPromises();
+    // @ts-expect-error value exists on html element
+    expect(wrapper.find("input").element.value).toBe("Real PV System");
+    appTarget.remove();
+  });
+  it("Test update system 404", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    // @ts-expect-error mock object
+    getSystem.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
+      },
+    });
+    await flushPromises();
+    expect(wrapper.find(".system-definition-form").text()).toBe(
+      "The System could not be found."
+    );
+    appTarget.remove();
+  });
+});

@@ -43,7 +43,17 @@
       <div class="details">
         <template v-if="systems.length > 0">
           <h3>System Details</h3>
-          <button @click="showDeleteDialog = true">Delete System</button>
+          <router-link
+            tag="button"
+            :to="{
+              name: 'Update System',
+              params: { systemId: selected.object_id },
+            }"
+            >Update System</router-link
+          >
+          <button class="delete-system" @click="showDeleteDialog = true">
+            Delete System
+          </button>
           <ul ckass="details-list" v-if="selected">
             <li><b>Name: </b>{{ selected.definition.name }}</li>
             <li>
@@ -138,7 +148,7 @@ export default class Systems extends Vue {
     return {
       systems: [],
       selected: null,
-      showDeleteDialog: false
+      showDeleteDialog: false,
     };
   }
 
