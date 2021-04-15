@@ -165,8 +165,15 @@ export default class Systems extends Vue {
     if (this.selected != null) {
       const token = await this.$auth.getTokenSilently();
       SystemsAPI.deleteSystem(token, this.selected.object_id)
-        .then(() => this.getSystems())
-        .catch((error: any) => console.error(error));
+        .then(() => {
+          this.getSystems();
+          this.showDeleteDialog = false;
+        })
+        .catch((error: any) => {
+          // TODO: display errors to user
+          console.error(error);
+          this.showDeleteDialog = false;
+        });
     }
   }
   setSelected(selectedSystem: Record<string, any>): void {

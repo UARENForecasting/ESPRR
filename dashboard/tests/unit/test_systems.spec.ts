@@ -63,7 +63,7 @@ describe("Test Systems list", () => {
     //expect two site rows
     const siteRows = wrapper.findAll("tbody tr");
     expect(siteRows.length).toBe(2);
-
+    expect(wrapper.find("modal-block").exists()).toBe(false);
     wrapper.find("button.delete-system").trigger("click");
 
     await flushPromises();
@@ -71,6 +71,9 @@ describe("Test Systems list", () => {
     wrapper.find(".confirm-deletion").trigger("click");
 
     await flushPromises();
+
+    expect(wrapper.find("modal-block").exists()).toBe(false);
+
     //expect one site row
     expect(wrapper.findAll("tbody tr").length).toBe(1);
   });
@@ -90,5 +93,27 @@ describe("Test Systems list", () => {
 
     await flushPromises();
     expect(deleteSystem).not.toHaveBeenCalled();
+  });
+  it("test delete error", async () => {
+    // @ts-expect-error ts does not recognize mocked fn
+    deleteSystem.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(Systems, {
+      localVue,
+      router,
+      mocks,
+    });
+
+    await flushPromises();
+
+    // @ts-expect-error Vue instance method
+    wrapper.vm.deleteSystem();
+
+    await flushPromises();
+    // getSystems is called after successful deletion to refresh
+    // the systems list
+    // @ts-expect-error accessing mock properties
+    expect(listSystems.mock.calls.length).toBe(1);
   });
 });

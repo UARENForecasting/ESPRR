@@ -1,7 +1,7 @@
 <template>
   <div class="system-definition-form">
     <div v-if="definition">
-      <h2 v-if="systemId">Create New System</h2>
+      <h2 v-if="systemId">Update System</h2>
       <h2 v-else>Create New System</h2>
       <form v-if="definition" id="system-definition" @submit="submitSystem">
         <label>Name: <input type="text" v-model="definition.name" /></label>
@@ -136,8 +136,8 @@
           </fieldset>
         </fieldset>
         <button type="submit">
-          <template v-if="systemId">Create</template
-          ><template v-else>Update</template> System
+          <template v-if="systemId">Update</template
+          ><template v-else>Create</template> System
         </button>
       </form>
     </div>
@@ -224,14 +224,25 @@ export default class SystemDefinition extends Vue {
     e.preventDefault();
     // validate and post system
     const token = await this.$auth.getTokenSilently();
-    SystemsApi.createSystem(token, this.definition)
-      .then(() => {
-        this.$router.push({ name: "Systems" });
-      })
-      .catch((errors: any) => {
-        // TODO :display errors to users
-        console.log(errors);
-      });
+    if (this.systemId) {
+      SystemsApi.updateSystem(token, this.systemId, this.definition)
+        .then(() => {
+          this.$router.push({ name: "Systems" });
+        })
+        .catch((errors: any) => {
+          // TODO :display errors to users
+          console.log(errors);
+        });
+    } else {
+      SystemsApi.createSystem(token, this.definition)
+        .then(() => {
+          this.$router.push({ name: "Systems" });
+        })
+        .catch((errors: any) => {
+          // TODO :display errors to users
+          console.log(errors);
+        });
+    }
   }
 
   @Watch("trackingType")

@@ -118,5 +118,22 @@ const createSystem = jest.fn(async function (
   systemIndex++;
   return response;
 });
+const updateSystem = jest.fn(async function (
+  token: string,
+  systemId: string,
+  definition: PVSystem
+): Promise<Record<string, any> | null> {
+  for (let i = 0; i < systems.length; i++) {
+    if (systems[i].object_id == systemId) {
+      systems[i].definition = definition;
+      return null;
+    }
+  }
+  const response = {
+    object_id: String(systemIndex),
+  };
+  systemIndex++;
+  return response;
+});
 
-export { listSystems, getSystem, createSystem, deleteSystem };
+export { listSystems, getSystem, createSystem, deleteSystem, updateSystem };

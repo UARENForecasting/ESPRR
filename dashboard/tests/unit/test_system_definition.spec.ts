@@ -1,6 +1,6 @@
 import SystemDefinition from "@/views/SystemDefinition.vue";
 import { $auth } from "./mockauth";
-import { getSystem, createSystem } from "@/api/systems";
+import { getSystem, createSystem, updateSystem } from "@/api/systems";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import VueRouter from "vue-router";
@@ -18,6 +18,7 @@ const mocks = { $auth };
 describe("Test System Definition", () => {
   beforeEach(() => {
     jest.resetModules();
+    jest.clearAllMocks();
     // @ts-expect-error ts complains about history on VueRouter
     if (router.history.current.path != "/system/new") {
       router.push({ name: "New System" });
@@ -134,6 +135,11 @@ describe("Test System Definition", () => {
     await flushPromises();
     // @ts-expect-error value exists on html element
     expect(wrapper.find("input").element.value).toBe("Test PV System");
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    // @ts-expect-error ts complains about history on VueRouter
+    expect(router.history.current.path).toBe("/");
+    expect(updateSystem).toHaveBeenCalled();
     appTarget.remove();
   });
   it("Test update system single axis system", async () => {
@@ -153,6 +159,11 @@ describe("Test System Definition", () => {
     await flushPromises();
     // @ts-expect-error value exists on html element
     expect(wrapper.find("input").element.value).toBe("Real PV System");
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    // @ts-expect-error ts complains about history on VueRouter
+    expect(router.history.current.path).toBe("/");
+    expect(updateSystem).toHaveBeenCalled();
     appTarget.remove();
   });
   it("Test update system 404", async () => {
@@ -176,6 +187,40 @@ describe("Test System Definition", () => {
     await flushPromises();
     expect(wrapper.find(".system-definition-form").text()).toBe(
       "The System could not be found."
+    );
+    appTarget.remove();
+  });
+  it("Test update system error", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    // @ts-expect-error mock object
+    updateSystem.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    router.push({
+      name: "Update System",
+      params: { systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9" },
+    });
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
+      },
+    });
+    await flushPromises();
+
+    wrapper.find("button[type='submit']").trigger("click");
+
+    await flushPromises();
+    expect(updateSystem).toHaveBeenCalled();
+    // @ts-expect-error ts complains about history on VueRouter
+    expect(router.history.current.path).toBe(
+      "/system/6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9"
     );
     appTarget.remove();
   });

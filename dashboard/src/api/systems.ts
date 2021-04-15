@@ -72,3 +72,26 @@ export async function createSystem(
     throw "Could not create system";
   }
 }
+
+export async function updateSystem(
+  token: string,
+  systemId: string,
+  definition: PVSystem
+): Promise<StoredPVSystem> {
+  const response = await fetch(`/api/systems/${systemId}`, {
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+    }),
+    method: "post",
+    body: JSON.stringify(definition),
+  });
+  if (response.ok) {
+    return await response.json();
+  } else if (response.status == 422) {
+    throw await response.json();
+  } else if (response.status == 409) {
+    throw `Site with name ${definition.name} already exists`;
+  } else {
+    throw "Could not create system";
+  }
+}
