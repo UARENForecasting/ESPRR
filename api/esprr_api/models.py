@@ -237,6 +237,14 @@ class SystemData(ThisBase):
             " a DatetimeIndex"
         ),
     )
+    clearsky_data: pd.DataFrame = Field(
+        ...,
+        description=(
+            "Has 'aod700' and 'precipitable_water' columns"
+            " with a DatetimeIndex in order to estimate clearsky ghi/dni/dhi and "
+            "compute an expected clearsky power profile."
+        ),
+    )
 
     @validator("weather_data")
     def weather_df(cls, v):
@@ -246,6 +254,17 @@ class SystemData(ThisBase):
             raise ValueError(
                 "Columns must be 'ghi', 'dni', 'dhi', 'temp_air' and 'wind_speed'"
             )
+        return v
+
+    @validator("clearsky_data")
+    def clearsky_df(cls, v):
+        if not isinstance(v.index, pd.DatetimeIndex):
+            raise TypeError("Must have pd.DatetimeIndex")
+        if not set(v.columns) == {
+            "aod700",
+            "precipitable_water",
+        }:
+            raise ValueError("Columns must be 'aod700' and 'precipitable_water'")
         return v
 
 

@@ -130,10 +130,20 @@ class NSRDBDataset:
         """
         points = self.find_system_locations(pvsystem)
         cols = ["ghi", "dni", "dhi", "wind_speed", "air_temperature"]
+        clrsky_cols = [
+            "aod",
+            "total_precipitable_water",
+        ]
+        all_cols = cols + clrsky_cols
+        rename = {
+            "air_temperature": "temp_air",
+            "aod": "aod700",
+            "total_precipitable_water": "precipitable_water",
+        }
         with self.open_dataset() as ds:
             for pt in points:
                 data = (
-                    ds[cols]
+                    ds[all_cols]
                     .sel(spatial_idx=pt.spatial_idx)
                     .compute(scheduler="single-threaded")
                 )
@@ -142,16 +152,18 @@ class NSRDBDataset:
                     longitude=data.lon.item(),
                     altitude=data.elevation.item(),
                 )
-                weather_df = (
-                    data.to_dataframe()  # type: ignore
+                df = (
+                    data.to_dataframe()
                     .set_index("times")
-                    .tz_localize("UTC")[cols]
-                    .rename(columns={"air_temperature": "temp_air"})
+                    .tz_localize("UTC")
                     .astype("float32")
                 )
+                weather_df = df[cols].rename(columns=rename)
+                clrsky_df = df[clrsky_cols].rename(columns=rename)
                 sysd = models.SystemData(
                     location=loc,
                     fraction_of_total=pt.fractional_area,
                     weather_data=weather_df,
+                    clearsky_data=clrsky_df,
                 )
                 yield sysd
