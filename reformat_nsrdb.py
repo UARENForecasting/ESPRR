@@ -11,7 +11,7 @@ import zarr
 
 # restrict data to this lat, lon range
 # nsrdb had no data over the ocean, so not a regular grid
-BOUNDARIES = ((31.0, 31.5), (-118.01, -117.81))
+BOUNDARIES = ((31.0, 38.0), (-118.01, -103.01))
 
 
 def load_file(fname):
@@ -56,7 +56,7 @@ def main():
     weather_file = h5py.File(base / "h5" / "nsrdb_conus_pv_2019.h5", mode="r")
     anc_a = h5py.File(base / "h5" / "nsrdb_conus_ancillary_a_2019.h5", mode="r")
     anc_b = h5py.File(base / "h5" / "nsrdb_conus_ancillary_b_2019.h5", mode="r")
-    output_path = base / "test_nsrdb_2019.zarr"
+    output_path = base / "nsrdb_2019.zarr"
 
     # find coordidnate limits
     coords = irradiance_file["coordinates"][:]
@@ -105,11 +105,8 @@ def main():
         vattr = dict(f[var].attrs)
         scale_factor = vattr.pop("scale_factor")
         arr = da.from_array(f[var])[:, limits]
-        breakpoint()
-        if str(arr.dtype) == "float64":
-            arr = arr.astype("float32")
         if scale_factor != 1.0:
-            arr /= scale_factor
+            arr = arr.astype("float32") / scale_factor
             encoding_dict["scale_factor"] = scale_factor
         data[var] = xr.DataArray(
             arr,
