@@ -133,6 +133,7 @@ async def delete_system(
     response_model=models.StoredObjectID,
     responses={
         **default_get_responses,
+        409: {},
         201: {"links": system_links},
     },
     status_code=201,

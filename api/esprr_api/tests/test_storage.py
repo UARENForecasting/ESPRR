@@ -1,3 +1,4 @@
+from copy import deepcopy
 import datetime as dt
 import uuid
 
@@ -237,6 +238,16 @@ def test_update_system(
     assert out.definition == system_def
     assert out.created_at == stored_system.created_at
     assert out.modified_at >= now
+
+
+def test_update_system_duplicate_name(storage_interface, system_def, system_id):
+    new_system = deepcopy(system_def)
+    new_system.name = "a new name"
+    with storage_interface.start_transaction() as st:
+        new_id = st.create_system(new_system).object_id
+        with pytest.raises(HTTPException) as err:
+            st.update_system(new_id, system_def)
+    assert err.value.status_code == 409
 
 
 def test_update_system_dne(storage_interface, system_def):

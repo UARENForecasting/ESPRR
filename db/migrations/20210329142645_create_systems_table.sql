@@ -84,7 +84,7 @@ grant execute on procedure `create_system` to 'apiuser'@'%';
 
 -- update system
 create definer = 'update_objects'@'localhost'
-  procedure update_system (auth0id varchar(32), systemid char(36), system_def JSON)
+  procedure update_system (auth0id varchar(32), systemid char(36), new_name varchar(128), system_def JSON)
     comment 'Update a system definition'
     modifies sql data sql security definer
   begin
@@ -93,7 +93,7 @@ create definer = 'update_objects'@'localhost'
     declare uid binary(16) default get_user_binid(auth0id);
 
     if allowed then
-      update systems set definition = system_def where id = binid;
+      update systems set name = new_name, definition = system_def where id = binid;
     else
       signal sqlstate '42000' set message_text = 'Updating system not allowed',
         mysql_errno = 1142;

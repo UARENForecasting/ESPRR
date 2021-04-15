@@ -110,26 +110,67 @@ def test_update_system(cursor, auth0_id, system_id):
         "select modified_at from systems where id = uuid_to_bin(%s, 1)", system_id
     )
     prevtime = cursor.fetchone()[0]
-    cursor.execute("call update_system(%s, %s, %s)", (auth0_id, system_id, ndef))
+    new_name = "a Test PV System"
+    cursor.execute(
+        "call update_system(%s, %s, %s, %s)", (auth0_id, system_id, new_name, ndef)
+    )
     num = cursor.execute(
-        "select definition, modified_at from systems where id = uuid_to_bin(%s, 1)",
+        "select definition, modified_at, name from systems where id = uuid_to_bin(%s, 1)",
         system_id,
     )
     assert num == 1
     res = cursor.fetchone()
     assert res[0] == ndef
     assert res[1] >= prevtime
+    assert res[2] == new_name
+
+
+def test_update_system_no_change(cursor, auth0_id, system_id, system_def):
+    cursor.execute(
+        "select modified_at from systems where id = uuid_to_bin(%s, 1)", system_id
+    )
+    prevtime = cursor.fetchone()[0]
+    cursor.execute(
+        "call update_system(%s, %s, %s, %s)", (auth0_id, system_id, *system_def)
+    )
+    num = cursor.execute(
+        "select definition, modified_at, name from systems where id = uuid_to_bin(%s, 1)",
+        system_id,
+    )
+    assert num == 1
+    res = cursor.fetchone()
+    assert res[0] == system_def[1]
+    assert res[1] >= prevtime
+    assert res[2] == system_def[0]
+
+
+def test_update_system_same_name(cursor, system_id, auth0_id, system_def):
+    old_name = system_def[0]
+    cursor.execute("select count(name) from systems where name = %s", old_name)
+    assert len(cursor.fetchall()) == 1
+    cursor.execute("call create_system(%s, %s, %s)", (auth0_id, "aname", system_def[1]))
+    sysid = cursor.fetchone()[0]
+    with pytest.raises(IntegrityError) as err:
+        cursor.execute(
+            "call update_system(%s, %s, %s, %s)", (auth0_id, sysid, old_name, "{}")
+        )
+    assert err.value.args[0] == 1062
 
 
 def test_update_system_bad_user(cursor, system_id, bad_user):
     with pytest.raises(OperationalError) as err:
-        cursor.execute("call update_system(%s, %s, %s)", (bad_user, system_id, "{}"))
+        cursor.execute(
+            "call update_system(%s, %s, %s, %s)",
+            (bad_user, system_id, "A System", "{}"),
+        )
     assert err.value.args[0] == 1142
 
 
 def test_update_system_bad_json(cursor, system_id, auth0_id):
     with pytest.raises(OperationalError) as err:
-        cursor.execute("call update_system(%s, %s, %s)", (auth0_id, system_id, "{"))
+        cursor.execute(
+            "call update_system(%s, %s, %s, %s)", (auth0_id, system_id, "A System", "{")
+        )
     assert err.value.args[0] == 3140
 
 
