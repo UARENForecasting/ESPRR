@@ -114,7 +114,10 @@ async def get_system(
 
 
 @router.delete(
-    "/{system_id}", responses={**default_get_responses, 204: {}}, status_code=204
+    "/{system_id}",
+    response_class=Response,
+    responses={**default_get_responses, 204: {}},
+    status_code=204,
 )
 async def delete_system(
     system_id: UUID = syspath,

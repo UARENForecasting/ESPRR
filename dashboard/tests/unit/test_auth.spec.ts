@@ -87,7 +87,8 @@ describe("Tests authenticated routes", () => {
     });
     await flushPromises();
     expect(home.find("Table").text()).toBe(
-      "Name AC Capacity (MW) Tracking Test PV System 10  Fixed Real PV System 10  Fixed"
+      `Name AC Capacity (MW) Tracking Test PV System 10  Fixed Real PV System 10 
+                Single Axis`
     );
     const button = home.find("button");
     expect(button.text()).toMatch(/Log out/);
@@ -131,15 +132,16 @@ describe("Test authguard", () => {
       mocks,
     });
     await flushPromises();
-    expect(view.find("main").text()).toMatch(
-      "Name AC Capacity (MW) Tracking Test PV System 10  Fixed Real PV System 10  Fixed"
+    expect(view.find("Table").text()).toMatch(
+      `Name AC Capacity (MW) Tracking Test PV System 10  Fixed Real PV System 10 
+                Single Axis`
     );
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
     router.push({ name: "New System" });
     await Vue.nextTick();
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
     // Assert view at new path is rendered
-    expect(view.find("main").text()).toBe("TODO");
+    expect(view.find("h2").text()).toBe("Create New System");
   });
 });
 
