@@ -1,6 +1,6 @@
 import Systems from "@/views/Systems.vue";
 import { $auth } from "./mockauth";
-import { listSystems } from "@/api/systems";
+import { listSystems, deleteSystem } from "@/api/systems";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import VueRouter from "vue-router";
@@ -18,6 +18,9 @@ const mocks = { $auth };
 describe("Test Systems list", () => {
   beforeEach(() => {
     jest.resetModules();
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
   });
   it("Test load systems", async () => {
     const wrapper = mount(Systems, {
@@ -70,5 +73,24 @@ describe("Test Systems list", () => {
     await flushPromises();
     //expect one site row
     expect(wrapper.findAll("tbody tr").length).toBe(1);
+  });
+  it("test delete without selection", async () => {
+    const wrapper = mount(Systems, {
+      localVue,
+      router,
+      mocks,
+    });
+
+    await flushPromises();
+
+    wrapper.vm.$data.selected = null;
+
+    await flushPromises();
+
+    // @ts-expect-error Vue instance method
+    wrapper.vm.deleteSystem();
+
+    await flushPromises();
+    expect(deleteSystem).not.toHaveBeenCalled();
   });
 });

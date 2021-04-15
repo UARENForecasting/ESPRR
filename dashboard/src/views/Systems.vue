@@ -162,7 +162,7 @@ export default class Systems extends Vue {
     }
   }
   async deleteSystem(): Promise<void> {
-    if (this.selected) {
+    if (this.selected != null) {
       const token = await this.$auth.getTokenSilently();
       SystemsAPI.deleteSystem(token, this.selected.object_id)
         .then(() => this.getSystems())
