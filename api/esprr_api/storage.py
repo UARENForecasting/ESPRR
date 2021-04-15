@@ -270,7 +270,9 @@ class StorageInterface:
     def update_system(
         self, system_id: UUID, system_def: models.PVSystem
     ) -> models.StoredObjectID:
-        self._call_procedure("update_system", system_id, system_def.json())
+        self._call_procedure(
+            "update_system", system_id, system_def.name, system_def.json()
+        )
         return models.StoredObjectID(object_id=system_id, object_type="system")
 
     def get_system_hash(self, system_id: UUID) -> str:
