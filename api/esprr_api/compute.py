@@ -107,28 +107,26 @@ def compute_total_system_power(
 def _largest_ramps(period: int, series: pd.Series, quantile: float):
     """Find the typical large ramps considering the whole month together"""
     out = (
-        series.resample(f"{period}min")
+        series.resample(f"{period}min")  # type: ignore
         .mean()
         .diff()
         .dropna()
-        .abs()
         .groupby(lambda x: x.month)
         .quantile(quantile)
     )
     return out
 
 
-def _typical_ss_ramps(period: int, series: pd.Series):
+def _typical_ss_ramps(period: int, series: pd.Series, quantile: float):
     """Apply to a clearsky power to estimate the sunrise/set ramps for each day
     and take the mean over a month for the typical monthly sunrise/set ramp"""
     out = (
-        series.resample(f"{period}min")
+        series.resample(f"{period}min")  # type: ignore
         .mean()
         .diff()
         .dropna()
-        .abs()
         .groupby(lambda x: x.date)
-        .quantile(0.95)
+        .quantile(quantile)
         .groupby(lambda x: x.month)
         .mean()
     )
@@ -137,29 +135,38 @@ def _typical_ss_ramps(period: int, series: pd.Series):
 
 def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFrame:
     system_center = system.boundary._rect.centroid
-    data = data.tz_convert("Etc/GMT+7")
+    data = data.tz_convert("Etc/GMT+7")  # type: ignore
     zenith = get_solarposition(data.index, system_center.y, system_center.x)["zenith"]
+    # remove most of nighttime but keep some to get the diff for morning/evening ramps
     data[zenith > 100] = np.nan
     periods = (5, 10, 15, 30, 60)
     out = pd.DataFrame(
         {
-            k: v
+            k: v  # type: ignore
             for p in periods
             for k, v in (
                 (
-                    (f"{p}-min", "p95 daytime ramp"),
+                    (f"{p}-min", "large daytime up-ramp"),
                     _largest_ramps(p, data.ac_power, 0.95),
                 ),
                 (
-                    (f"{p}-min", "typical sunrise/set ramp"),
-                    _typical_ss_ramps(p, data.clearsky_ac_power),
+                    (f"{p}-min", "large daytime down-ramp"),
+                    _largest_ramps(p, data.ac_power, 0.05),
+                ),
+                (
+                    (f"{p}-min", "typical sunrise ramp"),
+                    _typical_ss_ramps(p, data.clearsky_ac_power, 0.95),
+                ),
+                (
+                    (f"{p}-min", "typical sunset ramp"),
+                    _typical_ss_ramps(p, data.clearsky_ac_power, 0.05),
                 ),
             )
         },
     ).round(2)
     out.index = pd.Index([calendar.month_name[i] for i in out.index], name="month")
     out.columns.names = ["interval", "statistic"]
-    return out.melt(ignore_index=False).reset_index()
+    return out.melt(ignore_index=False).reset_index()  # type: ignore
 
 
 def _get_dataset(dataset_name: models.DatasetEnum) -> NSRDBDataset:

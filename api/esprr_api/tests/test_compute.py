@@ -88,6 +88,24 @@ def test_compute_total_system_power(ready_dataset, system_def, mocker, tracker):
     assert single.call_count == 12
 
 
+def test_compute_statistics(system_def):
+    data = pd.DataFrame(
+        {"ac_power": [10, 11, 12, 11], "clearsky_ac_power": [12, 11, 12, 11]},
+        index=pd.DatetimeIndex(
+            [
+                "2019-04-01T12:00-07:00",
+                "2019-04-01T13:00-07:00",
+                "2019-05-01T12:00-07:00",
+                "2019-05-01T13:00-07:00",
+            ]
+        ),
+    )
+    out = compute.compute_statistics(system_def, data)
+    assert isinstance(out, pd.DataFrame)
+    assert len(out.columns) == 4
+    assert len(out) == 5 * 4 * 2
+
+
 def test_get_dataset(nsrdb_data, dataset_name):
     settings.nsrdb_data_path = nsrdb_data
     ds = compute._get_dataset(dataset_name)
@@ -109,6 +127,11 @@ def test_run_job(
     update = mocker.patch("esprr_api.storage.StorageInterface.update_system_model_data")
     compute.run_job(system_id, dataset_name, auth0_id)
     assert update.call_count == 1
+    cargs = update.call_args[0]
+    assert cargs[0] == system_id
+    assert cargs[1] == dataset_name
+    assert cargs[3].startswith(b"ARROW")
+    assert cargs[4].startswith(b"ARROW")
 
 
 def test_run_job_badid(
