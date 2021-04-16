@@ -105,6 +105,7 @@ def compute_total_system_power(
 
 
 def _largest_ramps(period: int, series: pd.Series, quantile: float):
+    """Find the typical large ramps considering the whole month together"""
     out = (
         series.resample(f"{period}min")
         .mean()
@@ -118,6 +119,8 @@ def _largest_ramps(period: int, series: pd.Series, quantile: float):
 
 
 def _typical_ss_ramps(period: int, series: pd.Series):
+    """Apply to a clearsky power to estimate the sunrise/set ramps for each day
+    and take the mean over a month for the typical monthly sunrise/set ramp"""
     out = (
         series.resample(f"{period}min")
         .mean()
