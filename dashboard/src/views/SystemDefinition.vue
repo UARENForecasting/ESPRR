@@ -1,145 +1,114 @@
 <template>
   <div class="system-definition-form">
-    <div v-if="definition">
-      <h2 v-if="systemId">Update System</h2>
-      <h2 v-else>Create New System</h2>
-      <form v-if="definition" id="system-definition" @submit="submitSystem">
-        <label>Name: <input type="text" v-model="definition.name" /></label>
-        <label
-          >AC Capacity:
-          <input
-            type="number"
-            step="any"
-            v-model.number="definition.ac_capacity"
-        /></label>
-        <label
-          >DC/ AC Ratio:
-          <input
-            type="number"
-            step="any"
-            v-model.number="definition.dc_ac_ratio"
-        /></label>
-        <label
-          >Albedo:
-          <input type="number" step="any" v-model.number="definition.albedo"
-        /></label>
-
-        <fieldset class="boundary">
-          <!-- Replace with vue-leaflet/map selection -->
-          <legend>Boundary</legend>
-          <fieldset class="nw_corner">
-            <legend>Northwest Corner</legend>
-            <label>
-              Latitude:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.boundary.nw_corner.latitude"
-              />
-            </label>
-            <label>
-              Longitude:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.boundary.nw_corner.longitude"
-              />
-            </label>
-          </fieldset>
-          <fieldset class="se_corner">
-            <legend>Southeast Corner</legend>
-            <label>
-              Latitude:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.boundary.se_corner.latitude"
-              />
-            </label>
-            <label>
-              Longitude:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.boundary.se_corner.longitude"
-              />
-            </label>
-          </fieldset>
-        </fieldset>
-        <fieldset class="tracking">
-          <legend>Tracking</legend>
-          <label>
-            Tracking Type:
-            <input type="radio" v-model="trackingType" value="fixed" />Fixed
+    <h2 v-if="systemId">Update System</h2>
+    <h2 v-else>Create New System</h2>
+    <hr />
+    <div v-if="definition" class="definition-container">
+      <div id="definition-inputs">
+        <form v-if="definition" id="system-definition" @submit="submitSystem">
+          <label>Name: <input type="text" v-model="definition.name" /></label>
+          <label
+            >AC Capacity:
             <input
-              type="radio"
-              v-model="trackingType"
-              value="singleAxis"
-            />Single Axis
-          </label>
-          <fieldset class="fixed" v-if="trackingType == 'fixed'">
+              type="number"
+              step="any"
+              v-model.number="definition.ac_capacity"
+          /></label>
+          <label
+            >DC/ AC Ratio:
+            <input
+              type="number"
+              step="any"
+              v-model.number="definition.dc_ac_ratio"
+          /></label>
+          <label
+            >Albedo:
+            <input type="number" step="any" v-model.number="definition.albedo"
+          /></label>
+
+          <fieldset class="tracking">
+            <legend>Tracking</legend>
             <label>
-              Tilt:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.tracking.tilt"
-              />
-            </label>
-            <label>
-              Azimuth:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.tracking.azimuth"
-              />
-            </label>
-          </fieldset>
-          <fieldset class="fixed" v-else>
-            <label>
-              Axis Tilt:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.tracking.axis_tilt"
-              />
-            </label>
-            <label>
-              Axis Azimuth:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.tracking.axis_azimuth"
-              />
-            </label>
-            <label>
-              Ground Coverage Ratio:
-              <input
-                type="number"
-                step="any"
-                v-model.number="definition.tracking.gcr"
-              />
-            </label>
-            <label>
-              Backtracking:
+              Tracking Type:
+              <input type="radio" v-model="trackingType" value="fixed" />Fixed
               <input
                 type="radio"
-                v-model="definition.tracking.backtracking"
-                :value="true"
-              />True
-              <input
-                type="radio"
-                v-model="definition.tracking.backtracking"
-                :value="false"
-              />False
+                v-model="trackingType"
+                value="singleAxis"
+              />Single Axis
             </label>
+            <fieldset class="fixed" v-if="trackingType == 'fixed'">
+              <label>
+                Tilt:
+                <input
+                  type="number"
+                  step="any"
+                  v-model.number="definition.tracking.tilt"
+                />
+              </label>
+              <label>
+                Azimuth:
+                <input
+                  type="number"
+                  step="any"
+                  v-model.number="definition.tracking.azimuth"
+                />
+              </label>
+            </fieldset>
+            <fieldset class="fixed" v-else>
+              <label>
+                Axis Tilt:
+                <input
+                  type="number"
+                  step="any"
+                  v-model.number="definition.tracking.axis_tilt"
+                />
+              </label>
+              <label>
+                Axis Azimuth:
+                <input
+                  type="number"
+                  step="any"
+                  v-model.number="definition.tracking.axis_azimuth"
+                />
+              </label>
+              <label>
+                Ground Coverage Ratio:
+                <input
+                  type="number"
+                  step="any"
+                  v-model.number="definition.tracking.gcr"
+                />
+              </label>
+              <label>
+                Backtracking:
+                <input
+                  type="radio"
+                  v-model="definition.tracking.backtracking"
+                  :value="true"
+                />True
+                <input
+                  type="radio"
+                  v-model="definition.tracking.backtracking"
+                  :value="false"
+                />False
+              </label>
+            </fieldset>
           </fieldset>
-        </fieldset>
-        <button type="submit">
-          <template v-if="systemId">Update</template
-          ><template v-else>Create</template> System
-        </button>
-      </form>
+          <button type="submit">
+            <template v-if="systemId">Update</template
+            ><template v-else>Create</template> System
+          </button>
+        </form>
+      </div>
+      <div id="definition-map">
+        <system-map
+          :editable="true"
+          :systemBounds="definition.boundary"
+          :capacity="definition.ac_capacity"
+          @bounds-updated="updateBounds"
+        />
+      </div>
     </div>
     <div v-else>The System could not be found.</div>
   </div>
@@ -147,12 +116,17 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import * as SystemsApi from "@/api/systems";
+import SystemMap from "@/components/Map.vue";
+
 import {
   StoredPVSystem,
   PVSystem,
   FixedTracking,
   SingleAxisTracking,
+  BoundingBox,
 } from "@/models";
+
+Vue.component("system-map", SystemMap);
 
 @Component
 export default class SystemDefinition extends Vue {
@@ -172,18 +146,9 @@ export default class SystemDefinition extends Vue {
     if (this.systemId) {
       this.loadSystem();
     } else {
+      // @ts-expect-error don't expect boundary at creation
       this.definition = {
         name: "New System",
-        boundary: {
-          nw_corner: {
-            latitude: 33.44,
-            longitude: -112.07,
-          },
-          se_corner: {
-            latitude: 33.43,
-            longitude: -112.06,
-          },
-        },
         tracking: {
           tilt: 0,
           azimuth: 0,
@@ -271,10 +236,26 @@ export default class SystemDefinition extends Vue {
     }
     this.definition.tracking = newParameters;
   }
+
+  updateBounds(newBounds: BoundingBox): void {
+    this.definition.boundary = newBounds;
+  }
 }
 </script>
 <style scoped>
 label {
   display: block;
+}
+.definition-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.definition-inputs,
+.definition-map {
+  display: grid;
+}
+.map-wrapper {
+  height: 500px;
+  width: 50%;
 }
 </style>
