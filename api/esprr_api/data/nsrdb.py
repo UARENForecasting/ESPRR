@@ -134,7 +134,6 @@ class NSRDBDataset:
         cols = irr + other
         clrsky_cols = [f"clearsky_{v}" for v in irr]
         all_cols = cols + clrsky_cols
-        rename = {}
         with self.open_dataset() as ds:
             for pt in points:
                 data = (
@@ -148,7 +147,7 @@ class NSRDBDataset:
                     altitude=data.elevation.item(),
                 )
                 df = (
-                    data.to_dataframe()
+                    data.to_dataframe()  # type: ignore
                     .set_index("times")
                     .tz_localize("UTC")
                     .astype("float32")

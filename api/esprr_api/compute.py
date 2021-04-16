@@ -1,4 +1,3 @@
-from hashlib import sha256
 from uuid import UUID
 
 
@@ -123,7 +122,9 @@ def run_job(system_id: UUID, dataset_name: models.DatasetEnum, user: str):
                 raise
     dataset = _get_dataset(dataset_name)
     ac_power = compute_total_system_power(system.definition, dataset)
-    ac_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(ac_power.reset_index()))  # type: ignore
+    ac_bytes = utils.dump_arrow_bytes(
+        utils.convert_to_arrow(ac_power.reset_index())
+    )  # type: ignore
     stats_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(pd.DataFrame()))
     with si.start_transaction() as st:
         st.update_system_model_data(

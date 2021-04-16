@@ -1,5 +1,5 @@
 import pytest
-from rq import Queue, get_current_job, SimpleWorker
+from rq import Queue, get_current_job
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
