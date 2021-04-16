@@ -73,16 +73,8 @@ def compute_single_location(
     mc.run_model(data.weather_data)
     ac: pd.Series = mc.results.ac
 
-    clr_irr = location.get_clearsky(
-        ac.index,
-        model="simplified_solis",
-        aod700=data.clearsky_data["aod700"],
-        precipitable_water=data.clearsky_data["precipitable_water"],
-        solar_position=mc.results.solar_position,
-    )
-    clr_df = pd.concat([clr_irr, data.weather_data[["temp_air", "wind_speed"]]], axis=1)
     clr_mc = ModelChain.with_pvwatts(system=pvsystem, location=location)
-    clr_mc.run_model(clr_df)
+    clr_mc.run_model(data.clearsky_data)
     clr_ac: pd.Series = clr_mc.results.ac
 
     out = pd.DataFrame({"ac_power": ac, "clearsky_ac_power": clr_ac})

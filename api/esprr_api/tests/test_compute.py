@@ -37,27 +37,23 @@ def test_cachedlocation(mocker, args, kwargs):
 
 def test_compute_single_location(system_def, mocker):
     solpos = mocker.spy(compute.Location, "get_solarposition")
+    df = pd.DataFrame(
+        {
+            "ghi": [1100, 0],
+            "dni": [1000, 0],
+            "dhi": [100, 0],
+            "temp_air": [25, 25],
+            "wind_speed": [10, 10],
+        },
+        index=pd.DatetimeIndex(
+            [pd.Timestamp("2021-05-03T19:00Z"), pd.Timestamp("2021-05-04T07:00Z")]
+        ),
+    )
     data = models.SystemData(
         location=dict(latitude=32.02, longitude=-110.9, altitude=800),
         fraction_of_total=0.2,
-        weather_data=pd.DataFrame(
-            {
-                "ghi": [1100, 0],
-                "dni": [1000, 0],
-                "dhi": [100, 0],
-                "temp_air": [25, 25],
-                "wind_speed": [10, 10],
-            },
-            index=pd.DatetimeIndex(
-                [pd.Timestamp("2021-05-03T19:00Z"), pd.Timestamp("2021-05-04T07:00Z")]
-            ),
-        ),
-        clearsky_data=pd.DataFrame(
-            {"aod700": [0.5, 0.05], "precipitable_water": [5, 0.2]},
-            index=pd.DatetimeIndex(
-                [pd.Timestamp("2021-05-03T19:00Z"), pd.Timestamp("2021-05-04T07:00Z")]
-            ),
-        ),
+        weather_data=df,
+        clearsky_data=df,
     )
     out = compute.compute_single_location(system_def, data)
     assert isinstance(out, pd.DataFrame)
@@ -65,7 +61,7 @@ def test_compute_single_location(system_def, mocker):
     assert set(out.columns) == {"ac_power", "clearsky_ac_power"}
     assert out.ac_power.iloc[0] == 2.0
     assert out.ac_power.iloc[1] == 0.0
-    assert abs(out.clearsky_ac_power.iloc[0] - 1.539577) < 1e-6
+    assert out.clearsky_ac_power.iloc[0] == 2.0
     assert out.clearsky_ac_power.iloc[1] == 0.0
     assert solpos.call_count == 1  # cachelocation working
 

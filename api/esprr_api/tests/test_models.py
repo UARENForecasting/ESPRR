@@ -145,10 +145,6 @@ good_df = pd.DataFrame(
     {"ghi": 0, "dni": 0, "dhi": 0, "temp_air": 0, "wind_speed": 0},  # type: ignore
     index=pd.DatetimeIndex([pd.Timestamp("2021-04-04T00:00Z")]),  # type: ignore
 )
-clr_df = pd.DataFrame(
-    {"aod700": 0, "precipitable_water": 0},  # type: ignore
-    index=pd.DatetimeIndex([pd.Timestamp("2021-04-04T00:00Z")]),  # type: ignore
-)
 
 
 @pytest.mark.parametrize(
@@ -159,31 +155,31 @@ clr_df = pd.DataFrame(
             location=dict(latitude=0, longitude=1.9, altitude="no"),
             fraction_of_total=0.1,
             weather_data=good_df,
-            clearsky_data=clr_df,
+            clearsky_data=good_df,
         ),
         dict(
             location=dict(latitude=0, longitude=1.9, altitude=3818),
             fraction_of_total="invalid",
             weather_data=good_df,
-            clearsky_data=clr_df,
+            clearsky_data=good_df,
         ),
         dict(
             location=dict(latitude=0, longitude=1.9, altitude=3818),
             fraction_of_total=0.38,
             weather_data=good_df.rename(columns={"ghi": "notok"}),
-            clearsky_data=clr_df,
+            clearsky_data=good_df,
         ),
         dict(
             location=dict(latitude=0, longitude=1.9, altitude=3818),
             fraction_of_total=0.38,
             weather_data=good_df.reset_index(drop=True),
-            clearsky_data=clr_df,
+            clearsky_data=good_df,
         ),
         dict(
             location=dict(latitude=0, longitude=1.9, altitude=3818),
             fraction_of_total=0.38,
             weather_data=0,
-            clearsky_data=clr_df,
+            clearsky_data=good_df,
         ),
         dict(
             location=dict(latitude=0, longitude=1.9, altitude=3818),
@@ -195,20 +191,20 @@ clr_df = pd.DataFrame(
             location=dict(latitude=0, longitude=1.9, altitude=3818),
             fraction_of_total=0.38,
             weather_data=good_df,
-            clearsky_data=clr_df.reset_index(drop=True),
+            clearsky_data=good_df.reset_index(drop=True),
         ),
         dict(
             location=dict(latitude=0, longitude=1.9, altitude=3818),
             fraction_of_total=0.38,
             weather_data=good_df,
-            clearsky_data=clr_df.rename(columns={"aod700": "aod"}),
+            clearsky_data=good_df.rename(columns={"ghi": "ghino"}),
         ),
         pytest.param(
             dict(
                 location=dict(latitude=0, longitude=1.9, altitude=3818),
                 fraction_of_total=0.38,
                 weather_data=good_df,
-                clearsky_data=clr_df,
+                clearsky_data=good_df,
             ),
             marks=pytest.mark.xfail(strict=True),
         ),
