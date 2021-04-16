@@ -71,4 +71,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+      - name: flake8
+        run: |
+          cd api
+          pip install flake8
+          flake8 .
       - uses: psf/black@stable

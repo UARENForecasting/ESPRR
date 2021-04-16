@@ -49,11 +49,13 @@ def load_elevation_ds():
 
 def main():
     # files from AWS s3://nrel-pds-nsrdb/conus/ ~2TB each
+    base = Path("/d4/uaren/nsrdb")
     irradiance_file = h5py.File(
-        "/d4/uaren/nsrdb/h5/nsrdb_conus_irradiance_2019.h5", mode="r"
+        base / "h5" / "nsrdb_conus_irradiance_2019.h5", mode="r"
     )
-    weather_file = h5py.File("/d4/uaren/nsrdb/h5/nsrdb_conus_pv_2019.h5", mode="r")
-    output_path = "/d4/uaren/nsrdb/nsrdb_2019.zarr"
+    weather_file = h5py.File(base / "h5" / "nsrdb_conus_pv_2019.h5", mode="r")
+    clr_file = h5py.File(base / "h5" / "nsrdb_conus_clearsky_2019.h5", mode="r")
+    output_path = base / "nsrdb_2019.zarr"
 
     # find coordidnate limits
     coords = irradiance_file["coordinates"][:]
@@ -92,25 +94,25 @@ def main():
     elevation_da.encoding = {"compressor": compressor}
 
     data = {}
-    for var in ("ghi", "dni", "dhi", "fill_flag"):
-        vattr = dict(irradiance_file[var].attrs)
-        vattr.pop("scale_factor")
-        data[var] = xr.DataArray(
-            da.from_array(irradiance_file[var])[:, limits],
-            dims=["time_idx", "spatial_idx"],
-            attrs={k: str(v) for k, v in vattr.items()},
-        ).chunk((times.shape[0], 96))
-        data[var].encoding = {"compressor": compressor}
-    for var in ("air_temperature", "wind_speed"):
-        vattr = dict(weather_file[var].attrs)
+    vars_ = (
+        [(v, irradiance_file) for v in ("ghi", "dni", "dhi", "fill_flag")]
+        + [(v, weather_file) for v in ("air_temperature", "wind_speed")]
+        + [(f"clearsky_{v}", clr_file) for v in ("ghi", "dni", "dhi")]
+    )
+    for var, f in vars_:
+        encoding_dict = {"compressor": compressor}
+        vattr = dict(f[var].attrs)
         scale_factor = vattr.pop("scale_factor")
+        arr = da.from_array(f[var])[:, limits]
+        if scale_factor != 1.0:
+            arr = arr.astype("float32") / scale_factor
+            encoding_dict["scale_factor"] = scale_factor
         data[var] = xr.DataArray(
-            (da.from_array(weather_file[var])[:, limits]).astype("float32")
-            / scale_factor,
+            arr,
             dims=["time_idx", "spatial_idx"],
             attrs={k: str(v) for k, v in vattr.items()},
         ).chunk((times.shape[0], 96))
-        data[var].encoding = {"compressor": compressor, "scale_factor": scale_factor}
+        data[var].encoding = encoding_dict
     ds = xr.Dataset(
         data, coords={"lat": lat, "lon": lon, "elevation": elevation_da, "times": times}
     )
