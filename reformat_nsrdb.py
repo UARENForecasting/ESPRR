@@ -54,8 +54,7 @@ def main():
         base / "h5" / "nsrdb_conus_irradiance_2019.h5", mode="r"
     )
     weather_file = h5py.File(base / "h5" / "nsrdb_conus_pv_2019.h5", mode="r")
-    anc_a = h5py.File(base / "h5" / "nsrdb_conus_ancillary_a_2019.h5", mode="r")
-    anc_b = h5py.File(base / "h5" / "nsrdb_conus_ancillary_b_2019.h5", mode="r")
+    clr_file = h5py.File(base / "h5" / "nsrdb_conus_clearsky_2019.h5", mode="r")
     output_path = base / "nsrdb_2019.zarr"
 
     # find coordidnate limits
@@ -98,7 +97,7 @@ def main():
     vars_ = (
         [(v, irradiance_file) for v in ("ghi", "dni", "dhi", "fill_flag")]
         + [(v, weather_file) for v in ("air_temperature", "wind_speed")]
-        + [("aod", anc_a), ("total_precipitable_water", anc_b)]
+        + [(f"clearsky_{v}", clr_file) for v in ("ghi", "dni", "dhi")]
     )
     for var, f in vars_:
         encoding_dict = {"compressor": compressor}
