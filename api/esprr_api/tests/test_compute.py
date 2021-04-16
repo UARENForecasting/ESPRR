@@ -88,6 +88,29 @@ def test_compute_total_system_power(ready_dataset, system_def, mocker, tracker):
     assert single.call_count == 12
 
 
+def test_daytime_limits():
+    ind = pd.date_range("2020-01-01T00:00Z", freq="5min", periods=10)
+    zen = pd.Series([100, 95, 90, 85, 80, 80, 90, 95, 100, 120], index=ind)
+    exp = pd.Series([0, 0, 1, 1, 1, 1, 1, 1, 0, 0], index=ind).astype(bool)
+    out = compute._daytime_limits(5, zen)
+    pd.testing.assert_series_equal(out, exp)
+
+    ten = pd.Series(
+        [0, 1, 1, 1, 1],
+        index=pd.date_range("2020-01-01T00:00Z", freq="10min", periods=5),
+    ).astype(bool)
+    tenout = compute._daytime_limits(10, zen)
+    pd.testing.assert_series_equal(ten, tenout)
+
+    pd.testing.assert_series_equal(
+        pd.Series(list(range(5)) + list(range(5, 0, -1)), index=ind).diff()[exp],
+        pd.Series(
+            [1.0] * 4 + [-1.0] * 2,  # 90, 95
+            index=pd.date_range("2020-01-01T00:10Z", freq="5min", periods=6),
+        ),
+    )
+
+
 def test_compute_statistics(system_def):
     data = pd.DataFrame(
         {"ac_power": [10, 11, 12, 11], "clearsky_ac_power": [12, 11, 12, 11]},
