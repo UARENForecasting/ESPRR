@@ -1,3 +1,4 @@
+import calendar
 from uuid import UUID
 
 
@@ -8,6 +9,7 @@ from pvlib.location import Location  # type: ignore
 from pvlib.pvsystem import PVSystem  # type: ignore
 from pvlib.tracking import SingleAxisTracker  # type: ignore
 from pvlib.modelchain import ModelChain  # type: ignore
+from pvlib.solarposition import get_solarposition  # type: ignore
 
 
 from . import models, storage, utils
@@ -101,6 +103,85 @@ def compute_total_system_power(
     return out
 
 
+def _daytime_limits(period: int, zenith: pd.Series) -> pd.Series:
+    res = zenith.resample(f"{period}min")  # type: ignore
+    keep: pd.Series = (res.first() <= 90) | (res.last() <= 90)
+    # tack on a nighttime period to capture last down ramp after diff
+    night = keep.astype(int).diff() == -1  # type: ignore
+    keep |= night
+    return keep
+
+
+def _largest_ramps(
+    period: int, series: pd.Series, quantile: float, zenith: pd.Series
+) -> pd.Series:
+    """Find the typical large ramps considering the whole month together"""
+    keep_diffs = _daytime_limits(period, zenith)
+    out: pd.Series = (
+        series.resample(f"{period}min")  # type: ignore
+        .mean()
+        .diff()[keep_diffs]
+        .dropna()
+        .groupby(lambda x: x.month)
+        .quantile(quantile)
+    )
+    return out
+
+
+def _typical_ss_ramps(
+    period: int, series: pd.Series, quantile: float, zenith: pd.Series
+) -> pd.Series:
+    """Apply to a clearsky power to estimate the sunrise/set ramps for each day
+    and take the mean over a month for the typical monthly sunrise/set ramp"""
+    keep_diffs = _daytime_limits(period, zenith)
+    out: pd.Series = (
+        series.resample(f"{period}min")  # type: ignore
+        .mean()
+        .diff()[keep_diffs]
+        .dropna()
+        .groupby(lambda x: x.date)
+        .quantile(quantile)
+        .groupby(lambda x: x.month)
+        .mean()
+    )
+    return out
+
+
+def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFrame:
+    system_center = system.boundary._rect.centroid
+    data = data.tz_convert("Etc/GMT+7")  # type: ignore
+    zenith = get_solarposition(data.index, system_center.y, system_center.x)["zenith"]
+    # remove most of nighttime but keep some to get the diff for morning/evening ramps
+    periods = (5, 10, 15, 30, 60)
+    out = pd.DataFrame(
+        {
+            k: v  # type: ignore
+            for p in periods
+            for k, v in (
+                (
+                    (f"{p}-min", "p95 daytime ramp"),
+                    _largest_ramps(p, data.ac_power, 0.95, zenith),
+                ),
+                (
+                    (f"{p}-min", "p05 daytime ramp"),
+                    _largest_ramps(p, data.ac_power, 0.05, zenith),
+                ),
+                (
+                    (f"{p}-min", "typical sunrise ramp"),
+                    _typical_ss_ramps(p, data.clearsky_ac_power, 0.95, zenith),
+                ),
+                (
+                    (f"{p}-min", "typical sunset ramp"),
+                    _typical_ss_ramps(p, data.clearsky_ac_power, 0.05, zenith),
+                ),
+            )
+        },
+    ).round(2)
+    out.index = pd.Index([calendar.month_name[i] for i in out.index], name="month")
+    out.columns.names = ["interval", "statistic"]
+    return out.melt(ignore_index=False).reset_index()  # type: ignore
+
+
 def _get_dataset(dataset_name: models.DatasetEnum) -> NSRDBDataset:
     # will take about two seconds to load grid, could possibly preload
     # before the RQ fork, but not worth it for now
@@ -125,7 +206,8 @@ def run_job(system_id: UUID, dataset_name: models.DatasetEnum, user: str):
     ac_bytes = utils.dump_arrow_bytes(
         utils.convert_to_arrow(ac_power.reset_index())
     )  # type: ignore
-    stats_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(pd.DataFrame()))
+    stats = compute_statistics(system.definition, ac_power)
+    stats_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(stats))
     with si.start_transaction() as st:
         st.update_system_model_data(
             system_id, dataset_name, syshash, ac_bytes, stats_bytes

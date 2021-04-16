@@ -5,10 +5,11 @@ from typing import Any, Union, Optional
 
 import pandas as pd
 import pvlib  # type: ignore
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, root_validator, validator, PrivateAttr
 from pydantic.fields import Undefined
 from pydantic.types import UUID
 import pytz
+from shapely import geometry  # type: ignore
 
 
 SYSTEM_ID = "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
@@ -120,6 +121,16 @@ class BoundingBox(ThisBase):
 
     nw_corner: LatLon = Field(..., description="NW corner of the bounding box.")
     se_corner: LatLon = Field(..., description="SE corner of the bounding box.")
+    _rect: geometry.Polygon = PrivateAttr()
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._rect = geometry.box(
+            minx=self.nw_corner.longitude,
+            miny=self.se_corner.latitude,
+            maxx=self.se_corner.longitude,
+            maxy=self.nw_corner.latitude,
+        )
 
     @root_validator(skip_on_failure=True)
     def validate_extended_box(cls, values):

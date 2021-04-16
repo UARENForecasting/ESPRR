@@ -79,14 +79,7 @@ class NSRDBDataset:
         """Find the spatial index and fractiona area of the intersection of the NSRDB and the
         bounding box of the system
         """
-        sys_boundary = pvsystem.boundary
-        # make a shapely polygon for the system
-        system_rect = geometry.box(
-            minx=sys_boundary.nw_corner.longitude,
-            miny=sys_boundary.se_corner.latitude,
-            maxx=sys_boundary.se_corner.longitude,
-            maxy=sys_boundary.nw_corner.latitude,
-        )
+        system_rect = pvsystem.boundary._rect
         # first check that the system is within the boundary of the grid
         if not system_rect.within(self.boundary):
             raise ValueError("System is outside the boundary of the background dataset")
