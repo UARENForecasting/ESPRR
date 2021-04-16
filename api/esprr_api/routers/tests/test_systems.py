@@ -163,6 +163,7 @@ def test_get_system_model_status(client, system_id, dataset_name):
         "version": "v0.1",
         "system_modified": False,
         "status": "complete",
+        "error": [],
         "created_at": "2020-12-01T01:23:00+00:00",
         "modified_at": "2020-12-01T01:23:00+00:00",
     }

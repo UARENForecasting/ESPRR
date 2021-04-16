@@ -455,6 +455,29 @@ def test_update_system_model_data(
     assert after.version == __version__
 
 
+def test_update_system_model_data_error(
+    storage_interface,
+    dataset_name,
+    system_id,
+):
+    extime = dt.datetime(2020, 12, 1, 1, 23, tzinfo=dt.timezone.utc)
+    with storage_interface.start_transaction() as st:
+        st.update_system_model_data(
+            system_id,
+            dataset_name,
+            "a" * 32,
+            b"somethighn",
+            None,
+            [{"message": "failed"}],
+        )
+        after = st.get_system_model_meta(system_id, dataset_name)
+    assert after.modified_at > extime
+    assert after.system_modified
+    assert after.status == "error"
+    assert after.created_at == extime
+    assert after.version == __version__
+
+
 def test_update_system_model_data_bad_types(storage_interface, system_id):
     with pytest.raises(HTTPException) as err:
         with storage_interface.start_transaction() as st:

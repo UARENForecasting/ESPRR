@@ -164,3 +164,28 @@ def test_run_job_badid(
     update = mocker.patch("esprr_api.storage.StorageInterface.update_system_model_data")
     compute.run_job(other_system_id, dataset_name, auth0_id)
     assert update.call_count == 0
+
+
+def test_run_job_error(
+    system_id,
+    dataset_name,
+    auth0_id,
+    mocker,
+    ready_dataset,
+    add_example_db_data,
+):
+    update = mocker.patch("esprr_api.storage.StorageInterface.update_system_model_data")
+    mocker.patch("esprr_api.compute._get_dataset", return_value=ready_dataset)
+    mocker.patch(
+        "esprr_api.compute.compute_statistics", side_effect=ValueError("test err")
+    )
+    with pytest.raises(ValueError):
+        compute.run_job(system_id, dataset_name, auth0_id)
+
+    assert update.call_count == 1
+    cargs = update.call_args[0]
+    assert cargs[0] == system_id
+    assert cargs[1] == dataset_name
+    assert cargs[3] is None
+    assert cargs[4] is None
+    assert cargs[5] == {"message": "test err"}

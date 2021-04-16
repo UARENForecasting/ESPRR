@@ -45,7 +45,8 @@ def test_create_system_data_bad_user(cursor, bad_user, system_id):
     assert err.value.args[0] == 1142
 
 
-def test_update_system_data(auth0_id, dictcursor, system_id):
+@pytest.mark.parametrize("err", ["[]", '{"message": "fail"}'])
+def test_update_system_data(auth0_id, dictcursor, system_id, err):
     dictcursor.execute(
         "select * from system_data where system_id = uuid_to_bin(%s, 1) and dataset = %s",
         (system_id, "prepared"),
@@ -57,13 +58,19 @@ def test_update_system_data(auth0_id, dictcursor, system_id):
     new = {
         "timeseries": b"all the dataz",
         "statistics": b"mean",
+        "error": err,
         "version": "v1.0",
         "un_system_hash": "A" * 32,
     }
 
     dictcursor.execute(
-        "call update_system_data(%s, %s, %s, %s, %s, %s, %s)",
-        (auth0_id, system_id, "prepared", *new.values()),
+        "call update_system_data(%s, %s, %s, %s, %s, %s, %s, %s)",
+        (
+            auth0_id,
+            system_id,
+            "prepared",
+            *new.values(),
+        ),
     )
     dictcursor.execute(
         "select *, hex(system_hash) as un_system_hash from system_data where system_id = uuid_to_bin(%s, 1) and dataset = %s",
@@ -80,6 +87,7 @@ def test_update_system_data_bad_dataset(cursor, auth0_id, system_id):
     new = {
         "timeseries": b"all the dataz",
         "statistics": b"mean",
+        "error": "[]",
         "version": "v1.0",
         "un_system_hash": "A" * 32,
     }
@@ -87,7 +95,7 @@ def test_update_system_data_bad_dataset(cursor, auth0_id, system_id):
     with pytest.raises(OperationalError) as err:
         cursor.execute(
             f'call update_system_data("{auth0_id}", "{system_id}"'
-            ', "a", %s, %s, %s, %s)',
+            ', "a", %s, %s, %s, %s, %s)',
             list(new.values()),
         )
     assert err.value.args[0] == 1142
@@ -97,6 +105,7 @@ def test_update_system_data_bad_id(cursor, auth0_id):
     new = {
         "timeseries": b"all the dataz",
         "statistics": b"mean",
+        "error": "[]",
         "version": "v1.0",
         "un_system_hash": "A" * 32,
     }
@@ -104,7 +113,7 @@ def test_update_system_data_bad_id(cursor, auth0_id):
     with pytest.raises(OperationalError) as err:
         cursor.execute(
             f'call update_system_data("{auth0_id}", "{str(uuid1())}"'
-            ', "a", %s, %s, %s, %s)',
+            ', "a", %s, %s, %s, %s, %s)',
             list(new.values()),
         )
     assert err.value.args[0] == 1142
@@ -114,6 +123,7 @@ def test_update_system_data_bad_user(cursor, bad_user, system_id):
     new = {
         "timeseries": b"all the dataz",
         "statistics": b"mean",
+        "error": "[]",
         "version": "v1.0",
         "un_system_hash": "A" * 32,
     }
@@ -121,7 +131,7 @@ def test_update_system_data_bad_user(cursor, bad_user, system_id):
     with pytest.raises(OperationalError) as err:
         cursor.execute(
             f'call update_system_data("{bad_user}", "{system_id}",'
-            '"a", %s, %s, %s, %s)',
+            '"a", %s, %s, %s, %s, %s)',
             list(new.values()),
         )
     assert err.value.args[0] == 1142
@@ -215,12 +225,7 @@ def test_get_system_statistics_bad_user(
 
 @pytest.mark.parametrize(
     "dataset",
-    [
-        "prepared",
-        "complete",
-        "statistics missing",
-        "timeseries missing",
-    ],
+    ["prepared", "complete", "statistics missing", "timeseries missing", "error"],
 )
 def test_get_system_meta(system_id, dictcursor, dataset, auth0_id):
     dictcursor.execute(
