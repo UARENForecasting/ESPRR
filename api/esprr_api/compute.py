@@ -10,7 +10,7 @@ from pvlib.location import Location  # type: ignore
 from pvlib.pvsystem import PVSystem  # type: ignore
 from pvlib.tracking import SingleAxisTracker  # type: ignore
 from pvlib.modelchain import ModelChain  # type: ignore
-from pvlib.solarposition import get_solarposition
+from pvlib.solarposition import get_solarposition  # type: ignore
 
 
 from . import models, storage, utils
@@ -104,7 +104,7 @@ def compute_total_system_power(
     return out
 
 
-def _largest_ramps(period: int, series: pd.Series):
+def _largest_ramps(period: int, series: pd.Series, quantile: float):
     out = (
         series.resample(f"{period}min")
         .mean()
@@ -112,7 +112,7 @@ def _largest_ramps(period: int, series: pd.Series):
         .dropna()
         .abs()
         .groupby(lambda x: x.month)
-        .quantile(0.95)
+        .quantile(quantile)
     )
     return out
 
@@ -136,24 +136,27 @@ def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFr
     system_center = system.boundary._rect.centroid
     data = data.tz_convert("Etc/GMT+7")
     zenith = get_solarposition(data.index, system_center.y, system_center.x)["zenith"]
-    data[zenith > 95] = np.nan
+    data[zenith > 100] = np.nan
     periods = (5, 10, 15, 30, 60)
     out = pd.DataFrame(
         {
-            **{
-                ("all-sky", f"{p}-min 95%"): _largest_ramps(p, data.ac_power)
-                for p in periods
-            },
-            **{
-                ("sunrise/set", f"{p}-min typ."): _typical_ss_ramps(
-                    p, data.clearsky_ac_power
-                )
-                for p in periods
-            },
+            k: v
+            for p in periods
+            for k, v in (
+                (
+                    (f"{p}-min", "p95 daytime ramp"),
+                    _largest_ramps(p, data.ac_power, 0.95),
+                ),
+                (
+                    (f"{p}-min", "typical sunrise/set ramp"),
+                    _typical_ss_ramps(p, data.clearsky_ac_power),
+                ),
+            )
         },
-    )
-    out.index = pd.Index(calendar.month_name[1:], name="month")
-    return out
+    ).round(2)
+    out.index = pd.Index([calendar.month_name[i] for i in out.index], name="month")
+    out.columns.names = ["interval", "statistic"]
+    return out.melt(ignore_index=False).reset_index()
 
 
 def _get_dataset(dataset_name: models.DatasetEnum) -> NSRDBDataset:
@@ -180,7 +183,8 @@ def run_job(system_id: UUID, dataset_name: models.DatasetEnum, user: str):
     ac_bytes = utils.dump_arrow_bytes(
         utils.convert_to_arrow(ac_power.reset_index())
     )  # type: ignore
-    stats_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(pd.DataFrame()))
+    stats = compute_statistics(system.definition, ac_power)
+    stats_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(stats))
     with si.start_transaction() as st:
         st.update_system_model_data(
             system_id, dataset_name, syshash, ac_bytes, stats_bytes
