@@ -6,7 +6,37 @@ from esprr_api import compute, models, settings
 from esprr_api.data import nsrdb
 
 
-def test_compute_ac_power(system_def):
+@pytest.mark.parametrize(
+    "args,kwargs",
+    (
+        ((), {}),
+        ((0,), {}),
+        ((9,), {"a": "b"}),
+        ((), {"pressure": 883232}),
+        ((), {"temperature": pd.Series([0, 1, 2])}),
+    ),
+)
+def test_cachedlocation(mocker, args, kwargs):
+    solpos = mocker.spy(compute.Location, "get_solarposition")
+    loc = compute.CachedLocation(32, -110)
+    times = pd.date_range("2019-01-01T00:00Z", freq="5min", periods=3)
+    assert solpos.call_count == 0
+    t1 = loc.get_solarposition(times, *args, **kwargs)
+    assert solpos.call_count == 1
+    t2 = loc.get_solarposition(times, *args, **kwargs)
+    assert solpos.call_count == 1
+    pd.testing.assert_frame_equal(t1, t2)
+
+    loc.get_solarposition(times[:-1])
+    assert solpos.call_count == 2
+    loc.get_solarposition(times[:-1])
+    assert solpos.call_count == 2
+    loc.get_solarposition(times, *args, **kwargs)
+    assert solpos.call_count == 3
+
+
+def test_compute_single_location(system_def, mocker):
+    solpos = mocker.spy(compute.Location, "get_solarposition")
     data = models.SystemData(
         location=dict(latitude=32.02, longitude=-110.9, altitude=800),
         fraction_of_total=0.2,
@@ -22,12 +52,22 @@ def test_compute_ac_power(system_def):
                 [pd.Timestamp("2021-05-03T19:00Z"), pd.Timestamp("2021-05-04T07:00Z")]
             ),
         ),
+        clearsky_data=pd.DataFrame(
+            {"aod700": [0.5, 0.05], "precipitable_water": [5, 0.2]},
+            index=pd.DatetimeIndex(
+                [pd.Timestamp("2021-05-03T19:00Z"), pd.Timestamp("2021-05-04T07:00Z")]
+            ),
+        ),
     )
-    out = compute.compute_ac_power(system_def, data)
-    assert isinstance(out, pd.Series)
+    out = compute.compute_single_location(system_def, data)
+    assert isinstance(out, pd.DataFrame)
     assert len(out) == 2
-    assert out.iloc[0] == 2.0
-    assert out.iloc[1] == 0.0
+    assert set(out.columns) == {"ac_power", "clearsky_ac_power"}
+    assert out.ac_power.iloc[0] == 2.0
+    assert out.ac_power.iloc[1] == 0.0
+    assert abs(out.clearsky_ac_power.iloc[0] - 1.539577) < 1e-6
+    assert out.clearsky_ac_power.iloc[1] == 0.0
+    assert solpos.call_count == 1  # cachelocation working
 
 
 @pytest.mark.parametrize(
@@ -40,12 +80,15 @@ def test_compute_ac_power(system_def):
     ],
 )
 def test_compute_total_system_power(ready_dataset, system_def, mocker, tracker):
-    single = mocker.spy(compute, "compute_ac_power")
+    single = mocker.spy(compute, "compute_single_location")
     system_def.tracking = tracker
     out = compute.compute_total_system_power(system_def, ready_dataset)
-    assert isinstance(out, pd.Series)
-    assert abs(out.max() - 10.0) < 1e-6
-    assert out.min() == 0.0
+    assert isinstance(out, pd.DataFrame)
+    assert set(out.columns) == {"ac_power", "clearsky_ac_power"}
+
+    assert abs(out.ac_power.max() - 10.0) < 1e-6
+    assert abs(out.clearsky_ac_power.max() - 10.0) < 1e-6
+    assert out.ac_power.min() == 0.0
     assert single.call_count == 12
 
 

@@ -2,6 +2,7 @@ from hashlib import sha256
 from uuid import UUID
 
 
+from dask.base import tokenize  # type: ignore
 from fastapi import HTTPException
 import pandas as pd
 from pvlib.location import Location  # type: ignore
@@ -14,39 +15,18 @@ from . import models, storage, utils
 from .data.nsrdb import NSRDBDataset
 
 
-def _hash_args(times, args, kwargs, kwd_mark=(object(),)):
-    # inspired by functools hashing for @lru_cache
-    def _hash_pd(obj):
-        if isinstance(obj, (pd.Index, pd.DataFrame, pd.Series)):
-            return sha256(pd.util.hash_pandas_object(obj).values).hexdigest()
-        else:
-            return obj
-
-    key = tuple(_hash_pd(a) for a in args)
-    if kwargs:
-        key += kwd_mark
-        for k, v in kwargs.items():
-            key += (k, _hash_pd(v))
-    key += kwd_mark
-    thash = _hash_pd(times)
-    key += (thash,)
-
-    return hash(key)
-
-
 class CachedLocation(Location):
     """
     Cache the solar position data and avoid recomputing multiple times
     """
 
+    _stored_solpos = (None, None)
+
     def get_solarposition(self, times, *args, **kwargs):
         # cant use functools since datetimeindex not hashable
-        if (
-            not hasattr(self, "_stored_solpos")
-            or _hash_args(times, args, kwargs) != self._stored_solpos[0]
-        ):
+        # dask has a nice tokenize function for hashing
+        if (key := tokenize(times, *args, **kwargs)) != self._stored_solpos[0]:
             solpos = super().get_solarposition(times, *args, **kwargs)
-            key = _hash_args(times, args, kwargs)
             self._stored_solpos = (key, solpos)
         return self._stored_solpos[1].copy()
 
@@ -106,6 +86,7 @@ def compute_single_location(
     clr_ac: pd.Series = clr_mc.results.ac
 
     out = pd.DataFrame({"ac_power": ac, "clearsky_ac_power": clr_ac})
+    out.index.name = "time"  # type: ignore
     return out
 
 
@@ -114,18 +95,18 @@ def compute_total_system_power(
 ) -> pd.DataFrame:
     """Compute the total AC power from the weather data and fractional capacity of each grid
     box the system contains"""
-    out: pd.DataFrame[float] = pd.DataFrame(
+    out: pd.DataFrame = pd.DataFrame(
         [],
         columns=["ac_power", "clearsky_ac_power"],
-        index=pd.DatetimeIndex([], name="time"),
+        index=pd.DatetimeIndex([], name="time"),  # type: ignore
         dtype="float64",
-    )  # type: ignore
+    )
     for data in dataset.generate_data(system):
         part = compute_single_location(system, data)
         if out.empty:  # type: ignore
             out = part
         else:
-            out += part
+            out += part  # type: ignore
     return out
 
 
