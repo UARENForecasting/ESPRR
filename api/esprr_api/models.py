@@ -303,3 +303,11 @@ class SystemDataMeta(ThisBase):
                 "modified_at": "2020-12-01T01:23:00+00:00",
             }
         }
+
+
+class ManagementSystemDataStatus(ThisBase):
+    system_id: UUID
+    dataset: str
+    version: str
+    status: str
+    hash_changed: bool
