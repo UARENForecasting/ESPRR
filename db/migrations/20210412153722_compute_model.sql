@@ -6,6 +6,7 @@ create table system_data(
   system_hash binary(16),
   timeseries longblob,
   statistics longblob,
+  error JSON not null default (json_array()),
   created_at timestamp not null default current_timestamp,
   modified_at timestamp not null default current_timestamp on update current_timestamp,
   primary key system_dataset_key (system_id, dataset),
@@ -36,7 +37,7 @@ create definer = 'select_objects'@'localhost'
         mysql_errno = 1142;
     end if;
   end;
-  
+
 grant select on system_data to 'select_objects'@'localhost';
 grant execute on procedure `get_system_timeseries` to 'select_objects'@'localhost';
 grant execute on procedure `get_system_timeseries` to 'apiuser'@'%';
@@ -61,7 +62,7 @@ create definer = 'select_objects'@'localhost'
         mysql_errno = 1142;
     end if;
   end;
-  
+
 grant execute on procedure `get_system_statistics` to 'select_objects'@'localhost';
 grant execute on procedure `get_system_statistics` to 'apiuser'@'%';
 
@@ -94,7 +95,7 @@ grant execute on procedure `create_system_data` to 'apiuser'@'%';
 create definer = 'update_objects'@'localhost'
   procedure update_system_data (auth0id varchar(32), systemid char(36),
     datasetid varchar(32), new_timeseries longblob, new_statistics longblob,
-    new_version varchar(32), new_system_hash char(32))
+    new_error JSON, new_version varchar(32), new_system_hash char(32))
     comment 'Update the timeseries and stats data'
     modifies sql data sql security definer
   begin
@@ -107,12 +108,12 @@ create definer = 'update_objects'@'localhost'
     if allowed then
       update system_data set version = new_version,
         system_hash = unhex(new_system_hash),
-        timeseries = new_timeseries, statistics = new_statistics
+        timeseries = new_timeseries, statistics = new_statistics, error = new_error
 	where system_id = binid and dataset = datasetid;
     else
       signal sqlstate '42000' set message_text = 'Updating system data denied',
         mysql_errno = 1142;
-    end if;    
+    end if;
   end;
 grant update, select(system_id, dataset) on system_data to 'update_objects'@'localhost';
 grant execute on procedure `update_system_data` to 'update_objects'@'localhost';
@@ -124,14 +125,19 @@ create definer = 'select_objects'@'localhost'
     returns varchar(32)
     reads sql data sql security definer
   begin
+    declare error_status boolean default (exists(
+      select 1 from system_data where system_id = binid and dataset = datasetin
+      and json_length(error) != 0));
     declare timeseries_status boolean default (exists(
       select 1 from system_data where system_id = binid and dataset = datasetin
       and timeseries is not null));
     declare stats_status boolean default (exists(
       select 1 from system_data where system_id = binid and dataset = datasetin
-      and statistics is not null));	
+      and statistics is not null));
 
-    if timeseries_status and stats_status then
+    if error_status then
+      return 'error';
+    elseif timeseries_status and stats_status then
       return 'complete';
     elseif timeseries_status and not stats_status then
       return 'statistics missing';
@@ -160,7 +166,7 @@ create definer = 'select_objects'@'localhost'
       select bin_to_uuid(system_id, 1) as system_id,
         dataset, version, hex(system_hash) as system_hash,
         get_system_data_status(binid, datasetid) as status,
-        created_at, modified_at
+	error, created_at, modified_at
       from system_data where system_id = binid and dataset = datasetid;
     else
       signal sqlstate '42000' set message_text = 'Getting system data metadata denied',
@@ -227,4 +233,3 @@ drop procedure create_system_data;
 drop procedure get_system_statistics;
 drop procedure get_system_timeseries;
 drop table system_data;
-

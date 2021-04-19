@@ -201,12 +201,21 @@ def run_job(system_id: UUID, dataset_name: models.DatasetEnum, user: str):
                 return
             else:  # pragma: no cover
                 raise
-    dataset = _get_dataset(dataset_name)
-    ac_power = compute_total_system_power(system.definition, dataset)
+    try:
+        dataset = _get_dataset(dataset_name)
+        ac_power = compute_total_system_power(system.definition, dataset)
+        stats = compute_statistics(system.definition, ac_power)
+    except Exception as err:
+        error = {"message": str(err)}
+        with si.start_transaction() as st:
+            st.update_system_model_data(
+                system_id, dataset_name, syshash, None, None, error
+            )
+        raise
+
     ac_bytes = utils.dump_arrow_bytes(
         utils.convert_to_arrow(ac_power.reset_index())
     )  # type: ignore
-    stats = compute_statistics(system.definition, ac_power)
     stats_bytes = utils.dump_arrow_bytes(utils.convert_to_arrow(stats))
     with si.start_transaction() as st:
         st.update_system_model_data(

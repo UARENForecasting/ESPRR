@@ -1,6 +1,6 @@
 import datetime as dt
 from enum import Enum
-from typing import Any, Union, Optional
+from typing import Any, Union, Optional, List, Dict
 
 
 import pandas as pd
@@ -277,6 +277,7 @@ class DataStatusEnum(str, Enum):
     complete = "complete"
     statistics_missing = "statistics missing"
     timeseries_missing = "timeseries missing"
+    error = "error"
 
 
 class SystemDataMeta(ThisBase):
@@ -285,6 +286,7 @@ class SystemDataMeta(ThisBase):
     version: Optional[str]
     system_modified: bool
     status: DataStatusEnum
+    error: Union[List[Dict[str, Any]], Dict[str, Any]] = []
     created_at: dt.datetime
     modified_at: dt.datetime
 
@@ -296,6 +298,7 @@ class SystemDataMeta(ThisBase):
                 "version": "v0.1",
                 "system_modified": False,
                 "status": "complete",
+                "error": [],
                 "created_at": "2020-12-01T01:23:00+00:00",
                 "modified_at": "2020-12-01T01:23:00+00:00",
             }

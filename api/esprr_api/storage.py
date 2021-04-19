@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import datetime as dt
 from functools import partial
 import json
-from typing import List, Callable, Dict, Any
+from typing import List, Callable, Dict, Any, Union, Optional
 from uuid import UUID
 
 
@@ -307,8 +307,9 @@ class StorageInterface:
         system_id: UUID,
         dataset: models.DatasetEnum,
         system_hash: str,
-        timeseries_data: bytes,
-        statistics: bytes,
+        timeseries_data: Optional[bytes],
+        statistics: Optional[bytes],
+        error: Union[dict, List[dict]] = [],
     ):
         self._call_procedure(
             "update_system_data",
@@ -316,6 +317,7 @@ class StorageInterface:
             dataset,
             timeseries_data,
             statistics,
+            json.dumps(error),
             __version__,
             system_hash,
         )

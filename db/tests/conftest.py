@@ -79,14 +79,16 @@ def standard_test_data(
         (system_id, user_id, *system_def),
     )
     extime = dt.datetime(2020, 1, 3, 12, 34)
+    err = "[]"
     curs.executemany(
-        "insert into system_data (system_id, dataset, timeseries, statistics, created_at, modified_at) "
-        "values (uuid_to_bin(%s, 1), %s, %s, %s, %s, %s)",
+        "insert into system_data (system_id, dataset, timeseries, statistics, error, created_at, modified_at) "
+        "values (uuid_to_bin(%s, 1), %s, %s, %s, %s, %s, %s)",
         [
-            (system_id, "prepared", None, None, extime, extime),
-            (system_id, "complete", "timeseries", "stats", extime, extime),
-            (system_id, "timeseries missing", None, "stats", extime, extime),
-            (system_id, "statistics missing", "timeseries", None, extime, extime),
+            (system_id, "prepared", None, None, "{}", extime, extime),
+            (system_id, "complete", "timeseries", "stats", err, extime, extime),
+            (system_id, "timeseries missing", None, "stats", err, extime, extime),
+            (system_id, "statistics missing", "timeseries", None, err, extime, extime),
+            (system_id, "error", None, None, '{"message": "fail"}', extime, extime),
         ],
     )
     connection.commit()
