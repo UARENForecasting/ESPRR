@@ -595,7 +595,7 @@ def compute_management_interface(mocker):
 
 
 def test_list_system_data_status(
-    compute_management_interface, system_id, dataset_name, root_conn
+    compute_management_interface, system_id, dataset_name, root_conn, auth0_id
 ):
     curs = root_conn.cursor()
     curs.execute(
@@ -612,6 +612,7 @@ def test_list_system_data_status(
             status="error",
             version="v0.1",
             hash_changed=True,
+            user=auth0_id,
         ),
         models.ManagementSystemDataStatus(
             system_id=system_id,
@@ -619,6 +620,7 @@ def test_list_system_data_status(
             status="complete",
             version="v0.1",
             hash_changed=False,
+            user=auth0_id,
         ),
     ]
 

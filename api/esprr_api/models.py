@@ -311,3 +311,4 @@ class ManagementSystemDataStatus(ThisBase):
     version: str
     status: str
     hash_changed: bool
+    user: str

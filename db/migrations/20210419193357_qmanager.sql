@@ -5,8 +5,10 @@ create definer = 'select_objects'@'localhost'
   begin
     select bin_to_uuid(system_id, 1) as system_id, dataset,
       get_system_data_status(system_id, dataset) as status, version,
-      (system_hash != unhex(md5(systems.definition))) as hash_changed
-    from system_data join systems on systems.id = system_data.system_id;
+      (system_hash != unhex(md5(systems.definition))) as hash_changed,
+      users.auth0_id as user
+    from system_data join (systems, users) on systems.id = system_data.system_id
+    and systems.user_id = users.id;
   end;
 
 grant execute on procedure `list_system_data_status` to 'select_objects'@'localhost';

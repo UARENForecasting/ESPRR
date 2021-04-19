@@ -1,11 +1,11 @@
-def test_list_system_data_status(dictcursor, system_id):
+def test_list_system_data_status(dictcursor, system_id, auth0_id):
     dictcursor.execute(
         "update system_data set system_hash = unhex(md5('a')) where system_id = uuid_to_bin(%s, 1) and dataset = 'timeseries missing'",
         system_id,
     )
     dictcursor.execute("call list_system_data_status()")
     out = dictcursor.fetchall()
-    assert len(out) == 5
+    i = 0
     for o in out:
         assert o["system_id"] == system_id
         assert o["status"] == o["dataset"]
@@ -14,6 +14,9 @@ def test_list_system_data_status(dictcursor, system_id):
         else:
             assert not o["hash_changed"]
         assert "version" in o
+        assert o["user"] == auth0_id
+        i += 1
+    assert i == 5
 
 
 def test_report_failure(dictcursor, system_id):
