@@ -24,12 +24,11 @@ COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     rm requirements.txt
 
-# FROM node:14-buster as jsbuild
-# COPY ./dashboard js
-# RUN cd js && \
-#     npm install && \
-#     npm run postinstall && \
-#     npm run build
+FROM node:14-buster as jsbuild
+COPY ./dashboard js
+RUN cd js && \
+    npm install && \
+    npm run build
 
 FROM basepython as wheelbuild
 COPY . /src
@@ -47,6 +46,6 @@ COPY --from=wheelbuild /src/db/migrations /opt/app-root/migrations
 COPY --from=wheelbuild /src/db/migrate /opt/app-root/bin/migrate
 COPY --from=dbmate /usr/local/bin/dbmate /opt/app-root/bin/dbmate
 RUN pip install --no-cache-dir /opt/app-root/*.whl
-# COPY --from=jsbuild /js/dist /opt/app-root/static
+COPY --from=jsbuild /js/dist /opt/app-root/static
 
 USER 1001
