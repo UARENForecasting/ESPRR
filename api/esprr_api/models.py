@@ -309,6 +309,18 @@ class ManagementSystemDataStatus(ThisBase):
     system_id: UUID
     dataset: str
     version: str
-    status: str
+    status: DataStatusEnum
     hash_changed: bool
     user: str
+
+    def __hash__(self):
+        return hash(
+            (
+                self.system_id,
+                self.dataset,
+                self.version,
+                self.status,
+                self.hash_changed,
+                self.user,
+            )
+        )

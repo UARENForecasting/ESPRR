@@ -357,7 +357,13 @@ class ComputeManagementInterface(StorageInterface):
     def list_system_data_status(self) -> List[models.ManagementSystemDataStatus]:
         with self.start_transaction() as st:
             res = st._call_procedure("list_system_data_status", with_current_user=False)
-        return [models.ManagementSystemDataStatus(**r) for r in res]
+
+        def repq(d):
+            if d["status"] == "prepared":
+                d["status"] = "queued"
+            return d
+
+        return [models.ManagementSystemDataStatus(**repq(r)) for r in res]
 
     def report_failure(self, system_id: str, dataset: str, message: str):
         with self.start_transaction() as st:

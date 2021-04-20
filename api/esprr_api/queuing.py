@@ -1,5 +1,7 @@
+import json
 import logging
-from typing import Union, Type
+import time
+from typing import Union, Type, Tuple, List
 from uuid import UUID
 
 
@@ -65,6 +67,9 @@ class QueueManager:
     ) -> str:
         return f"{str(system_id)}:{dataset}"
 
+    def decompose_key(self, inp: str) -> Tuple[str, str]:
+        return inp.split(":")
+
     def enqueue_job(
         self,
         system_id: Union[UUID, str],
@@ -115,3 +120,105 @@ class QueueManager:
                 registry.remove(key, delete_job=True)
             except Exception:
                 pass
+
+    def remove_invalid_jobs(
+        self, current_status: List[models.ManagementSystemDataStatus]
+    ):
+        """Remove jobs from any queue that are complete or have been
+        deleted from the database"""
+        all_jobs = []
+        jobs_to_remove_if_present = []
+        for m in current_status:
+            key = self.generate_key(m.system_id, m.dataset)
+            all_jobs.append(key)
+            if m.status == "complete" and not m.hash_changed:
+                jobs_to_remove_if_present.append(key)
+
+        i = 0
+        for job_id in self.q.job_ids:
+            if job_id not in all_jobs or job_id in jobs_to_remove_if_present:
+                self.delete_job(*self.decompose_key(job_id))
+                i += 1
+        if i:
+            logger.info("Removed %s invalid jobs from the queues", i)
+
+    def add_missing_jobs(self, current_status: List[models.ManagementSystemDataStatus]):
+        """Add jobs to the queue that are missing but present in the database
+        and not complete"""
+        i = 0
+        for m in current_status:
+            if (m.status == "queued" or m.hash_changed) and self.generate_key(
+                m.system_id, m.dataset
+            ) not in self.q.job_ids:
+                self.enqueue_job(m.system_id, m.dataset, m.user)
+                i += 1
+        if i:
+            logger.info("Enqueuing %s missing jobs", i)
+
+    def evaluate_failed_jobs(
+        self, current_status: List[models.ManagementSystemDataStatus]
+    ) -> List[Tuple[str, str, str]]:
+        """If job has gotten to the failed job registry, some uncaught error
+        happened. Return the data needed to update errors in the db."""
+
+        jobd = {self.generate_key(m.system_id, m.dataset): m for m in current_status}
+        out = []
+
+        for failed_job in self.q.failed_job_registry.get_job_ids():
+            if failed_job not in jobd:
+                self.q.failed_job_registry.remove(failed_job, delete_job=True)
+            elif (
+                jobd[failed_job].status == "queued"
+                and not jobd[failed_job].hash_changed
+            ):
+                msg = json.dumps(
+                    {
+                        "error": {
+                            "details": (
+                                "Uncaught error during job execution. "
+                                "Framework administrators have been notified."
+                            )
+                        }
+                    }
+                )
+                out.append((jobd[failed_job].system_id, jobd[failed_job].dataset, msg))
+        if lo := len(out):
+            logger.info("%s jobs processed from failed job registry", lo)
+        return out
+
+
+def _get_compute_management_interface():  # pragma: no cover
+    from .storage import ComputeManagementInterface
+
+    return ComputeManagementInterface()
+
+
+def sync_jobs():
+    """Keep jobs between the RQ queue and database in sync"""
+    cmi = _get_compute_management_interface()
+    qm = QueueManager()
+
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level="INFO")
+    while True:
+        try:
+            logger.info(
+                "Adding missing jobs, removing invalid jobs, and "
+                "cleaning up failed jobs"
+            )
+            # add missing jobs
+            with cmi.start_transaction() as jst:
+                current_status = jst.list_system_data_status()
+            qm.add_missing_jobs(current_status)
+            # remove invalid
+            with cmi.start_transaction() as jst:
+                current_status = jst.list_system_data_status()
+            qm.remove_invalid_jobs(current_status)
+            # cleanup failed job registry
+            with cmi.start_transaction() as jst:
+                most_current_status = jst.list_system_data_status()
+                failed_jobs = qm.evaluate_failed_jobs(most_current_status)
+                for system_id, dataset, msg in failed_jobs:
+                    jst.report_failure(system_id, dataset, msg)
+            time.sleep(settings.sync_jobs_period)
+        except KeyboardInterrupt:
+            break

@@ -595,17 +595,25 @@ def compute_management_interface(mocker):
 
 
 def test_list_system_data_status(
-    compute_management_interface, system_id, dataset_name, root_conn, auth0_id
+    compute_management_interface,
+    system_id,
+    dataset_name,
+    root_conn,
+    auth0_id,
+    other_system_id,
 ):
     curs = root_conn.cursor()
-    curs.execute(
+    curs.executemany(
         "insert into system_data (system_id, dataset, version, system_hash, error) "
         "values (uuid_to_bin(%s, 1), %s, %s, %s, %s)",
-        (system_id, "other", "v0.1", "", '{"error": "err"}'),
+        (
+            (system_id, "other", "v0.1", "", '{"error": "err"}'),
+            (other_system_id, "what", "v0.1", "", "[]"),
+        ),
     )
     root_conn.commit()
     out = compute_management_interface.list_system_data_status()
-    assert out == [
+    assert set(out) == {
         models.ManagementSystemDataStatus(
             system_id=system_id,
             dataset="other",
@@ -615,6 +623,14 @@ def test_list_system_data_status(
             user=auth0_id,
         ),
         models.ManagementSystemDataStatus(
+            system_id=other_system_id,
+            dataset="what",
+            status="queued",
+            version="v0.1",
+            hash_changed=True,
+            user="auth0|invalid",
+        ),
+        models.ManagementSystemDataStatus(
             system_id=system_id,
             dataset=dataset_name,
             status="complete",
@@ -622,7 +638,7 @@ def test_list_system_data_status(
             hash_changed=False,
             user=auth0_id,
         ),
-    ]
+    }
 
     curs.execute("delete from system_data where dataset = 'other'")
     root_conn.commit()
