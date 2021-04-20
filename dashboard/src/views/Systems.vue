@@ -95,8 +95,9 @@
             </li>
           </ul>
           <system-map
-            :systemBounds="selected.definition.boundary"
-            :capacity="selected.definition.ac_capacity"
+            :system="selected"
+            :all_systems="notSelectedSystems"
+            @new-selection="setSelected"
           />
         </template>
       </div>
@@ -120,6 +121,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import { StoredPVSystem } from "@/models";
 
 import * as SystemsAPI from "@/api/systems";
 import SystemMap from "@/components/Map.vue";
@@ -128,7 +130,7 @@ Vue.component("system-map", SystemMap);
 
 @Component
 export default class Systems extends Vue {
-  systems!: Record<string, any>[];
+  systems!: Array<StoredPVSystem>;
   selected!: Record<string, any>;
   showDeleteDialog!: boolean;
 
@@ -171,6 +173,11 @@ export default class Systems extends Vue {
   }
   setSelected(selectedSystem: Record<string, any>): void {
     this.selected = selectedSystem;
+  }
+  get notSelectedSystems(): Array<StoredPVSystem> {
+    return this.systems.filter((system: StoredPVSystem) => {
+      return system.object_id != this.selected.object_id;
+    });
   }
 }
 </script>
@@ -225,7 +232,7 @@ th {
 }
 
 tr.selected-site {
-  background-color: #ddd;
+  background-color: #ccc;
 }
 
 table {

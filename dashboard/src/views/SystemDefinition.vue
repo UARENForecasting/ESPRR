@@ -101,11 +101,12 @@
           </button>
         </form>
       </div>
-      <div id="definition-map">
+      <div id="definition-map" v-if="this.systems">
         <system-map
           :editable="true"
-          :systemBounds="definition.boundary"
-          :capacity="definition.ac_capacity"
+          :system="definition"
+          :all_systems="otherSystems"
+          :dc_capacity="dcCapacity"
           @bounds-updated="updateBounds"
         />
       </div>
@@ -134,17 +135,20 @@ export default class SystemDefinition extends Vue {
 
   definition!: PVSystem;
   trackingType!: string;
+  systems!: Array<StoredPVSystem>;
 
   data(): Record<string, any> {
     return {
       definition: this.definition,
       trackingType: this.trackingType,
+      systems: null,
     };
   }
 
   created(): void {
     if (this.systemId) {
       this.loadSystem();
+      this.loadSystems();
     } else {
       // @ts-expect-error don't expect boundary at creation
       this.definition = {
@@ -158,6 +162,7 @@ export default class SystemDefinition extends Vue {
         dc_ac_ratio: 1.2,
       };
       this.trackingType = "fixed";
+      this.loadSystems();
     }
   }
 
@@ -183,6 +188,17 @@ export default class SystemDefinition extends Vue {
     // validate the system with the systems/check endpoint
     /* istanbul ignore next */
     return true;
+  }
+
+  async loadSystems(): Promise<void> {
+    const token = await this.$auth.getTokenSilently();
+    SystemsApi.listSystems(token)
+      .then((systems: Array<StoredPVSystem>) => {
+        this.systems = systems;
+      })
+      .catch((errors: any) => {
+        console.log(errors);
+      });
   }
 
   async submitSystem(e: Event): Promise<void> {
@@ -239,6 +255,24 @@ export default class SystemDefinition extends Vue {
 
   updateBounds(newBounds: BoundingBox): void {
     this.definition.boundary = newBounds;
+  }
+  get dcCapacity(): number | null {
+    if (this.definition.ac_capacity && this.definition.dc_ac_ratio) {
+      return this.definition.ac_capacity * this.definition.dc_ac_ratio;
+    } else {
+      return null;
+    }
+  }
+  get otherSystems(): Array<StoredPVSystem> {
+    let otherSystems: Array<StoredPVSystem>;
+    if (this.systemId) {
+      otherSystems = this.systems.filter((system: StoredPVSystem) => {
+        return system.object_id != this.systemId;
+      });
+    } else {
+      otherSystems = this.systems;
+    }
+    return otherSystems;
   }
 }
 </script>

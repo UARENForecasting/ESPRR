@@ -1,6 +1,8 @@
 <template>
   <div class="l-wrapper">
-    <p v-if="!capacity">Enter a capacity to map system.</p>
+    <p v-if="editable && !dc_capacity">
+      Enter AC capacity and DC/AC ratio to map system.
+    </p>
     <l-map
       ref="systemMap"
       :zoom="zoom"
@@ -8,22 +10,39 @@
       @ready="mapReady"
       @click="placeSystem"
     >
+      <l-control-layers position="topright"></l-control-layers>
       <l-tile-layer :url="url" :attribution="attribution"> </l-tile-layer>
       <l-control-scale
         position="bottomleft"
         :imperial="false"
         :metric="true"
       ></l-control-scale>
+
       <v-path-transforms
         v-if="sitePolygon"
         :latLngs="sitePolygon"
         :draggable="draggable"
         :rotation="false"
-        :scaling="scaling"
+        :scaling="false"
+        layer-type="overlay"
+        color="#777"
         @transformed="handleTransformation"
       >
-        <l-popup v-if="!editable">Wow</l-popup>
       </v-path-transforms>
+
+      <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
+        <v-path-transforms
+          v-for="system of all_systems"
+          :key="system.object_id"
+          :latLngs="createPolygon(system.definition.boundary)"
+          :draggable="false"
+          :rotation="false"
+          :scaling="false"
+          layer-type="overlay"
+          @click="emitSelection(system)"
+        >
+        </v-path-transforms>
+      </l-layer-group>
     </l-map>
   </div>
 </template>
@@ -31,22 +50,37 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import L from "leaflet";
-import { LMap, LTileLayer, LMarker, LPopup, LControlScale } from "vue2-leaflet";
+import {
+  LMap,
+  LTileLayer,
+  LMarker,
+  LControlScale,
+  LControlLayers,
+  LLayerGroup,
+} from "vue2-leaflet";
 import Vue2LeafletPathTransform from "vue2-leaflet-path-transform";
 import { BoundingBox } from "@/models";
+
+import { PVSystem, StoredPVSystem } from "@/models";
+
+interface TransformationEvent {
+  target: L.Polyline;
+}
 
 Vue.component("l-map", LMap);
 Vue.component("l-tile-layer", LTileLayer);
 Vue.component("l-marker", LMarker);
 Vue.component("l-control-scale", LControlScale);
-Vue.component("l-popup", LPopup);
+Vue.component("l-control-layers", LControlLayers);
+Vue.component("l-layer-group", LLayerGroup);
 Vue.component("v-path-transforms", Vue2LeafletPathTransform);
 
 @Component
 export default class SystemMap extends Vue {
-  @Prop() systemBounds!: BoundingBox;
+  @Prop() system!: PVSystem;
   @Prop({ default: false }) editable!: boolean;
-  @Prop() capacity!: number;
+  @Prop() dc_capacity!: number;
+  @Prop() all_systems!: Array<StoredPVSystem>;
 
   url!: string;
   attribution!: string;
@@ -57,15 +91,21 @@ export default class SystemMap extends Vue {
   bounds!: L.LatLngBounds;
   map!: L.Map;
 
-  created(): void {
+  mapReady(): void {
+    // @ts-expect-error accessing Leaflet API
+    this.map = this.$refs.systemMap.mapObject;
+    this.initialize();
+  }
+
+  initialize(): void {
+    this.draggable = true;
     if (this.editable) {
-      this.draggable = true;
       this.scaling = true;
     } else {
       this.draggable = false;
       this.scaling = false;
     }
-    if (this.systemBounds) {
+    if (this.system.boundary) {
       this.updateFromBoundingBox();
     }
   }
@@ -102,27 +142,30 @@ export default class SystemMap extends Vue {
     }
   }
 
-  mapReady(): void {
-    // @ts-expect-error accessing Leaflet API
-    this.map = this.$refs.systemMap.mapObject;
+  createPolygon(boundingBox: BoundingBox): Array<L.LatLng> {
+    return [
+      L.latLng(boundingBox.nw_corner.latitude, boundingBox.nw_corner.longitude),
+      L.latLng(boundingBox.nw_corner.latitude, boundingBox.se_corner.longitude),
+      L.latLng(boundingBox.se_corner.latitude, boundingBox.se_corner.longitude),
+      L.latLng(boundingBox.se_corner.latitude, boundingBox.nw_corner.longitude),
+    ];
   }
 
-  handleTransformation(transformEvent: any): void {
+  handleTransformation(transformEvent: TransformationEvent): void {
     // enforce area and emit parameters
-    console.log(transformEvent);
     this.$emit(
       "bounds-updated",
       this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
     );
   }
 
-  @Watch("systemBounds")
+  @Watch("system")
   updateFromBoundingBox(): void {
-    this.bounds = this.boundingBoxToLeafletBounds(this.systemBounds);
+    this.bounds = this.boundingBoxToLeafletBounds(this.system.boundary);
     this.centerMap();
   }
 
-  @Watch("capacity")
+  @Watch("dc_capacity")
   adjustForCapacity(): void {
     if (this.bounds) {
       // increase the size of the system at the current center
@@ -132,8 +175,8 @@ export default class SystemMap extends Vue {
   }
 
   areaFromCapacity(): number {
-    // roughly 36MW/km^2 assumed
-    return this.capacity / 36;
+    // roughly 40MW/km^2 assumed
+    return this.dc_capacity / 40;
   }
 
   initializePolygon(center: L.LatLng): void {
@@ -150,6 +193,7 @@ export default class SystemMap extends Vue {
     if (!this.bounds) {
       const center = event.latlng;
       this.initializePolygon(center);
+      this.map.fitBounds(this.bounds, { animate: true });
     }
   }
 
@@ -174,6 +218,10 @@ export default class SystemMap extends Vue {
   }
   centerMap(): void {
     this.center = this.centerCoords();
+  }
+  emitSelection(system: StoredPVSystem): void {
+    // Emit an event so parent components can update highlighting/selection
+    this.$emit("new-selection", system);
   }
 }
 </script>
