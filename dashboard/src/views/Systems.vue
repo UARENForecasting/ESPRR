@@ -95,7 +95,7 @@
             </li>
           </ul>
           <system-map
-            :system="selected"
+            :system="selected.definition"
             :all_systems="notSelectedSystems"
             @new-selection="setSelected"
           />
