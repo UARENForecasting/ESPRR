@@ -343,3 +343,30 @@ class StorageInterface:
             raise HTTPException(status_code=404, detail="No statistics available")
         out: bytes = res["statistics"]
         return out
+
+
+class ComputeManagementInterface(StorageInterface):
+    """A special interface to the database (that requires different permissions)
+    to list all computations and allow setting a failure message on a computation.
+    """
+
+    def __init__(self):
+        self._cursor = None
+        self.commit = True
+
+    def list_system_data_status(self) -> List[models.ManagementSystemDataStatus]:
+        with self.start_transaction() as st:
+            res = st._call_procedure("list_system_data_status", with_current_user=False)
+
+        def repq(d):
+            if d["status"] == "prepared":
+                d["status"] = "queued"
+            return d
+
+        return [models.ManagementSystemDataStatus(**repq(r)) for r in res]
+
+    def report_failure(self, system_id: str, dataset: str, message: str):
+        with self.start_transaction() as st:
+            st._call_procedure(
+                "report_failure", system_id, dataset, message, with_current_user=False
+            )

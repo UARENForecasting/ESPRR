@@ -303,3 +303,24 @@ class SystemDataMeta(ThisBase):
                 "modified_at": "2020-12-01T01:23:00+00:00",
             }
         }
+
+
+class ManagementSystemDataStatus(ThisBase):
+    system_id: UUID
+    dataset: str
+    version: str
+    status: DataStatusEnum
+    hash_changed: bool
+    user: str
+
+    def __hash__(self):
+        return hash(
+            (
+                self.system_id,
+                self.dataset,
+                self.version,
+                self.status,
+                self.hash_changed,
+                self.user,
+            )
+        )

@@ -1,5 +1,6 @@
 from copy import deepcopy
 import datetime as dt
+import json
 import uuid
 
 
@@ -577,3 +578,87 @@ def test_get_system_model_stats_empty(
         with pytest.raises(HTTPException) as err:
             st.get_system_model_statistics(system_id, dataset_name)
     assert err.value.status_code == 404
+
+
+@pytest.fixture()
+def compute_management_interface(mocker):
+    mocker.patch(
+        "esprr_api.storage.engine",
+        new=storage.create_engine(
+            "mysql+pymysql://",
+            creator=storage._make_sql_connection_partial(user="qmanager"),
+        ).pool,
+    )
+    out = storage.ComputeManagementInterface()
+    out.commit = False
+    return out
+
+
+def test_list_system_data_status(
+    compute_management_interface,
+    system_id,
+    dataset_name,
+    root_conn,
+    auth0_id,
+    other_system_id,
+):
+    curs = root_conn.cursor()
+    curs.executemany(
+        "insert into system_data (system_id, dataset, version, system_hash, error) "
+        "values (uuid_to_bin(%s, 1), %s, %s, %s, %s)",
+        (
+            (system_id, "other", "v0.1", "", '{"error": "err"}'),
+            (other_system_id, "what", "v0.1", "", "[]"),
+        ),
+    )
+    root_conn.commit()
+    out = compute_management_interface.list_system_data_status()
+    assert set(out) == {
+        models.ManagementSystemDataStatus(
+            system_id=system_id,
+            dataset="other",
+            status="error",
+            version="v0.1",
+            hash_changed=True,
+            user=auth0_id,
+        ),
+        models.ManagementSystemDataStatus(
+            system_id=other_system_id,
+            dataset="what",
+            status="queued",
+            version="v0.1",
+            hash_changed=True,
+            user="auth0|invalid",
+        ),
+        models.ManagementSystemDataStatus(
+            system_id=system_id,
+            dataset=dataset_name,
+            status="complete",
+            version="v0.1",
+            hash_changed=False,
+            user=auth0_id,
+        ),
+    }
+
+    curs.execute("delete from system_data where dataset = 'other'")
+    root_conn.commit()
+
+
+def test_report_failure(
+    compute_management_interface, root_conn, system_id, dataset_name
+):
+    compute_management_interface.commit = True
+    msg = {"error": "uh oh"}
+    compute_management_interface.report_failure(
+        system_id, dataset_name, json.dumps(msg)
+    )
+
+    curs = root_conn.cursor()
+    curs.execute("select error from system_data")
+    assert curs.fetchone()[0] == msg
+    curs.execute(
+        "update system_data set error = json_array() where system_id = "
+        "uuid_to_bin(%s, 1) and dataset = %s",
+        (system_id, dataset_name),
+    )
+    root_conn.commit()
