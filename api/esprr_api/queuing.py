@@ -68,7 +68,7 @@ class QueueManager:
         return f"{str(system_id)}:{dataset}"
 
     def decompose_key(self, inp: str) -> Tuple[str, str]:
-        return inp.split(":")
+        return tuple(inp.split(":"))  # type: ignore
 
     def enqueue_job(
         self,
@@ -108,7 +108,9 @@ class QueueManager:
                 return True
         return False
 
-    def delete_job(self, system_id: UUID, dataset: Union[models.DatasetEnum, str]):
+    def delete_job(
+        self, system_id: Union[UUID, str], dataset: Union[models.DatasetEnum, str]
+    ):
         """Try removing the job if present in any registries"""
         key = self.generate_key(system_id, dataset)
         try:
@@ -181,7 +183,9 @@ class QueueManager:
                         }
                     }
                 )
-                out.append((jobd[failed_job].system_id, jobd[failed_job].dataset, msg))
+                out.append(
+                    (str(jobd[failed_job].system_id), jobd[failed_job].dataset, msg)
+                )
         if lo := len(out):
             logger.info("%s jobs processed from failed job registry", lo)
         return out
