@@ -195,6 +195,10 @@ export default class SystemMap extends Vue {
       this.initializePolygon(center);
       this.map.fitBounds(this.bounds, { animate: true });
     }
+    this.$emit(
+      "bounds-updated",
+      this.leafletBoundsToBoundingBox(this.bounds)
+    );
   }
 
   boundingBoxToLeafletBounds(bb: BoundingBox): L.LatLngBounds {
