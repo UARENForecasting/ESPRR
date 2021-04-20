@@ -1,8 +1,5 @@
 <template>
   <div class="l-wrapper">
-    <p v-if="editable && !dc_capacity">
-      Enter AC capacity and DC/AC ratio to map system.
-    </p>
     <l-map
       ref="systemMap"
       :zoom="zoom"
@@ -10,7 +7,10 @@
       @ready="mapReady"
       @click="placeSystem"
     >
-      <l-control-layers position="topright"></l-control-layers>
+      <l-control-layers
+        position="topright"
+        :collapsed="false"
+      ></l-control-layers>
       <l-tile-layer :url="url" :attribution="attribution"> </l-tile-layer>
       <l-control-scale
         position="bottomleft"
@@ -44,6 +44,16 @@
         </v-path-transforms>
       </l-layer-group>
     </l-map>
+    <div class="map-prompt">
+      <p v-if="editable && !bounds">
+        Click on the map to place the system. The system will be represented by
+        a square with an area corresponding to its DC capacity at a density of
+        40 Megawatts per square kilometer.
+      </p>
+      <p v-if="editable && bounds">
+        Click and drag to move the sytem's location.
+      </p>
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -175,7 +185,7 @@ export default class SystemMap extends Vue {
   }
 
   areaFromCapacity(): number {
-    // roughly 40MW/km^2 assumed
+    // roughly 40MW/km^2  assumed
     return this.dc_capacity / 40;
   }
 
@@ -195,10 +205,7 @@ export default class SystemMap extends Vue {
       this.initializePolygon(center);
       this.map.fitBounds(this.bounds, { animate: true });
     }
-    this.$emit(
-      "bounds-updated",
-      this.leafletBoundsToBoundingBox(this.bounds)
-    );
+    this.$emit("bounds-updated", this.leafletBoundsToBoundingBox(this.bounds));
   }
 
   boundingBoxToLeafletBounds(bb: BoundingBox): L.LatLngBounds {
@@ -220,9 +227,11 @@ export default class SystemMap extends Vue {
       },
     };
   }
+
   centerMap(): void {
     this.center = this.centerCoords();
   }
+
   emitSelection(system: StoredPVSystem): void {
     // Emit an event so parent components can update highlighting/selection
     this.$emit("new-selection", system);
@@ -233,5 +242,10 @@ export default class SystemMap extends Vue {
 .l-wrapper {
   width: 100%;
   height: 100%;
+}
+.map-prompt {
+  display: grid;
+  background-color: #eaeaea;
+  padding: 0 1em;
 }
 </style>
