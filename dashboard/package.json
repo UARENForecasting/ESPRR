@@ -11,13 +11,17 @@
   "dependencies": {
     "@auth0/auth0-spa-js": "^1.14.0",
     "core-js": "^3.6.5",
+    "leaflet": "^1.7.1",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2",
-    "vue-router": "^3.2.0"
+    "vue-router": "^3.2.0",
+    "vue2-leaflet": "^2.7.0",
+    "vue2-leaflet-path-transform": "^2.0.2"
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",
+    "@types/leaflet": "^1.7.0",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
     "@vue/cli-plugin-babel": "~4.5.0",

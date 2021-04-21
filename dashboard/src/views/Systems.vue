@@ -41,7 +41,7 @@
         <p v-else>No Systems yet. <a href="#">Create a new system.</a></p>
       </div>
       <div class="details">
-        <template v-if="systems.length > 0">
+        <template v-if="selected">
           <h3>System Details</h3>
           <router-link
             tag="button"
@@ -93,22 +93,12 @@
                 </template>
               </ul>
             </li>
-            <li>
-              <b>Boundary: </b>
-              <ul>
-                <li>
-                  <b>Northwest Corner: </b>
-                  {{ selected.definition.boundary.nw_corner.latitude }} &deg;N,
-                  {{ selected.definition.boundary.nw_corner.longitude }} &deg;E
-                </li>
-                <li>
-                  <b>Southeast Corner: </b>
-                  {{ selected.definition.boundary.se_corner.latitude }} &deg;N,
-                  {{ selected.definition.boundary.se_corner.longitude }} &deg;E
-                </li>
-              </ul>
-            </li>
           </ul>
+          <system-map
+            :system="selected.definition"
+            :all_systems="notSelectedSystems"
+            @new-selection="setSelected"
+          />
         </template>
       </div>
     </div>
@@ -131,11 +121,16 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import { StoredPVSystem } from "@/models";
+
 import * as SystemsAPI from "@/api/systems";
+import SystemMap from "@/components/Map.vue";
+
+Vue.component("system-map", SystemMap);
 
 @Component
 export default class Systems extends Vue {
-  systems!: Record<string, any>[];
+  systems!: Array<StoredPVSystem>;
   selected!: Record<string, any>;
   showDeleteDialog!: boolean;
 
@@ -178,6 +173,11 @@ export default class Systems extends Vue {
   }
   setSelected(selectedSystem: Record<string, any>): void {
     this.selected = selectedSystem;
+  }
+  get notSelectedSystems(): Array<StoredPVSystem> {
+    return this.systems.filter((system: StoredPVSystem) => {
+      return system.object_id != this.selected.object_id;
+    });
   }
 }
 </script>
@@ -232,7 +232,7 @@ th {
 }
 
 tr.selected-site {
-  background-color: #ddd;
+  background-color: #ccc;
 }
 
 table {

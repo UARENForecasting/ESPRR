@@ -1,6 +1,11 @@
 import SystemDefinition from "@/views/SystemDefinition.vue";
 import { $auth } from "./mockauth";
-import { getSystem, createSystem, updateSystem } from "@/api/systems";
+import {
+  getSystem,
+  createSystem,
+  updateSystem,
+  listSystems,
+} from "@/api/systems";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import VueRouter from "vue-router";
@@ -30,7 +35,7 @@ describe("Test System Definition", () => {
       router,
       mocks,
     });
-    expect(wrapper.findAll("input").length).toBe(12);
+    expect(wrapper.findAll("input").length).toBe(8);
   });
   it("Test change tracking", async () => {
     const wrapper = mount(SystemDefinition, {
@@ -186,7 +191,7 @@ describe("Test System Definition", () => {
     });
     await flushPromises();
     expect(wrapper.find(".system-definition-form").text()).toBe(
-      "The System could not be found."
+      "Update System  The System could not be found."
     );
     appTarget.remove();
   });
@@ -222,6 +227,91 @@ describe("Test System Definition", () => {
     expect(router.history.current.path).toBe(
       "/system/6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9"
     );
+    appTarget.remove();
+  });
+  it("Test dc capacity null", async () => {
+    const wrapper = mount(SystemDefinition, {
+      localVue,
+      router,
+      mocks,
+    });
+
+    wrapper.vm.$data.definition.ac_capacity = null;
+    // @ts-expect-error accessing vm getter
+    expect(wrapper.vm.dcCapacity).toEqual(null);
+  });
+  it("Test dc capacity", async () => {
+    const wrapper = mount(SystemDefinition, {
+      localVue,
+      router,
+      mocks,
+    });
+
+    wrapper.vm.$data.definition.ac_capacity = 1;
+    // @ts-expect-error accessing vm getter
+    expect(wrapper.vm.dcCapacity).toEqual(1.2);
+  });
+  it("Test dc capacity", async () => {
+    // @ts-expect-error mock object
+    listSystems.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(SystemDefinition, {
+      localVue,
+      router,
+      mocks,
+    });
+
+    await flushPromises();
+    expect(wrapper.vm.$data.systems).toBe(null);
+  });
+  it("Test update bounds", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.vm.$data.definition.boundary).toEqual({
+      nw_corner: {
+        latitude: 34.9,
+        longitude: -112.9,
+      },
+      se_corner: {
+        latitude: 33,
+        longitude: -111,
+      },
+    });
+    // @ts-expect-error vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34,
+        longitude: -112,
+      },
+      se_corner: {
+        latitude: 32,
+        longitude: -110,
+      },
+    });
+    expect(wrapper.vm.$data.definition.boundary).toEqual({
+      nw_corner: {
+        latitude: 34,
+        longitude: -112,
+      },
+      se_corner: {
+        latitude: 32,
+        longitude: -110,
+      },
+    });
     appTarget.remove();
   });
 });

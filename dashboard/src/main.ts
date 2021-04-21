@@ -4,6 +4,7 @@ import App from "./App.vue";
 import router from "./router";
 
 import "./assets/css/styles.css";
+import "leaflet/dist/leaflet.css";
 
 // Auth0 config
 import { domain, clientId, audience } from "../auth_config.json";
