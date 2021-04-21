@@ -109,3 +109,58 @@ export async function updateSystem(
     throw "Could not create system";
   }
 }
+export async function startProcessing(
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+    }),
+    method: "post",
+  });
+}
+export async function getResult(
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+    }),
+    method: "get",
+  });
+}
+export async function getResultTimeSeries(
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  const response = await fetch(
+    `/api/systems/${systemId}/data/${dataset}/timeseries`,
+    {
+      headers: new Headers({
+        Authorization: `Bearer ${token}`,
+      }),
+      method: "get",
+    }
+  );
+}
+
+export async function getResultStatistics(
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  const response = await fetch(
+    `/api/systems/${systemId}/data/${dataset}/statistics`,
+    {
+      headers: new Headers({
+        Authorization: `Bearer ${token}`,
+      }),
+      method: "get",
+    }
+  );
+}
