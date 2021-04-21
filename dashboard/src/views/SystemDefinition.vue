@@ -5,6 +5,11 @@
     <hr />
     <div v-if="definition" class="definition-container">
       <div id="definition-inputs">
+        <ul class="error-list" v-if="errors">
+          <li v-for="(field, error) in errors" :key="error">
+            <b>{{ error }}:</b> {{ errors[error] }}
+          </li>
+        </ul>
         <form v-if="definition" id="system-definition" @submit="submitSystem">
           <label>Name: <input type="text" v-model="definition.name" /></label>
           <label
@@ -95,10 +100,13 @@
               </label>
             </fieldset>
           </fieldset>
-          <button type="submit">
+          <button type="submit" :disabled="!boundarySelected">
             <template v-if="systemId">Update</template
-            ><template v-else>Create</template> System
-          </button>
+            ><template v-else>Create</template> System</button
+          ><span v-if="!boundarySelected"
+            >You must place the system on the map to the left before
+            creation.</span
+          >
         </form>
       </div>
       <div id="definition-map" v-if="this.systems">
@@ -117,6 +125,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import * as SystemsApi from "@/api/systems";
+import flattenErrors from "@/api/errors";
 import SystemMap from "@/components/Map.vue";
 
 import {
@@ -136,12 +145,14 @@ export default class SystemDefinition extends Vue {
   definition!: PVSystem;
   trackingType!: string;
   systems!: Array<StoredPVSystem>;
+  errors!: Record<string, string>;
 
   data(): Record<string, any> {
     return {
       definition: this.definition,
       trackingType: this.trackingType,
       systems: null,
+      errors: null,
     };
   }
 
@@ -209,19 +220,22 @@ export default class SystemDefinition extends Vue {
       SystemsApi.updateSystem(token, this.systemId, this.definition)
         .then(() => {
           this.$router.push({ name: "Systems" });
+          this.errors = null;
         })
         .catch((errors: any) => {
           // TODO :display errors to users
           console.log(errors);
+          this.errors = flattenErrors(errors);
         });
     } else {
       SystemsApi.createSystem(token, this.definition)
         .then(() => {
           this.$router.push({ name: "Systems" });
+          this.errors = null;
         })
         .catch((errors: any) => {
           // TODO :display errors to users
-          console.log(errors);
+          this.errors = flattenErrors(errors);
         });
     }
   }
@@ -254,7 +268,7 @@ export default class SystemDefinition extends Vue {
   }
 
   updateBounds(newBounds: BoundingBox): void {
-    this.definition.boundary = newBounds;
+    this.$set(this.definition, "boundary", newBounds);
   }
   get dcCapacity(): number | null {
     if (this.definition.ac_capacity && this.definition.dc_ac_ratio) {
@@ -263,6 +277,7 @@ export default class SystemDefinition extends Vue {
       return null;
     }
   }
+
   get otherSystems(): Array<StoredPVSystem> {
     let otherSystems: Array<StoredPVSystem>;
     if (this.systemId) {
@@ -273,6 +288,9 @@ export default class SystemDefinition extends Vue {
       otherSystems = this.systems;
     }
     return otherSystems;
+  }
+  get boundarySelected(): boolean {
+    return "boundary" in this.definition;
   }
 }
 </script>
@@ -291,5 +309,14 @@ label {
 .map-wrapper {
   height: 500px;
   width: 50%;
+}
+ul.error-list {
+  border: 1px solid #caa;
+  border-radius: 0.5em;
+  padding: 0.5em;
+  background-color: #ecc;
+  list-style: none;
+}
+ul.error-list li {
 }
 </style>
