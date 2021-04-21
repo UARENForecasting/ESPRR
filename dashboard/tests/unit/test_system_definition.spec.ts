@@ -348,4 +348,44 @@ describe("Test System Definition", () => {
     });
     appTarget.remove();
   });
+  it("Test save system error display", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+    const errors = errorFactory("error");
+    errors.detail.push({
+      loc: ["__root__"],
+      msg: "is bad",
+    });
+    // @ts-expect-error mock object
+    createSystem.mockImplementationOnce(async () => {
+      throw errors;
+    });
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+    });
+    // @ts-expect-error vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34,
+        longitude: -112,
+      },
+      se_corner: {
+        latitude: 32,
+        longitude: -110,
+      },
+    });
+    await flushPromises();
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    const htmlErrorList = wrapper.find("ul.error-list");
+    const errorLis = htmlErrorList.findAll("li");
+    expect(errorLis.at(0).text()).toBe("theError: error");
+    expect(errorLis.at(1).text()).toBe("System: is bad");
+
+    appTarget.remove();
+  });
 });
