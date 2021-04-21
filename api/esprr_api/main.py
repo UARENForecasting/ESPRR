@@ -39,8 +39,8 @@ async def ping() -> str:  # pragma: no cover
 
 class LogFilter(logging.Filter):
     def filter(record):  # pragma: no cover
-        if hasattr(record, "scope"):
-            if record.scope.get("path") in ("/ping", "/metrics"):
+        for a in record.args:
+            if isinstance(a, str) and (a.endswith("/ping") or a.endswith("/metrics")):
                 return 0
         return 1
 
