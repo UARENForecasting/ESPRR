@@ -145,7 +145,7 @@ export default class SystemDefinition extends Vue {
   definition!: PVSystem;
   trackingType!: string;
   systems!: Array<StoredPVSystem>;
-  errors!: Record<string, string>;
+  errors!: Record<string, string> | null;
 
   data(): Record<string, any> {
     return {
