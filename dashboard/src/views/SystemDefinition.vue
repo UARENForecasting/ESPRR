@@ -189,9 +189,9 @@ export default class SystemDefinition extends Vue {
           this.trackingType = "fixed";
         }
       })
-      .catch((errors: any) => {
+      .catch(() => {
         // 404 case, don't set definition
-        console.log(errors);
+        return;
       });
   }
 
@@ -208,7 +208,13 @@ export default class SystemDefinition extends Vue {
         this.systems = systems;
       })
       .catch((errors: any) => {
-        console.log(errors);
+        // List systems should not fail under normal circumstances.
+        // log the error so it can be debugged in production and
+        // prompt user to retry.
+        console.error(errors);
+        this.errors = {
+          Error: "Failed to load systems. Refresh the page to try again."
+        };
       });
   }
 
@@ -223,8 +229,6 @@ export default class SystemDefinition extends Vue {
           this.errors = null;
         })
         .catch((errors: any) => {
-          // TODO :display errors to users
-          console.log(errors);
           this.errors = flattenErrors(errors);
         });
     } else {
@@ -234,7 +238,6 @@ export default class SystemDefinition extends Vue {
           this.errors = null;
         })
         .catch((errors: any) => {
-          // TODO :display errors to users
           this.errors = flattenErrors(errors);
         });
     }

@@ -8,7 +8,6 @@ export default function flattenErrors(
     let field: string;
     field = e.loc[e.loc.length - 1];
     if (field == "__root__") {
-      console.log(e);
       field = "System";
     } else {
       field = getDisplayName(field);

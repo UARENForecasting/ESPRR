@@ -298,6 +298,7 @@ describe("Test System Definition", () => {
 
     await flushPromises();
     expect(wrapper.vm.$data.systems).toBe(null);
+    expect(wrapper.find("ul.error-list").find("li").text()).toBe("Error: Failed to load systems. Refresh the page to try again.");
   });
   it("Test update bounds", async () => {
     const appTarget = document.createElement("div");
