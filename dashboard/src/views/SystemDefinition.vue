@@ -213,7 +213,7 @@ export default class SystemDefinition extends Vue {
         // prompt user to retry.
         console.error(errors);
         this.errors = {
-          Error: "Failed to load systems. Refresh the page to try again."
+          Error: "Failed to load systems. Refresh the page to try again.",
         };
       });
   }
