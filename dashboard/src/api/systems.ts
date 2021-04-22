@@ -167,4 +167,9 @@ export async function getResultStatistics(
       method: "get",
     }
   );
+  if (response.ok) {
+    if (accept == "application/vnd.apache.arrow.file") {
+    } else {
+    }
+  }
 }

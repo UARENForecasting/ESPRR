@@ -6,12 +6,16 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "postinstall": "./rename_plotly_types.sh"
   },
   "dependencies": {
     "@auth0/auth0-spa-js": "^1.14.0",
+    "@types/plotly.js": "^1.54.10",
+    "apache-arrow": "^3.0.0",
     "core-js": "^3.6.5",
     "leaflet": "^1.7.1",
+    "plotly.js-basic-dist": "^1.58.4",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2",
