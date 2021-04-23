@@ -102,6 +102,10 @@
             :all_systems="notSelectedSystems"
             @new-selection="setSelected"
           />
+          <results
+            v-if="selected"
+            :systemId="selected.object_id"
+          />
         </template>
       </div>
     </div>
@@ -128,8 +132,10 @@ import { StoredPVSystem } from "@/models";
 
 import * as SystemsAPI from "@/api/systems";
 import SystemMap from "@/components/Map.vue";
+import Results from "@/components/Results.vue";
 
 Vue.component("system-map", SystemMap);
+Vue.component("results", Results);
 
 @Component
 export default class Systems extends Vue {

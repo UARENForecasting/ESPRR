@@ -288,7 +288,15 @@ export default class SystemDefinition extends Vue {
         });
     } else {
       SystemsApi.createSystem(token, this.definition)
-        .then(() => {
+        .then((response: any) => {
+          console.log("Created: ", response);
+          SystemsApi.startProcessing(
+            token,
+            response.object_id,
+            "NSRDB_2019"
+          ).then((otherResponse: any) => {
+            console.log("Started processing: ", otherResponse);
+          })
           this.$router.push({ name: "Systems" });
           this.errors = null;
         })

@@ -1,5 +1,6 @@
 /* istanbul ignore file */
 
+import { Table } from "apache-arrow";
 import { StoredPVSystem, PVSystem } from "@/models";
 
 export async function listSystems(
@@ -120,6 +121,11 @@ export async function startProcessing(
     }),
     method: "post",
   });
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw await response.json();
+  }
 }
 export async function getResult(
   token: string,
@@ -132,23 +138,37 @@ export async function getResult(
     }),
     method: "get",
   });
+  if (response.ok) {
+    return await response.json();
+  } else {
+    const errors = response.json();
+    throw errors;
+  }
 }
-export async function getResultTimeSeries(
+
+export async function getResultTimeseries(
   token: string,
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-): Promise<Record<string, any>> {
+): Promise<Table> {
   const response = await fetch(
     `/api/systems/${systemId}/data/${dataset}/timeseries`,
     {
       headers: new Headers({
         Authorization: `Bearer ${token}`,
-        Accept: accept
+        Accept: accept,
       }),
       method: "get",
     }
   );
+  if (response.ok) {
+    const data = await response.arrayBuffer();
+    return Table.from([new Uint8Array(data)]);
+  } else {
+    const errors = await response.json();
+    throw errors;
+  }
 }
 
 export async function getResultStatistics(
@@ -156,20 +176,22 @@ export async function getResultStatistics(
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-): Promise<Record<string, any>> {
+): Promise<Table> {
   const response = await fetch(
     `/api/systems/${systemId}/data/${dataset}/statistics`,
     {
       headers: new Headers({
         Authorization: `Bearer ${token}`,
-        Accept: accept
+        Accept: accept,
       }),
       method: "get",
     }
   );
   if (response.ok) {
-    if (accept == "application/vnd.apache.arrow.file") {
-    } else {
-    }
+    const data = await response.arrayBuffer();
+    return Table.from([new Uint8Array(data)]);
+  } else {
+    const errors = await response.json();
+    throw errors;
   }
 }
