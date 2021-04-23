@@ -1,4 +1,5 @@
 import SystemDefinition from "@/views/SystemDefinition.vue";
+import SystemMap from "@/components/Map.vue";
 import { $auth } from "./mockauth";
 import {
   getSystem,
@@ -14,6 +15,17 @@ import flushPromises from "flush-promises";
 
 // use systems mock module
 jest.mock("@/api/systems");
+
+function errorFactory(error: string) {
+  return {
+    detail: [
+      {
+        loc: ["theError"],
+        msg: error,
+      },
+    ],
+  };
+}
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -35,7 +47,9 @@ describe("Test System Definition", () => {
       router,
       mocks,
     });
+    await flushPromises();
     expect(wrapper.findAll("input").length).toBe(8);
+    expect(wrapper.findComponent(SystemMap).exists()).toBe(true);
   });
   it("Test change tracking", async () => {
     const wrapper = mount(SystemDefinition, {
@@ -90,6 +104,18 @@ describe("Test System Definition", () => {
       router,
       mocks,
     });
+    // @ts-expect-error accessing vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34.9,
+        longitude: -112.9,
+      },
+      se_corner: {
+        latitude: 33,
+        longitude: -111,
+      },
+    });
+    await flushPromises();
     wrapper.find("button[type='submit']").trigger("click");
     await flushPromises();
     expect(createSystem).toHaveBeenCalled();
@@ -104,7 +130,7 @@ describe("Test System Definition", () => {
 
     // @ts-expect-error mock object
     createSystem.mockImplementationOnce(async () => {
-      throw "error";
+      throw errorFactory("error");
     });
     const wrapper = mount(SystemDefinition, {
       attachTo: "#app",
@@ -112,12 +138,20 @@ describe("Test System Definition", () => {
       router,
       mocks,
     });
+    // @ts-expect-error vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34,
+        longitude: -112,
+      },
+      se_corner: {
+        latitude: 32,
+        longitude: -110,
+      },
+    });
+    await flushPromises();
     wrapper.find("button[type='submit']").trigger("click");
-    try {
-      await flushPromises();
-    } catch (error) {
-      expect(error).toBe("error");
-    }
+    await flushPromises();
 
     // @ts-expect-error ts compains about history on VueRouter
     expect(router.history.current.path).toBe("/system/new");
@@ -178,7 +212,7 @@ describe("Test System Definition", () => {
 
     // @ts-expect-error mock object
     getSystem.mockImplementationOnce(async () => {
-      throw "error";
+      throw errorFactory("error");
     });
     const wrapper = mount(SystemDefinition, {
       attachTo: "#app",
@@ -202,7 +236,7 @@ describe("Test System Definition", () => {
 
     // @ts-expect-error mock object
     updateSystem.mockImplementationOnce(async () => {
-      throw "error";
+      throw errorFactory("error");
     });
     router.push({
       name: "Update System",
@@ -254,7 +288,7 @@ describe("Test System Definition", () => {
   it("Test dc capacity", async () => {
     // @ts-expect-error mock object
     listSystems.mockImplementationOnce(async () => {
-      throw "error";
+      throw errorFactory("error");
     });
     const wrapper = mount(SystemDefinition, {
       localVue,
@@ -264,6 +298,9 @@ describe("Test System Definition", () => {
 
     await flushPromises();
     expect(wrapper.vm.$data.systems).toBe(null);
+    expect(wrapper.find("ul.error-list").find("li").text()).toBe(
+      "Error: Failed to load systems. Refresh the page to try again."
+    );
   });
   it("Test update bounds", async () => {
     const appTarget = document.createElement("div");
@@ -312,6 +349,46 @@ describe("Test System Definition", () => {
         longitude: -110,
       },
     });
+    appTarget.remove();
+  });
+  it("Test save system error display", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+    const errors = errorFactory("error");
+    errors.detail.push({
+      loc: ["__root__"],
+      msg: "is bad",
+    });
+    // @ts-expect-error mock object
+    createSystem.mockImplementationOnce(async () => {
+      throw errors;
+    });
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+    });
+    // @ts-expect-error vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34,
+        longitude: -112,
+      },
+      se_corner: {
+        latitude: 32,
+        longitude: -110,
+      },
+    });
+    await flushPromises();
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    const htmlErrorList = wrapper.find("ul.error-list");
+    const errorLis = htmlErrorList.findAll("li");
+    expect(errorLis.at(0).text()).toBe("theError: error");
+    expect(errorLis.at(1).text()).toBe("System: is bad");
+
     appTarget.remove();
   });
 });
