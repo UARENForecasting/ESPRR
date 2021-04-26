@@ -87,8 +87,7 @@ describe("Tests authenticated routes", () => {
     });
     await flushPromises();
     expect(home.find("Table").text()).toBe(
-      `Name AC Capacity (MW) Orientation/Tracking Test PV System 10  Fixed TiltReal PV System 10
-                Single Axis`
+      `Name AC Capacity (MW) Orientation/Tracking Test PV System 10  Fixed TiltReal PV System 10 \n                Single Axis`
     );
     const button = home.find("button");
     expect(button.text()).toMatch(/Log out/);
@@ -133,8 +132,7 @@ describe("Test authguard", () => {
     });
     await flushPromises();
     expect(view.find("Table").text()).toMatch(
-      `Name AC Capacity (MW) Orientation/Tracking Test PV System 10  Fixed TiltReal PV System 10
-                Single Axis`
+      `Name AC Capacity (MW) Orientation/Tracking Test PV System 10  Fixed TiltReal PV System 10 \n                Single Axis`
     );
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
     router.push({ name: "New System" });

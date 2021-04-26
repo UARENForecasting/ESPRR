@@ -28,6 +28,23 @@
               min="0"
               v-model.number="definition.dc_ac_ratio"
           /></label>
+          <label for="albedoSelect">Surface Type:</label>
+          <select id="albedoSelect" name="albedoSelect" @change="changeAlbedo">
+            <option value="" disable selected>manually set albedo</option>
+            <option
+              v-for="k in Object.keys(surfaceTypes)"
+              :key="k"
+              :name="k"
+              :value="k"
+            >
+              {{ k }}
+            </option>
+          </select>
+          <slot></slot>
+          <help
+            :helpText="'Fill in albedo based on some common surface types.'"
+            :tagId="'albedoSelect'"
+          />
           <label
             >Albedo:
             <input
@@ -145,6 +162,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import * as SystemsApi from "@/api/systems";
 import flattenErrors from "@/api/errors";
 import SystemMap from "@/components/Map.vue";
+import SurfaceTypes from "@/constants/surface_albedo.json";
 
 import {
   StoredPVSystem,
@@ -156,6 +174,10 @@ import {
 
 Vue.component("system-map", SystemMap);
 
+interface HTMLInputEvent extends Event {
+  target: HTMLInputElement & EventTarget;
+}
+
 @Component
 export default class SystemDefinition extends Vue {
   @Prop() systemId!: string;
@@ -164,6 +186,7 @@ export default class SystemDefinition extends Vue {
   trackingType!: string;
   systems!: Array<StoredPVSystem>;
   errors!: Record<string, string> | null;
+  surfaceTypes: Record<string, number> = SurfaceTypes;
 
   data(): Record<string, any> {
     return {
@@ -259,6 +282,10 @@ export default class SystemDefinition extends Vue {
           this.errors = flattenErrors(errors);
         });
     }
+  }
+
+  changeAlbedo(e: HTMLInputEvent): void {
+    this.definition.albedo = this.surfaceTypes[e.target.value];
   }
 
   @Watch("trackingType")
