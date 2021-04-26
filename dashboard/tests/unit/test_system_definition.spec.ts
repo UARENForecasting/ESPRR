@@ -51,6 +51,28 @@ describe("Test System Definition", () => {
     expect(wrapper.findAll("input").length).toBe(8);
     expect(wrapper.findComponent(SystemMap).exists()).toBe(true);
   });
+  it("Test change surface", async () => {
+    const wrapper = mount(SystemDefinition, {
+      localVue,
+      router,
+      mocks,
+    });
+
+    wrapper.vm.$data.definition.albedo = 0;
+    expect(wrapper.vm.$data.definition.albedo).toEqual(0);
+    const expected = Object.assign({}, wrapper.vm.$data.definition);
+
+    const surfaceTypeSelect = wrapper.find("select[name=albedoSelect]");
+    expect(surfaceTypeSelect.exists()).toBe(true);
+    const opt = surfaceTypeSelect.findAll("option").at(5);
+    expect(opt.exists()).toBe(true);
+    opt.trigger("change");
+    await flushPromises();
+    expect(wrapper.vm.$data.definition.albedo).toBeGreaterThan(0);
+
+    expected.albedo = 0.4;
+    expect(wrapper.vm.$data.definition).toEqual(expected);
+  });
   it("Test change tracking", async () => {
     const wrapper = mount(SystemDefinition, {
       localVue,
@@ -61,7 +83,7 @@ describe("Test System Definition", () => {
     wrapper.vm.$data.definition.tracking.tilt = 12;
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       tilt: 12,
-      azimuth: 0,
+      azimuth: 180,
     });
 
     // @ts-expect-error access vm
@@ -70,9 +92,9 @@ describe("Test System Definition", () => {
 
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       axis_tilt: 12,
-      axis_azimuth: 0,
-      gcr: 0,
-      backtracking: false,
+      axis_azimuth: 180,
+      gcr: 0.4,
+      backtracking: true,
     });
 
     // @ts-expect-error access vm
@@ -81,7 +103,7 @@ describe("Test System Definition", () => {
 
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       tilt: 12,
-      azimuth: 0,
+      azimuth: 180,
     });
 
     // @ts-expect-error access vm
@@ -90,7 +112,7 @@ describe("Test System Definition", () => {
 
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       tilt: 12,
-      azimuth: 0,
+      azimuth: 180,
     });
   });
   it("Test save system", async () => {
