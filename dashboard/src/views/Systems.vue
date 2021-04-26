@@ -102,12 +102,15 @@
             :all_systems="notSelectedSystems"
             @new-selection="setSelected"
           />
-          <results
+          
+        </template>
+      </div>
+    </div>
+    <div>
+        <results
             v-if="selected"
             :systemId="selected.object_id"
           />
-        </template>
-      </div>
     </div>
     <transition name="fade">
       <div v-if="showDeleteDialog" id="delete-dialog">
@@ -190,7 +193,7 @@ export default class Systems extends Vue {
   }
 }
 </script>
-<style>
+<style scoped>
 div.grid {
   display: grid;
   grid-template-columns: 1fr 2fr;

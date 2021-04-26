@@ -146,12 +146,12 @@ export async function getResult(
   }
 }
 
-export async function getResultTimeseries(
+export async function fetchResultTimeseries(
   token: string,
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-): Promise<Table> {
+): Promise<Table|string> {
   const response = await fetch(
     `/api/systems/${systemId}/data/${dataset}/timeseries`,
     {
@@ -162,21 +162,35 @@ export async function getResultTimeseries(
       method: "get",
     }
   );
+  return response;
+}
+export async function getResultTimeseries(
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Table|string> {
+  const response = await fetchResultTimeseries(token, systemId, dataset, accept);
   if (response.ok) {
-    const data = await response.arrayBuffer();
-    return Table.from([new Uint8Array(data)]);
+    if (accept == "application/vnd.apache.arrow.file") {
+      const data = await response.arrayBuffer();
+      return Table.from([new Uint8Array(data)]);
+    } else {
+      return await response.text();
+    }
   } else {
     const errors = await response.json();
     throw errors;
   }
 }
 
-export async function getResultStatistics(
+
+export async function fetchResultStatistics(
   token: string,
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-): Promise<Table> {
+){
   const response = await fetch(
     `/api/systems/${systemId}/data/${dataset}/statistics`,
     {
@@ -187,9 +201,22 @@ export async function getResultStatistics(
       method: "get",
     }
   );
+  return response;
+}
+export async function getResultStatistics(
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Table> {
+  const response = await fetchResultStatistics(token, systemId, dataset, accept); 
   if (response.ok) {
-    const data = await response.arrayBuffer();
-    return Table.from([new Uint8Array(data)]);
+    if (accept == "application/vnd.apache.arrow.file") {
+      const data = await response.arrayBuffer();
+      return Table.from([new Uint8Array(data)]);
+    } else {
+      return await response.text();
+    }
   } else {
     const errors = await response.json();
     throw errors;

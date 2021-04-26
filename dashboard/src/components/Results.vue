@@ -1,19 +1,28 @@
 <template>
   <div>
     <timeseries-plot
+      @download-timeseries="downloadData"
       v-if="timeseries"
       :timeseriesData="timeseries"
       />
+    <statistics-table
+      v-if="statistics"
+      :tableData="statistics"
+    />
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
+import StatisticsTable from "@/components/data/StatisticsTable.vue";
+
 
 import * as SystemsAPI from "@/api/systems";
 import { Table } from "apache-arrow";
+import downloadFile from "@/utillsdownloadFile";
 
 Vue.component("timeseries-plot", TimeseriesPlot);
+Vue.component("statistics-table", StatisticsTable);
 
 @Component
 export default class DataSetResults extends Vue {
@@ -22,7 +31,7 @@ export default class DataSetResults extends Vue {
 
   status!: string;
   statistics!: Table | null;
-  timeseries!: Table | null;
+  timeseries!: Table | string | null;
 
   created() {
     this.updateStatus();
@@ -38,7 +47,7 @@ export default class DataSetResults extends Vue {
       this.loadTimeseries();
       this.loadStatistics();
     } else {
-      console.log("UHHH");
+      console.log(this.status);
     }
   }
   async updateStatus(): Promise<void> {
@@ -57,8 +66,8 @@ export default class DataSetResults extends Vue {
     SystemsAPI.getResultTimeseries(
       token,
       this.systemId,
-      this.dataset   
-    ).then((timeseriesTable: Table) => {
+      this.dataset,
+    ).then((timeseriesTable: Table|string) => {
       this.timeseries = timeseriesTable;
     });
   }
@@ -71,6 +80,23 @@ export default class DataSetResults extends Vue {
     ).then((statisticsTable: Table) => {
       this.statistics = statisticsTable;
     });
+  }
+
+  async downloadTimeseries(dataType: string, contentType: string) {
+    const token = await this.$auath.getTokenSilently();
+    const contents = await SystemsApi.fetchResultTimeseries(
+      token, this.systemId, this.dataset, contentType
+    ).then((response: Response) => response.blob())
+    downloadFile("file.arrow", contents);
+
+  }
+
+  async downloadStatistics(contentType: string) {
+    const token = await this.$auath.getTokenSilently();
+    contents = await SystemsApi.fetchResultStatistics(
+      token, this.systemId, this.dataset, contentType
+    ).then((response: Response) => response.blob())
+    downloadFile("file.csv", contents);
   }
 }
 </script>

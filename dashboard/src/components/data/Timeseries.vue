@@ -1,4 +1,3 @@
-84;0;0c
 <template>
   <div class="timeseries-plot">
     Download:
@@ -7,12 +6,17 @@
       Apache Arrow
     </button>
     <br />
+    <select v-model="selected" @change="redraw">
+      <option v-for="field in availableFields" :key="field">{{ field }}</option>
+    </select>
     <div :id="id"></div>
   </div>
 </template>
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { getDisplayName } from "@/utils/DisplayNames";
 import { Table } from "apache-arrow";
+import { DateTime } from "luxon";
 import Plotly from "plotly.js-basic-dist";
 
 @Component
@@ -20,17 +24,19 @@ export default class TimeseriesPlot extends Vue {
   @Prop() timeseriesData!: Table;
   @Prop() title!: string;
   config = { responsive: true };
+  selected!: string;
 
   // should update to be unique if we want multiple plots on a page
   id = "thePlot";
 
   data() {
     return {
-      config: this.config
+      config: this.config,
+      selected: this.selected
     } 
   }
   get yData() {
-    return this.timeseriesData.getColumn("ac").toArray();
+    return this.timeseriesData.getColumn(this.selected).toArray();
   }
   get xData() {
     // Have to build times manually because calling .toArray() on the time
@@ -39,7 +45,7 @@ export default class TimeseriesPlot extends Vue {
     let index = this.timeseriesData.getColumn("time");
     const dateTimes: Array<Date> = [];
     for (let i = 0; i < index.length; i++) {
-      dateTimes.push(index.get(i));
+      dateTimes.push(DateTime.fromMillis(index.get(i)).toJSDate());
     }
     return dateTimes;
   }
@@ -58,7 +64,7 @@ export default class TimeseriesPlot extends Vue {
       .filter(x => x !== "time" && x !== "month");
   }
   get plotTitle() {
-    return "AC Power (MW)";
+    return getDisplayName(this.selected);
   }
   get layout() {
     return {
@@ -67,15 +73,23 @@ export default class TimeseriesPlot extends Vue {
         title: `Time`
       },
       yaxis: {
-        title: "AC Power"
+        title: `${getDisplayName(this.selected)} (MW)`
       }
     };
   }
+  resetSelected() {
+    this.selected = this.availableFields[0];
+  }
   async mounted() {
+    this.resetSelected();
     await Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
   @Watch("timeseriesData")
   changeData() {
+    this.resetSelected();
+    Plotly.react(this.id, this.plotData, this.layout, this.config);
+  }
+  redraw() {
     Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
   downloadData(contentType: string) {
