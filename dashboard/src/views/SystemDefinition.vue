@@ -133,7 +133,7 @@
                 />
               </label>
               <label
-                title="Controls whether the tracker has the capability to \"backtrack\" to avoid row-to-row shading. False denotes no backtrack capability. True denotes backtrack capability."
+                title='Controls whether the tracker has the capability to "backtrack" to avoid row-to-row shading. False denotes no backtrack capability. True denotes backtrack capability.'
               >
                 Backtracking:
                 <input
