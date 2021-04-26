@@ -11,16 +11,19 @@
           </li>
         </ul>
         <form v-if="definition" id="system-definition" @submit="submitSystem">
-          <label>Name: <input type="text" v-model="definition.name" /></label>
           <label
-            >AC Capacity:
+            title="A name for this system. Most special characters beyond space, comma, hyphen, and parentheses are not allowed."
+            >Name: <input type="text" v-model="definition.name"
+          /></label>
+          <label title="AC Capacity of the system in MW"
+            >AC Capacity (MW):
             <input
               type="number"
               step="any"
               min="0"
               v-model.number="definition.ac_capacity"
           /></label>
-          <label
+          <label title="Ratio of installed DC capacity to AC capacity"
             >DC/AC Ratio:
             <input
               type="number"
@@ -28,24 +31,25 @@
               min="0"
               v-model.number="definition.dc_ac_ratio"
           /></label>
-          <label for="albedoSelect">Surface Type:</label>
-          <select id="albedoSelect" name="albedoSelect" @change="changeAlbedo">
-            <option value="" disable selected>manually set albedo</option>
-            <option
-              v-for="k in Object.keys(surfaceTypes)"
-              :key="k"
-              :name="k"
-              :value="k"
+          <label title="Sets Albedo for common surface types"
+            >Surface Type:
+            <select
+              id="albedoSelect"
+              name="albedoSelect"
+              @change="changeAlbedo"
             >
-              {{ k }}
-            </option>
-          </select>
-          <slot></slot>
-          <help
-            :helpText="'Fill in albedo based on some common surface types.'"
-            :tagId="'albedoSelect'"
-          />
-          <label
+              <option value="" disable selected>manually set albedo</option>
+              <option
+                v-for="k in Object.keys(surfaceTypes)"
+                :key="k"
+                :name="k"
+                :value="k"
+              >
+                {{ k }}
+              </option>
+            </select>
+          </label>
+          <label title="Albedo of the ground where system is installed"
             >Albedo:
             <input
               type="number"
@@ -57,7 +61,9 @@
 
           <fieldset class="tracking">
             <legend>Panel Orientation/Tracking</legend>
-            <label>
+            <label
+              title="Choosed between PV panels that are mounted at a fixed orientation or on a single-axis tracking system"
+            >
               Tracking Type:
               <input type="radio" v-model="trackingType" value="fixed" />Fixed
               Tilt
@@ -68,7 +74,7 @@
               />Single Axis
             </label>
             <fieldset class="fixed" v-if="trackingType == 'fixed'">
-              <label>
+              <label title="Tilt of the panels in degrees from horizontal">
                 Tilt:
                 <input
                   type="number"
@@ -78,7 +84,9 @@
                   v-model.number="definition.tracking.tilt"
                 />
               </label>
-              <label>
+              <label
+                title="Azimuth of the panels in degrees from North. 180 == South"
+              >
                 Azimuth:
                 <input
                   type="number"
@@ -90,7 +98,9 @@
               </label>
             </fieldset>
             <fieldset class="fixed" v-else>
-              <label>
+              <label
+                title="Tilt (in degrees) of the single-axis tracking system"
+              >
                 Axis Tilt:
                 <input
                   type="number"
@@ -100,7 +110,9 @@
                   v-model.number="definition.tracking.axis_tilt"
                 />
               </label>
-              <label>
+              <label
+                title="Azimuth of the single-axis tracking system in degrees from North"
+              >
                 Axis Azimuth:
                 <input
                   type="number"
@@ -120,7 +132,9 @@
                   v-model.number="definition.tracking.gcr"
                 />
               </label>
-              <label>
+              <label
+                title="If the system supports backtracking for low sun angles"
+              >
                 Backtracking:
                 <input
                   type="radio"
