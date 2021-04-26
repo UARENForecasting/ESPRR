@@ -12,7 +12,7 @@
             <tr>
               <th>Name</th>
               <th>AC Capacity (MW)</th>
-              <th>Tracking</th>
+              <th>Orientation/Tracking</th>
             </tr>
           </thead>
           <tbody>
@@ -32,7 +32,7 @@
                 <template v-if="'backtracking' in system.definition.tracking">
                   Single Axis
                 </template>
-                <template v-else> Fixed </template>
+                <template v-else> Fixed Tilt</template>
               </td>
             </tr>
           </tbody>
@@ -62,9 +62,9 @@
             <li><b>DC/AC Ratio: </b>{{ selected.definition.dc_ac_ratio }}</li>
             <li><b>Albedo: </b>{{ selected.definition.albedo }}</li>
             <li>
-              <b>Tracking: </b>
-              <ul class="tracking-details-list">
-                <template v-if="'backtracking' in selected.definition.tracking">
+              <template v-if="'backtracking' in selected.definition.tracking">
+                <b>Tracking: </b>
+                <ul class="tracking-details-list">
                   <li>
                     <b>Axis Tilt: </b
                     >{{ selected.definition.tracking.axis_tilt }}&deg;
@@ -81,8 +81,11 @@
                     <b>Backtracking: </b
                     >{{ selected.definition.tracking.backtracking }}
                   </li>
-                </template>
-                <template v-else>
+                </ul>
+              </template>
+              <template v-else>
+                <b>Panel Orientation: </b>
+                <ul class="tracking-details-list">
                   <li>
                     <b>Tilt: </b>{{ selected.definition.tracking.tilt }}&deg;
                   </li>
@@ -90,8 +93,8 @@
                     <b>Azimuth: </b
                     >{{ selected.definition.tracking.azimuth }}&deg;
                   </li>
-                </template>
-              </ul>
+                </ul>
+              </template>
             </li>
           </ul>
           <system-map

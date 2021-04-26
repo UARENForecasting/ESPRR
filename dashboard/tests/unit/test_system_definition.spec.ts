@@ -61,7 +61,7 @@ describe("Test System Definition", () => {
     wrapper.vm.$data.definition.tracking.tilt = 12;
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       tilt: 12,
-      azimuth: 0,
+      azimuth: 180,
     });
 
     // @ts-expect-error access vm
@@ -70,9 +70,9 @@ describe("Test System Definition", () => {
 
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       axis_tilt: 12,
-      axis_azimuth: 0,
-      gcr: 0,
-      backtracking: false,
+      axis_azimuth: 180,
+      gcr: 0.4,
+      backtracking: true,
     });
 
     // @ts-expect-error access vm
@@ -81,7 +81,7 @@ describe("Test System Definition", () => {
 
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       tilt: 12,
-      azimuth: 0,
+      azimuth: 180,
     });
 
     // @ts-expect-error access vm
@@ -90,7 +90,7 @@ describe("Test System Definition", () => {
 
     expect(wrapper.vm.$data.definition.tracking).toEqual({
       tilt: 12,
-      azimuth: 0,
+      azimuth: 180,
     });
   });
   it("Test save system", async () => {
