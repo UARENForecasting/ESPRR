@@ -62,7 +62,7 @@
           <fieldset class="tracking">
             <legend>Panel Orientation/Tracking</legend>
             <label
-              title="Choosed between PV panels that are mounted at a fixed orientation or on a single-axis tracking system"
+              title="Choose between PV panels that are mounted at a fixed orientation or on a single-axis tracking system"
             >
               Tracking Type:
               <input type="radio" v-model="trackingType" value="fixed" />Fixed
@@ -99,7 +99,7 @@
             </fieldset>
             <fieldset class="fixed" v-else>
               <label
-                title="Tilt (in degrees) of the single-axis tracking system"
+                title="Tilt (in degrees) of the axis of rotation with respect to horizontal. Typically 0."
               >
                 Axis Tilt:
                 <input
@@ -111,7 +111,7 @@
                 />
               </label>
               <label
-                title="Azimuth of the single-axis tracking system in degrees from North"
+                title="The compass direction along which the axis of rotation lies. Measured in decimal degrees east of north. Typically 0."
               >
                 Axis Azimuth:
                 <input
@@ -133,7 +133,7 @@
                 />
               </label>
               <label
-                title="If the system supports backtracking for low sun angles"
+                title="Controls whether the tracker has the capability to \"backtrack\" to avoid row-to-row shading. False denotes no backtrack capability. True denotes backtrack capability."
               >
                 Backtracking:
                 <input
