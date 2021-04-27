@@ -20,6 +20,29 @@
         </option>
       </select>
     </label>
+    <label>
+      <b>Units</b>
+      <label>
+        Absolute Ramps (MW)
+        <input
+          type="radio"
+          id="absolute"
+          name="units"
+          value="false"
+          v-model="asRampRate"
+        />
+      </label>
+      <label>
+        Ramp Rates (MW/min)
+        <input
+          type="radio"
+          id="rate"
+          name="units"
+          value="true"
+          v-model="asRampRate"
+        />
+      </label>
+    </label>
     <table
       class="striped-table result-summary"
       :style="`--numCol: ` + (headers.length + 1)"
@@ -52,15 +75,17 @@ import { Table, predicate } from "apache-arrow";
 @Component
 export default class StatisticsTable extends Vue {
   @Prop() tableData!: Table;
-
+  asRampRate!: string;
   selectedInterval!: string;
 
   created(): void {
     this.selectedInterval = this.availableIntervals[0];
+    this.asRampRate = "false";
   }
   data(): Record<string, any> {
     return {
       selectedInterval: this.selectedInterval,
+      asRampRate: this.asRampRate,
     };
   }
 
@@ -76,13 +101,21 @@ export default class StatisticsTable extends Vue {
     );
   }
 
+  get scaleFactor(): number {
+    if (this.asRampRate === "true") {
+      return Number(this.selectedInterval.split("-")[0]);
+    } else {
+      return 1;
+    }
+  }
+
   get tableRows(): Record<string, Record<string, number>> {
     const rows: Record<string, Record<string, number>> = {};
     for (const row of this.filteredTable) {
       if (!(row["month"] in rows)) {
         rows[row["month"]] = {};
       }
-      rows[row["month"]][row["statistic"]] = row.value;
+      rows[row["month"]][row["statistic"]] = row.value / this.scaleFactor;
     }
     return rows;
   }
