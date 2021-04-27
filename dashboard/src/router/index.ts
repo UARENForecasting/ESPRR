@@ -1,6 +1,7 @@
 import VueRouter, { RouteConfig } from "vue-router";
 import Systems from "../views/Systems.vue";
 import SystemDefinition from "../views/SystemDefinition.vue";
+import SystemDetails from "../views/System.vue";
 import { authGuard } from "../auth/authGuard";
 
 const routes: Array<RouteConfig> = [
@@ -16,7 +17,14 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard,
   },
   {
-    path: "/system/:systemId",
+    path: "/systems/:systemId",
+    name: "System Details",
+    component: SystemDetails,
+    props: true,
+    beforeEnter: authGuard,
+  },
+  {
+    path: "/system/:systemId/edit",
     name: "Update System",
     component: SystemDefinition,
     props: true,

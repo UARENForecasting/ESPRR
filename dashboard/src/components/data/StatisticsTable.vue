@@ -1,6 +1,7 @@
 <template>
   <div v-if="tableData" class="summary-table">
     <h3>Statistics</h3>
+    Download:
     <button @click="downloadData('text/csv')">CSV</button>
     <button @click="downloadData('application/vnd.apache.arrow.file')">
       Apache Arrow

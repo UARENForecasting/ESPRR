@@ -46,6 +46,14 @@
           <router-link
             tag="button"
             :to="{
+              name: 'System Details',
+              params: { systemId: selected.object_id },
+            }"
+            >NSRDB 2019 Results</router-link
+          >
+          <router-link
+            tag="button"
+            :to="{
               name: 'Update System',
               params: { systemId: selected.object_id },
             }"
@@ -104,9 +112,6 @@
           />
         </template>
       </div>
-    </div>
-    <div>
-      <results v-if="selected" :systemId="selected.object_id" />
     </div>
     <transition name="fade">
       <div v-if="showDeleteDialog" id="delete-dialog">
@@ -222,6 +227,7 @@ tr {
   display: grid;
   padding: 0.5em;
   grid-template-columns: 2fr 2fr 1fr;
+  border-bottom: 1px solid #ccc;
 }
 
 th {
