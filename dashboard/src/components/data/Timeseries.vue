@@ -7,14 +7,6 @@
       Apache Arrow
     </button>
     <br />
-    <label>
-      Variable:
-      <select v-model="selected" @change="redraw">
-        <option v-for="field in availableFields" :key="field">
-          {{ field }}
-        </option>
-      </select>
-    </label>
     <div :id="id"></div>
   </div>
 </template>
@@ -42,10 +34,6 @@ export default class TimeseriesPlot extends Vue {
     };
   }
 
-  get yData(): Array<number> {
-    return this.timeseriesData.getColumn(this.selected).toArray();
-  }
-
   get xData(): Array<Date> {
     // Have to build times manually because calling .toArray() on the time
     // column results in a double length array with alternative 0 values
@@ -62,8 +50,17 @@ export default class TimeseriesPlot extends Vue {
     return [
       {
         x: this.xData,
-        y: this.yData,
+        y: this.timeseriesData.getColumn("clearsky_ac_power").toArray(),
+        name: "Clearsky AC Power",
         type: "scatter",
+        showlegend: true,
+      },
+      {
+        x: this.xData,
+        y: this.timeseriesData.getColumn("ac_power").toArray(),
+        name: "AC Power",
+        type: "scatter",
+        showlegend: true,
       },
     ];
   }
@@ -85,7 +82,7 @@ export default class TimeseriesPlot extends Vue {
         title: `Time`,
       },
       yaxis: {
-        title: `${getDisplayName(this.selected)} (MW)`,
+        title: "MW",
       },
     };
   }
