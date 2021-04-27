@@ -14,6 +14,7 @@ const localVue = createLocalVue();
 localVue.use(VueRouter);
 
 const mocks = { $auth };
+const stubs = { "system-map": true };
 
 describe("Test Systems list", () => {
   beforeEach(() => {
@@ -27,6 +28,7 @@ describe("Test Systems list", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     await flushPromises();
@@ -45,6 +47,7 @@ describe("Test Systems list", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     await flushPromises();
@@ -57,6 +60,7 @@ describe("Test Systems list", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     await flushPromises();
 
@@ -84,6 +88,7 @@ describe("Test Systems list", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     await flushPromises();
@@ -103,6 +108,7 @@ describe("Test Systems list", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     await flushPromises();

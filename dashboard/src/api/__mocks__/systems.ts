@@ -7,6 +7,7 @@
  * e.g. import { listSystems } from "@/api/systems"
  * and calling listSystems.mockResolvedValues.
  */
+/* eslint-disable */
 import { PVSystem, StoredPVSystem } from "@/models";
 import { Table, FloatVector, DateVector } from "apache-arrow";
 
@@ -138,17 +139,17 @@ const updateSystem = jest.fn(async function (
   systemId: string,
   definition: PVSystem
 ): Promise<Record<string, any> | null> {
+  let sysId: string;
   for (let i = 0; i < systems.length; i++) {
     if (systems[i].object_id == systemId) {
+      sysId = systems[i].object_id;
       systems[i].definition = definition;
-      return null;
+      return {
+        object_id: sysId,
+      };
     }
   }
-  const response = {
-    object_id: String(systemIndex),
-  };
-  systemIndex++;
-  return response;
+  return null;
 });
 
 const startProcessing = jest.fn(async function (
@@ -156,7 +157,7 @@ const startProcessing = jest.fn(async function (
   systemId: string,
   dataset: string
 ): Promise<Record<string, any>> {
-   return {"result": "ok"};
+  return { result: "ok" };
 });
 const getResult = jest.fn(async function (
   token: string,

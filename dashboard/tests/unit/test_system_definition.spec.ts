@@ -32,6 +32,8 @@ localVue.use(VueRouter);
 
 const mocks = { $auth };
 
+const stubs = { "system-map": true };
+
 describe("Test System Definition", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -46,6 +48,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     await flushPromises();
     expect(wrapper.findAll("input").length).toBe(8);
@@ -56,6 +59,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.albedo = 0;
@@ -78,6 +82,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.tracking.tilt = 12;
@@ -125,6 +130,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     // @ts-expect-error accessing vm method
     wrapper.vm.updateBounds({
@@ -159,6 +165,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     // @ts-expect-error vm method
     wrapper.vm.updateBounds({
@@ -189,6 +196,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
       },
@@ -213,6 +221,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
       },
@@ -241,6 +250,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
       },
@@ -269,6 +279,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
       },
@@ -281,7 +292,7 @@ describe("Test System Definition", () => {
     expect(updateSystem).toHaveBeenCalled();
     // @ts-expect-error ts complains about history on VueRouter
     expect(router.history.current.path).toBe(
-      "/system/6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9"
+      "/system/6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9/edit"
     );
     appTarget.remove();
   });
@@ -290,6 +301,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.ac_capacity = null;
@@ -301,6 +313,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.ac_capacity = 1;
@@ -316,6 +329,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     await flushPromises();
@@ -334,6 +348,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
       },
@@ -391,6 +406,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     // @ts-expect-error vm method
     wrapper.vm.updateBounds({
