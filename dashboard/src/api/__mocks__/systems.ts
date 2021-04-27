@@ -8,6 +8,7 @@
  * and calling listSystems.mockResolvedValues.
  */
 import { PVSystem, StoredPVSystem } from "@/models";
+import { Table } from "apache-arrow";
 
 let systemIndex = 0;
 
@@ -134,6 +135,75 @@ const updateSystem = jest.fn(async function (
   };
   systemIndex++;
   return response;
+});
+
+const startProcessing = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+    }),
+    method: "post",
+  });
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw await response.json();
+  }
+});
+const getResult = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  return {status: "complete"};
+});
+
+const fetchResultTimeseries = jest.fn(async function(
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Response> {
+  return new Response();
+});
+
+const getResultTimeseries =jest.fn(async function(
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Table | string> {
+  if (accept == "text/csv") {
+    return "stuff";
+  } else {
+    return Table.from([]);
+  }
+});
+
+const fetchResultStatistics = jest.fn(async function(
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Response> {
+  
+  return new Response();
+});
+const getResultStatistics = jest.fn(async function(
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Table | string> {
+  if (accept == "text/csv") {
+    return "stuff";
+  } else {
+    return Table.from([]);
+  }
 });
 
 export { listSystems, getSystem, createSystem, deleteSystem, updateSystem };
