@@ -12,7 +12,7 @@
 </template>
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import { getDisplayName } from "@/utils/DisplayNames";
+import { StoredPVSystem } from "@/models";
 import { Table } from "apache-arrow";
 import { DateTime } from "luxon";
 import Plotly from "plotly.js-basic-dist";
@@ -20,7 +20,8 @@ import Plotly from "plotly.js-basic-dist";
 @Component
 export default class TimeseriesPlot extends Vue {
   @Prop() timeseriesData!: Table;
-  @Prop() title!: string;
+  @Prop() system!: StoredPVSystem;
+  @Prop() dataset!: string;
   config = { responsive: true };
   selected!: string;
 
@@ -72,7 +73,7 @@ export default class TimeseriesPlot extends Vue {
   }
 
   get plotTitle(): string {
-    return getDisplayName(this.selected);
+    return `${this.dataset} ${this.system.definition.name} Performance`;
   }
 
   get layout(): Record<string, any> {

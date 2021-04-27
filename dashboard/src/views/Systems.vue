@@ -56,6 +56,7 @@
             :to="{
               name: 'Update System',
               params: { systemId: selected.object_id },
+              query: { returnTo: 'systems' },
             }"
             >Update System</router-link
           >

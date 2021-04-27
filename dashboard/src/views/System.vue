@@ -11,6 +11,7 @@
               :to="{
                 name: 'Update System',
                 params: { systemId: system.object_id },
+                query: { returnTo: 'details' },
               }"
               >Update System</router-link
             >
@@ -67,7 +68,7 @@
         </div>
       </div>
       <div>
-        <results v-if="system" :systemId="system.object_id" />
+        <results v-if="system" :system="system" />
       </div>
       <transition name="fade">
         <div v-if="showDeleteDialog" id="delete-dialog">

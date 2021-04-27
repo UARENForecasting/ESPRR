@@ -273,14 +273,38 @@ export default class SystemDefinition extends Vue {
       });
   }
 
+  navigateToPrevious(): void {
+    if ("returnTo" in this.$route.query) {
+      if (this.$route.query.returnTo == "details") {
+        this.$router.push({
+          name: "System Details",
+          params: {
+            systemId: this.systemId,
+          },
+        });
+      } else {
+        this.$router.push({ name: "Systems" });
+      }
+    } else {
+      this.$router.push({ name: "Systems" });
+    }
+  }
+
   async submitSystem(e: Event): Promise<void> {
     e.preventDefault();
     // validate and post system
     const token = await this.$auth.getTokenSilently();
     if (this.systemId) {
       SystemsApi.updateSystem(token, this.systemId, this.definition)
-        .then(() => {
-          this.$router.push({ name: "Systems" });
+        .then((systemResponse: StoredPVSystem) => {
+          SystemsApi.startProcessing(
+            token,
+            systemResponse.object_id,
+            "NSRDB_2019"
+          ).then((otherResponse: any) => {
+            console.log("Started processing: ", otherResponse);
+          });
+          this.navigateToPrevious();
           this.errors = null;
         })
         .catch((errors: any) => {
@@ -297,7 +321,7 @@ export default class SystemDefinition extends Vue {
           ).then((otherResponse: any) => {
             console.log("Started processing: ", otherResponse);
           });
-          this.$router.push({ name: "Systems" });
+          this.navigateToPrevious();
           this.errors = null;
         })
         .catch((errors: any) => {

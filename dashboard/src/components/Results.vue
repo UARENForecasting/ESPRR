@@ -21,10 +21,14 @@
       Performance calculation is running and will be ready soon.
     </div>
     <div class="results" v-if="status == 'complete'">
+      <h2>Performance Results</h2>
+      <hr />
       <timeseries-plot
         @download-timeseries="downloadTimeseries"
         v-if="timeseries"
         :timeseriesData="timeseries"
+        :system="system"
+        :dataset="dataset"
       />
       <statistics-table
         @download-statistics="downloadStatistics"
@@ -36,6 +40,7 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { StoredPVSystem } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
 
@@ -49,18 +54,19 @@ Vue.component("statistics-table", StatisticsTable);
 @Component
 export default class DataSetResults extends Vue {
   @Prop({ default: "NSRDB_2019" }) dataset!: string;
-  @Prop() systemId!: string;
+  @Prop() system!: StoredPVSystem;
 
   status!: string | null;
   statistics!: Table | string | null;
   timeseries!: Table | string | null;
   timeout!: any;
+  errors!: Record<string, any> | null;
 
   created(): void {
     this.updateStatus();
   }
 
-  @Watch("systemId")
+  @Watch("system", { deep: true })
   loadNewSystemResults(): void {
     // Reload results if System ID changes.
     this.status = null;
@@ -88,7 +94,7 @@ export default class DataSetResults extends Vue {
     this.errors = null;
   }
 
-  async initialize(): void {
+  async initialize(): Promise<void> {
     if (this.status) {
       if (this.status == "complete") {
         this.loadTimeseries();
@@ -109,7 +115,7 @@ export default class DataSetResults extends Vue {
 
   async updateStatus(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    SystemsAPI.getResult(token, this.systemId, this.dataset).then(
+    SystemsAPI.getResult(token, this.system.object_id, this.dataset).then(
       (statusResponse: any) => {
         this.status = statusResponse.status;
         if (this.status == "error") {
@@ -122,18 +128,20 @@ export default class DataSetResults extends Vue {
 
   async loadTimeseries(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    SystemsAPI.getResultTimeseries(token, this.systemId, this.dataset).then(
-      (timeseriesTable: Table | string) => {
-        this.timeseries = timeseriesTable;
-      }
-    );
+    SystemsAPI.getResultTimeseries(
+      token,
+      this.system.object_id,
+      this.dataset
+    ).then((timeseriesTable: Table | string) => {
+      this.timeseries = timeseriesTable;
+    });
   }
 
   async loadStatistics(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
     SystemsAPI.getResultStatistics(
       token,
-      this.systemId,
+      this.system.object_id,
       this.dataset
       // @ts-expect-error Is Table
     ).then((statisticsTable: Table) => {
@@ -145,7 +153,7 @@ export default class DataSetResults extends Vue {
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultTimeseries(
       token,
-      this.systemId,
+      this.system.object_id,
       this.dataset,
       contentType
     ).then((response: Response): Promise<Blob> => response.blob());
@@ -162,7 +170,7 @@ export default class DataSetResults extends Vue {
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultStatistics(
       token,
-      this.systemId,
+      this.system.object_id,
       this.dataset,
       contentType
     ).then((response: Response): Promise<Blob> => response.blob());
