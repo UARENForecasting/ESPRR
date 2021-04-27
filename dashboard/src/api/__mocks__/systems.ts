@@ -8,10 +8,24 @@
  * and calling listSystems.mockResolvedValues.
  */
 import { PVSystem, StoredPVSystem } from "@/models";
-import { Table } from "apache-arrow";
+import { Table, FloatVector, DateVector } from "apache-arrow";
 
 let systemIndex = 0;
 
+const timeIndex = [
+  new Date("2021-01-01T00:00Z"),
+  new Date("2021-01-02T00:00Z"),
+  new Date("2021-01-03T00:00Z"),
+];
+
+const tsTable = Table.new(
+  [
+    FloatVector.from(Float32Array.from([1.0, 2.0, 3.0])),
+    FloatVector.from(Float32Array.from([1.0, 2.0, 3.0])),
+    DateVector.from(timeIndex),
+  ],
+  ["ac_power", "clearsky_ac_power", "time"]
+);
 const systems: Array<StoredPVSystem> = [
   {
     object_id: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
@@ -142,36 +156,26 @@ const startProcessing = jest.fn(async function (
   systemId: string,
   dataset: string
 ): Promise<Record<string, any>> {
-  const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
-    headers: new Headers({
-      Authorization: `Bearer ${token}`,
-    }),
-    method: "post",
-  });
-  if (response.ok) {
-    return await response.json();
-  } else {
-    throw await response.json();
-  }
+   return {"result": "ok"};
 });
 const getResult = jest.fn(async function (
   token: string,
   systemId: string,
   dataset: string
 ): Promise<Record<string, any>> {
-  return {status: "complete"};
+  return { status: "complete" };
 });
 
-const fetchResultTimeseries = jest.fn(async function(
+const fetchResultTimeseries = jest.fn(async function (
   token: string,
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
 ): Promise<Response> {
-  return new Response();
+  return new Response(new Blob());
 });
 
-const getResultTimeseries =jest.fn(async function(
+const getResultTimeseries = jest.fn(async function (
   token: string,
   systemId: string,
   dataset: string,
@@ -180,20 +184,19 @@ const getResultTimeseries =jest.fn(async function(
   if (accept == "text/csv") {
     return "stuff";
   } else {
-    return Table.from([]);
+    return tsTable;
   }
 });
 
-const fetchResultStatistics = jest.fn(async function(
+const fetchResultStatistics = jest.fn(async function (
   token: string,
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
 ): Promise<Response> {
-  
   return new Response();
 });
-const getResultStatistics = jest.fn(async function(
+const getResultStatistics = jest.fn(async function (
   token: string,
   systemId: string,
   dataset: string,
@@ -202,8 +205,20 @@ const getResultStatistics = jest.fn(async function(
   if (accept == "text/csv") {
     return "stuff";
   } else {
-    return Table.from([]);
+    return tsTable;
   }
 });
 
-export { listSystems, getSystem, createSystem, deleteSystem, updateSystem };
+export {
+  listSystems,
+  getSystem,
+  createSystem,
+  deleteSystem,
+  updateSystem,
+  startProcessing,
+  fetchResultTimeseries,
+  fetchResultStatistics,
+  getResultTimeseries,
+  getResultStatistics,
+  getResult,
+};
