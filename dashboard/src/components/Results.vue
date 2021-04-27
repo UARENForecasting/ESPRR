@@ -35,6 +35,7 @@
         v-if="statistics"
         :tableData="statistics"
       />
+      <quick-table v-if="statistics" :tableData="statistics" />
     </div>
   </div>
 </template>
@@ -43,6 +44,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { StoredPVSystem } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
+import QuickTable from "@/components/data/QuickTable.vue";
 
 import * as SystemsAPI from "@/api/systems";
 import { Table } from "apache-arrow";
@@ -50,6 +52,7 @@ import downloadFile from "@/utils/downloadFile";
 
 Vue.component("timeseries-plot", TimeseriesPlot);
 Vue.component("statistics-table", StatisticsTable);
+Vue.component("quick-table", QuickTable);
 
 @Component
 export default class DataSetResults extends Vue {
