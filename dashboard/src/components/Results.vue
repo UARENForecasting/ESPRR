@@ -1,19 +1,41 @@
 <template>
   <div>
-    <timeseries-plot
-      @download-timeseries="downloadTimeseries"
-      v-if="timeseries"
-      :timeseriesData="timeseries"
-    />
-    <statistics-table
-      @download-statistics="downloadStatistics"
-      v-if="statistics"
-      :tableData="statistics"
-    />
+    <div v-if="errors" class="errors">
+      Errors occurred during processing:
+      <ul>
+        <li v-for="error of errors" :key="error">
+          {{ error }}
+        </li>
+      </ul>
+    </div>
+    <div v-if="status == 'queued'">
+      Performance calculation is Queued and will be processed shortly.
+    </div>
+    <div v-if="status == 'statistics missing'">
+      Result statistics are missing.
+    </div>
+    <div v-if="status == 'timeseries missing'">
+      Result timeseries are missing.
+    </div>
+    <div v-if="status == 'running'">
+      Performance calculation is running and will be ready soon.
+    </div>
+    <div class="results" v-if="status == 'complete'">
+      <timeseries-plot
+        @download-timeseries="downloadTimeseries"
+        v-if="timeseries"
+        :timeseriesData="timeseries"
+      />
+      <statistics-table
+        @download-statistics="downloadStatistics"
+        v-if="statistics"
+        :tableData="statistics"
+      />
+    </div>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
 
@@ -29,37 +51,75 @@ export default class DataSetResults extends Vue {
   @Prop({ default: "NSRDB_2019" }) dataset!: string;
   @Prop() systemId!: string;
 
-  status!: string;
+  status!: string | null;
   statistics!: Table | string | null;
   timeseries!: Table | string | null;
+  timeout!: any;
 
   created(): void {
     this.updateStatus();
   }
+
+  @Watch("systemId")
+  loadNewSystemResults(): void {
+    // Reload results if System ID changes.
+    this.status = null;
+    this.timeseries = null;
+    this.statistics = null;
+    this.updateStatus();
+  }
+
   data(): Record<string, any> {
     return {
       statistics: null,
       timeseries: null,
+      status: null,
+      errors: null,
     };
   }
+
+  activated(): void {
+    this.updateStatus();
+  }
+
+  deactivated(): void {
+    clearTimeout(this.timeout);
+    this.status = null;
+    this.errors = null;
+  }
+
   async initialize(): void {
-    if (this.status == "complete") {
-      this.loadTimeseries();
-      this.loadStatistics();
+    if (this.status) {
+      if (this.status == "complete") {
+        this.loadTimeseries();
+        this.loadStatistics();
+      } else if (this.status == "error") {
+        return;
+      } else {
+        this.awaitResults();
+      }
     } else {
-      // TODO
-      console.log(this.status);
+      this.awaitResults();
     }
   }
+
+  async awaitResults(): Promise<void> {
+    this.timeout = setTimeout(this.updateStatus, 1000);
+  }
+
   async updateStatus(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
     SystemsAPI.getResult(token, this.systemId, this.dataset).then(
       (statusResponse: any) => {
         this.status = statusResponse.status;
+        if (this.status == "error") {
+          this.errors = statusResponse.error;
+        }
         this.initialize();
       }
     );
   }
+
   async loadTimeseries(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
     SystemsAPI.getResultTimeseries(token, this.systemId, this.dataset).then(
@@ -68,6 +128,7 @@ export default class DataSetResults extends Vue {
       }
     );
   }
+
   async loadStatistics(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
     SystemsAPI.getResultStatistics(
