@@ -13,35 +13,36 @@
     </button>
     <br />
     <label>
+      <b>Units</b>
+      <label title="Present statistics in terms of absolute power ramps">
+        Absolute Ramps (MW)
+        <input
+          type="radio"
+          id="absolute"
+          name="units"
+          value="0"
+          v-model.number="asRampRate"
+        />
+      </label>
+      <label title="Present statistics in terms of MW/min ramp rates">
+        Ramp Rates (MW/min)
+        <input
+          type="radio"
+          id="rate"
+          name="units"
+          value="1"
+          v-model.number="asRampRate"
+        />
+      </label>
+    </label>
+    <br />
+    <label>
       <b>Interval</b>
       <select v-model="selectedInterval">
         <option v-for="interval of availableIntervals" :key="interval">
           {{ interval }}
         </option>
       </select>
-    </label>
-    <label>
-      <b>Units</b>
-      <label>
-        Absolute Ramps (MW)
-        <input
-          type="radio"
-          id="absolute"
-          name="units"
-          value="false"
-          v-model="asRampRate"
-        />
-      </label>
-      <label>
-        Ramp Rates (MW/min)
-        <input
-          type="radio"
-          id="rate"
-          name="units"
-          value="true"
-          v-model="asRampRate"
-        />
-      </label>
     </label>
     <table
       class="striped-table result-summary"
@@ -50,7 +51,7 @@
       <thead>
         <tr>
           <th>Month</th>
-          <th v-for="(header, i) of headers" :key="i">
+          <th v-for="(header, i) of niceHeaders" :key="i">
             {{ header }}
           </th>
         </tr>
@@ -71,16 +72,17 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { Table, predicate } from "apache-arrow";
+import { getDisplayName } from "@/utils/DisplayNames";
 
 @Component
 export default class StatisticsTable extends Vue {
   @Prop() tableData!: Table;
-  asRampRate!: string;
+  asRampRate!: number;
   selectedInterval!: string;
 
   created(): void {
     this.selectedInterval = this.availableIntervals[0];
-    this.asRampRate = "false";
+    this.asRampRate = 0;
   }
   data(): Record<string, any> {
     return {
@@ -89,10 +91,14 @@ export default class StatisticsTable extends Vue {
     };
   }
 
-  get headers(): Array<string | number> {
+  get headers(): Array<string> {
     return Array.from(
       new Set(this.filteredTable.getColumn("statistic").toArray())
     );
+  }
+
+  get niceHeaders(): Array<string> {
+    return this.headers.map(getDisplayName);
   }
 
   get filteredTable(): Table {
@@ -102,7 +108,7 @@ export default class StatisticsTable extends Vue {
   }
 
   get scaleFactor(): number {
-    if (this.asRampRate === "true") {
+    if (this.asRampRate) {
       return Number(this.selectedInterval.split("-")[0]);
     } else {
       return 1;

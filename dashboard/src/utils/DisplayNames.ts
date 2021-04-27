@@ -10,6 +10,10 @@ export const displayNames: Record<string, any> = {
   backtracking: "Backtracking",
   ac_power: "AC Power",
   clearsky_ac_power: "Clearsky AC Power",
+  "p95 daytime ramp": "Stress-case up (p95)",
+  "p05 daytime ramp": "Stress-case down (p05)",
+  "typical sunrise ramp": "Typical Sunrise",
+  "typical sunset ramp": "Typical Sunset",
 };
 
 export function getDisplayName(machineName: string): string {
