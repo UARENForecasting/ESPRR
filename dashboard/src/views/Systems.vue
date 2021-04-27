@@ -102,15 +102,11 @@
             :all_systems="notSelectedSystems"
             @new-selection="setSelected"
           />
-          
         </template>
       </div>
     </div>
     <div>
-        <results
-            v-if="selected"
-            :systemId="selected.object_id"
-          />
+      <results v-if="selected" :systemId="selected.object_id" />
     </div>
     <transition name="fade">
       <div v-if="showDeleteDialog" id="delete-dialog">

@@ -1,14 +1,20 @@
 <template>
   <div class="timeseries-plot">
+    <h3>Timeseries</h3>
     Download:
     <button @click="downloadData('text/csv')">CSV</button>
     <button @click="downloadData('application/vnd.apache.arrow.file')">
       Apache Arrow
     </button>
     <br />
-    <select v-model="selected" @change="redraw">
-      <option v-for="field in availableFields" :key="field">{{ field }}</option>
-    </select>
+    <label>
+      Variable:
+      <select v-model="selected" @change="redraw">
+        <option v-for="field in availableFields" :key="field">
+          {{ field }}
+        </option>
+      </select>
+    </label>
     <div :id="id"></div>
   </div>
 </template>
@@ -29,16 +35,18 @@ export default class TimeseriesPlot extends Vue {
   // should update to be unique if we want multiple plots on a page
   id = "thePlot";
 
-  data() {
+  data(): Record<string, any> {
     return {
       config: this.config,
-      selected: this.selected
-    } 
+      selected: this.selected,
+    };
   }
-  get yData() {
+
+  get yData(): Array<number> {
     return this.timeseriesData.getColumn(this.selected).toArray();
   }
-  get xData() {
+
+  get xData(): Array<Date> {
     // Have to build times manually because calling .toArray() on the time
     // column results in a double length array with alternative 0 values
     // with apache-arrow 3.0.0
@@ -49,50 +57,59 @@ export default class TimeseriesPlot extends Vue {
     }
     return dateTimes;
   }
+
   get plotData(): Partial<Plotly.PlotData>[] {
     return [
       {
         x: this.xData,
         y: this.yData,
-        type: "scatter"
-      }
+        type: "scatter",
+      },
     ];
   }
-  get availableFields() {
+
+  get availableFields(): Array<string> {
     return this.timeseriesData.schema.fields
-      .map(x => x.name)
-      .filter(x => x !== "time" && x !== "month");
+      .map((x) => x.name)
+      .filter((x) => x !== "time" && x !== "month");
   }
-  get plotTitle() {
+
+  get plotTitle(): string {
     return getDisplayName(this.selected);
   }
-  get layout() {
+
+  get layout(): Record<string, any> {
     return {
       title: this.plotTitle,
       xaxis: {
-        title: `Time`
+        title: `Time`,
       },
       yaxis: {
-        title: `${getDisplayName(this.selected)} (MW)`
-      }
+        title: `${getDisplayName(this.selected)} (MW)`,
+      },
     };
   }
-  resetSelected() {
+
+  resetSelected(): void {
     this.selected = this.availableFields[0];
   }
-  async mounted() {
+
+  async mounted(): Promise<void> {
     this.resetSelected();
     await Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
+
   @Watch("timeseriesData")
-  changeData() {
+  changeData(): void {
     this.resetSelected();
     Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
-  redraw() {
+
+  redraw(): void {
     Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
-  downloadData(contentType: string) {
+
+  downloadData(contentType: string): void {
     this.$emit("download-timeseries", contentType);
   }
 }

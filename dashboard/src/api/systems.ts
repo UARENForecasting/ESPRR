@@ -151,7 +151,7 @@ export async function fetchResultTimeseries(
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-): Promise<Table|string> {
+): Promise<Response> {
   const response = await fetch(
     `/api/systems/${systemId}/data/${dataset}/timeseries`,
     {
@@ -169,8 +169,13 @@ export async function getResultTimeseries(
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-): Promise<Table|string> {
-  const response = await fetchResultTimeseries(token, systemId, dataset, accept);
+): Promise<Table | string> {
+  const response = await fetchResultTimeseries(
+    token,
+    systemId,
+    dataset,
+    accept
+  );
   if (response.ok) {
     if (accept == "application/vnd.apache.arrow.file") {
       const data = await response.arrayBuffer();
@@ -184,13 +189,12 @@ export async function getResultTimeseries(
   }
 }
 
-
 export async function fetchResultStatistics(
   token: string,
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-){
+): Promise<Response> {
   const response = await fetch(
     `/api/systems/${systemId}/data/${dataset}/statistics`,
     {
@@ -208,8 +212,13 @@ export async function getResultStatistics(
   systemId: string,
   dataset: string,
   accept = "application/vnd.apache.arrow.file"
-): Promise<Table> {
-  const response = await fetchResultStatistics(token, systemId, dataset, accept); 
+): Promise<Table | string> {
+  const response = await fetchResultStatistics(
+    token,
+    systemId,
+    dataset,
+    accept
+  );
   if (response.ok) {
     if (accept == "application/vnd.apache.arrow.file") {
       const data = await response.arrayBuffer();

@@ -296,7 +296,7 @@ export default class SystemDefinition extends Vue {
             "NSRDB_2019"
           ).then((otherResponse: any) => {
             console.log("Started processing: ", otherResponse);
-          })
+          });
           this.$router.push({ name: "Systems" });
           this.errors = null;
         })

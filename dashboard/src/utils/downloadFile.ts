@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-export default function download(filename: string, contents: Blob) {
+export default function download(filename: string, contents: Blob): void {
   if (navigator.msSaveBlob) {
     navigator.msSaveBlob(contents, filename);
   } else {

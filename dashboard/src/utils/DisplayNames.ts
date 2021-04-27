@@ -9,7 +9,7 @@ export const displayNames: Record<string, any> = {
   gcr: "Ground Coverage Ratio",
   backtracking: "Backtracking",
   ac_power: "AC Power",
-  clearsky_ac_power: "Clearsky AC Power"
+  clearsky_ac_power: "Clearsky AC Power",
 };
 
 export function getDisplayName(machineName: string): string {
