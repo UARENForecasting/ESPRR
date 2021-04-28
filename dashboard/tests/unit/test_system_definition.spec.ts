@@ -7,6 +7,7 @@ import {
   updateSystem,
   listSystems,
 } from "@/api/systems";
+import { errorFactory } from "./testutils";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import VueRouter from "vue-router";
@@ -15,17 +16,6 @@ import flushPromises from "flush-promises";
 
 // use systems mock module
 jest.mock("@/api/systems");
-
-function errorFactory(error: string) {
-  return {
-    detail: [
-      {
-        loc: ["theError"],
-        msg: error,
-      },
-    ],
-  };
-}
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);

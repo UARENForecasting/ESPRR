@@ -9,7 +9,7 @@
       </ul>
     </div>
     <div v-if="status == 'queued'">
-      Performance calculation is Queued and will be processed shortly.
+      Performance calculation is queued and will be processed shortly.
     </div>
     <div v-if="status == 'statistics missing'">
       Result statistics are missing.
@@ -83,19 +83,16 @@ export default class DataSetResults extends Vue {
       status: null,
       errors: null,
       active: this.active,
+      timeout: null,
     };
   }
 
   async initialize(): Promise<void> {
-    if (this.status) {
-      if (this.status == "complete") {
-        this.loadTimeseries();
-        this.loadStatistics();
-      } else if (this.status == "error") {
-        return;
-      } else {
-        this.awaitResults();
-      }
+    if (this.status == "complete") {
+      this.loadTimeseries();
+      this.loadStatistics();
+    } else if (this.status == "error") {
+      return;
     } else {
       this.awaitResults();
     }
@@ -144,6 +141,7 @@ export default class DataSetResults extends Vue {
     });
   }
 
+  /* istanbul ignore next */
   async downloadTimeseries(contentType: string): Promise<void> {
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultTimeseries(
@@ -161,7 +159,7 @@ export default class DataSetResults extends Vue {
     downloadFile(filename, contents);
   }
 
-  /* istabul ignore-next */
+  /* istanbul ignore next */
   async downloadStatistics(contentType: string): Promise<void> {
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultStatistics(
