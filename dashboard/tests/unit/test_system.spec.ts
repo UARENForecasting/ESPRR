@@ -8,7 +8,7 @@ import {
   getResultTimeseries,
   getResultStatistics,
   fetchResultTimeseries,
-  fetchResultStatistics
+  fetchResultStatistics,
 } from "@/api/systems";
 
 import { createLocalVue, mount } from "@vue/test-utils";

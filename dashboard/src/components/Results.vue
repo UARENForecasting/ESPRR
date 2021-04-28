@@ -61,9 +61,29 @@ export default class DataSetResults extends Vue {
   timeseries!: Table | string | null;
   timeout!: any;
   errors!: Record<string, any> | null;
+  active!: boolean;
 
   created(): void {
+    this.active = true;
     this.updateStatus();
+  }
+
+  destroyed(): void {
+    // lifecycle hook to cleanup polling
+    this.active = false;
+    clearTimeout(this.timeout);
+    this.status = null;
+    this.errors = null;
+  }
+
+  data(): Record<string, any> {
+    return {
+      statistics: null,
+      timeseries: null,
+      status: null,
+      errors: null,
+      active: this.active,
+    };
   }
 
   @Watch("system", { deep: true })
@@ -75,20 +95,15 @@ export default class DataSetResults extends Vue {
     this.updateStatus();
   }
 
-  data(): Record<string, any> {
-    return {
-      statistics: null,
-      timeseries: null,
-      status: null,
-      errors: null,
-    };
-  }
-
   activated(): void {
+    // hook for keep-alive lifecycle init
+    this.active = true;
     this.updateStatus();
   }
 
   deactivated(): void {
+    // hook for keep-alive lifecycle cleanup
+    this.active = false;
     clearTimeout(this.timeout);
     this.status = null;
     this.errors = null;
@@ -110,7 +125,10 @@ export default class DataSetResults extends Vue {
   }
 
   async awaitResults(): Promise<void> {
-    this.timeout = setTimeout(this.updateStatus, 1000);
+    // don't set timeout if the component has been deactivated
+    if (this.active) {
+      this.timeout = setTimeout(this.updateStatus, 1000);
+    }
   }
 
   async updateStatus(): Promise<void> {

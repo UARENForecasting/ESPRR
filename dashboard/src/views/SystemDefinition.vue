@@ -274,7 +274,6 @@ export default class SystemDefinition extends Vue {
   }
 
   navigateToPrevious(): void {
-    console.log("pushing prev");
     if ("returnTo" in this.$route.query) {
       if (this.$route.query.returnTo == "details") {
         this.$router.push({

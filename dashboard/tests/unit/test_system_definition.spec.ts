@@ -429,4 +429,88 @@ describe("Test System Definition", () => {
 
     appTarget.remove();
   });
+  it("Test update system return to details", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    router.push({
+      name: "Update System",
+      params: { systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9" },
+      query: { returnTo: "details" },
+    });
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      stubs,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      },
+    });
+    await flushPromises();
+    // @ts-expect-error accessing vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34.9,
+        longitude: -112.9,
+      },
+      se_corner: {
+        latitude: 33,
+        longitude: -111,
+      },
+    });
+    await flushPromises();
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    expect(updateSystem).toHaveBeenCalled();
+    // @ts-expect-error ts compains about history on VueRouter
+    expect(router.history.current.path).toBe(
+      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
+    );
+    appTarget.remove();
+  });
+  it("Test update system return to listing", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    router.push({
+      name: "Update System",
+      params: { systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9" },
+      query: { returnTo: "listing" },
+    });
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      stubs,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      },
+    });
+    await flushPromises();
+    // @ts-expect-error accessing vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34.9,
+        longitude: -112.9,
+      },
+      se_corner: {
+        latitude: 33,
+        longitude: -111,
+      },
+    });
+    await flushPromises();
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    expect(updateSystem).toHaveBeenCalled();
+    // @ts-expect-error ts compains about history on VueRouter
+    expect(router.history.current.path).toBe("/");
+    appTarget.remove();
+  });
 });
