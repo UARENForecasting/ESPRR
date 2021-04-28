@@ -141,17 +141,15 @@ export default class SystemDetails extends Vue {
   }
 
   async deleteSystem(): Promise<void> {
-    if (this.system != null) {
-      const token = await this.$auth.getTokenSilently();
-      SystemsAPI.deleteSystem(token, this.system.object_id)
-        .then(() => {
-          this.$router.push({ name: "Systems" });
-        })
-        .catch((error: any) => {
-          console.error(error);
-          this.showDeleteDialog = false;
-        });
-    }
+    const token = await this.$auth.getTokenSilently();
+    SystemsAPI.deleteSystem(token, this.system.object_id)
+      .then(() => {
+        this.$router.push({ name: "Systems" });
+      })
+      .catch((error: any) => {
+        console.error(error);
+        this.showDeleteDialog = false;
+      });
   }
   get otherSystems(): Array<StoredPVSystem> {
     return this.systems.filter((system: StoredPVSystem) => {
