@@ -39,7 +39,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Vue, Component, Prop } from "vue-property-decorator";
 import { StoredPVSystem } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
@@ -84,29 +84,6 @@ export default class DataSetResults extends Vue {
       errors: null,
       active: this.active,
     };
-  }
-
-  @Watch("system", { deep: true })
-  loadNewSystemResults(): void {
-    // Reload results if System ID changes.
-    this.status = null;
-    this.timeseries = null;
-    this.statistics = null;
-    this.updateStatus();
-  }
-
-  activated(): void {
-    // hook for keep-alive lifecycle init
-    this.active = true;
-    this.updateStatus();
-  }
-
-  deactivated(): void {
-    // hook for keep-alive lifecycle cleanup
-    this.active = false;
-    clearTimeout(this.timeout);
-    this.status = null;
-    this.errors = null;
   }
 
   async initialize(): Promise<void> {
@@ -184,6 +161,7 @@ export default class DataSetResults extends Vue {
     downloadFile(filename, contents);
   }
 
+  /* istabul ignore-next */
   async downloadStatistics(contentType: string): Promise<void> {
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultStatistics(

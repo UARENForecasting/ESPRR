@@ -2,8 +2,13 @@
   <div v-if="tableData" class="summary-table">
     <h3>Statistics</h3>
     Download:
-    <button @click="downloadData('text/csv')">CSV</button>
-    <button @click="downloadData('application/vnd.apache.arrow.file')">
+    <button id="download-statistics-csv" @click="downloadData('text/csv')">
+      CSV
+    </button>
+    <button
+      id="download-statistics-arrow"
+      @click="downloadData('application/vnd.apache.arrow.file')"
+    >
       Apache Arrow
     </button>
     <br />
@@ -87,6 +92,7 @@ export default class StatisticsTable extends Vue {
   }
 
   downloadData(contentType: string): void {
+    /* istanbul ignore next */
     this.$emit("download-statistics", contentType);
   }
 }

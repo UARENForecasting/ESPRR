@@ -145,8 +145,7 @@ export default class SystemDetails extends Vue {
       const token = await this.$auth.getTokenSilently();
       SystemsAPI.deleteSystem(token, this.system.object_id)
         .then(() => {
-          this.getSystems();
-          this.showDeleteDialog = false;
+          this.$router.push({ name: "Systems" });
         })
         .catch((error: any) => {
           console.error(error);

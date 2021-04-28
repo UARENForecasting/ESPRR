@@ -10,8 +10,9 @@
     <div :id="id"></div>
   </div>
 </template>
+
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import { StoredPVSystem } from "@/models";
 import { Table } from "apache-arrow";
 import { DateTime } from "luxon";
@@ -25,14 +26,18 @@ export default class TimeseriesPlot extends Vue {
   config = { responsive: true };
   selected!: string;
 
-  // should update to be unique if we want multiple plots on a page
-  id = "thePlot";
+  id = "timeseries-plot";
 
   data(): Record<string, any> {
     return {
       config: this.config,
       selected: this.selected,
     };
+  }
+
+  mounted(): void {
+    this.resetSelected();
+    Plotly.react(this.id, this.plotData, this.layout, this.config);
   }
 
   get xData(): Array<Date> {
@@ -92,22 +97,8 @@ export default class TimeseriesPlot extends Vue {
     this.selected = this.availableFields[0];
   }
 
-  async mounted(): Promise<void> {
-    this.resetSelected();
-    await Plotly.react(this.id, this.plotData, this.layout, this.config);
-  }
-
-  @Watch("timeseriesData")
-  changeData(): void {
-    this.resetSelected();
-    Plotly.react(this.id, this.plotData, this.layout, this.config);
-  }
-
-  redraw(): void {
-    Plotly.react(this.id, this.plotData, this.layout, this.config);
-  }
-
   downloadData(contentType: string): void {
+    /* istanbul ignore next */
     this.$emit("download-timeseries", contentType);
   }
 }
