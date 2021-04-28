@@ -159,6 +159,18 @@ describe("Test Results component", () => {
     expect(wrapper.vm.$data.timeout).toBeTruthy();
     wrapper.destroy();
 
+    // @ts-expect-error mock fn
+    expect(getResult.mock.calls.length).toBe(1);
+
+    // @ts-expect-error instance method
+    wrapper.vm.awaitResults();
+    jest.runAllTimers();
+    await flushPromises();
+
+    // no more calls are made, polling has stopped
+    // @ts-expect-error mock fn
+    expect(getResult.mock.calls.length).toBe(1);
+
     expect(wrapper.vm.$data.active).toBe(false);
     expect(wrapper.vm.$data.status).toBe(null);
     expect(wrapper.vm.$data.errors).toBe(null);
