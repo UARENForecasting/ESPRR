@@ -31,17 +31,13 @@
       </v-path-transforms>
 
       <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
-        <v-path-transforms
+        <l-rectangle
           v-for="system of all_systems"
           :key="system.object_id"
-          :latLngs="createPolygon(system.definition.boundary)"
-          :draggable="false"
-          :rotation="false"
-          :scaling="false"
-          layer-type="overlay"
+          :bounds="createRectangle(system.definition.boundary)"
           @click="emitSelection(system)"
         >
-        </v-path-transforms>
+        </l-rectangle>
       </l-layer-group>
     </l-map>
     <div class="map-prompt">
@@ -67,6 +63,7 @@ import {
   LControlScale,
   LControlLayers,
   LLayerGroup,
+  LRectangle
 } from "vue2-leaflet";
 import Vue2LeafletPathTransform from "vue2-leaflet-path-transform";
 import { BoundingBox } from "@/models";
@@ -83,6 +80,7 @@ Vue.component("l-marker", LMarker);
 Vue.component("l-control-scale", LControlScale);
 Vue.component("l-control-layers", LControlLayers);
 Vue.component("l-layer-group", LLayerGroup);
+Vue.component("l-rectangle", LRectangle);
 Vue.component("v-path-transforms", Vue2LeafletPathTransform);
 
 @Component
@@ -158,6 +156,13 @@ export default class SystemMap extends Vue {
       L.latLng(boundingBox.nw_corner.latitude, boundingBox.se_corner.longitude),
       L.latLng(boundingBox.se_corner.latitude, boundingBox.se_corner.longitude),
       L.latLng(boundingBox.se_corner.latitude, boundingBox.nw_corner.longitude),
+    ];
+  }
+  
+  createRectangle(boundingBox: BoundingBox): Array<L.LatLng> {
+    return [
+      L.latLng(boundingBox.nw_corner.latitude, boundingBox.nw_corner.longitude),
+      L.latLng(boundingBox.se_corner.latitude, boundingBox.se_corner.longitude)
     ];
   }
 
