@@ -150,11 +150,11 @@ export default class DataSetResults extends Vue {
       this.dataset,
       contentType
     ).then((response: Response): Promise<Blob> => response.blob());
-    let filename: string;
+    let filename = `${this.system.definition.name.replace(/ /g,"_")}_${this.dataset}_timeseries`;
     if (contentType == "text/csv") {
-      filename = "timeseries.csv";
+      filename += ".csv";
     } else {
-      filename = "timeseries.arrow";
+      filename += ".arrow";
     }
     downloadFile(filename, contents);
   }
@@ -168,11 +168,11 @@ export default class DataSetResults extends Vue {
       this.dataset,
       contentType
     ).then((response: Response): Promise<Blob> => response.blob());
-    let filename: string;
+    let filename = `${this.system.definition.name.replace(/ /g,"_")}_${this.dataset}_statistics`;
     if (contentType == "text/csv") {
-      filename = "statistics.csv";
+      filename += ".csv";
     } else {
-      filename = "statistics.arrow";
+      filename += ".arrow";
     }
     downloadFile(filename, contents);
   }
