@@ -241,7 +241,7 @@ export default class SystemMap extends Vue {
 <style scoped>
 .l-wrapper {
   width: 100%;
-  height: 100%;
+  height: 40vh;
 }
 .map-prompt {
   display: grid;

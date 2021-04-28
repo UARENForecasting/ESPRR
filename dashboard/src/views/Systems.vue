@@ -46,8 +46,17 @@
           <router-link
             tag="button"
             :to="{
+              name: 'System Details',
+              params: { systemId: selected.object_id },
+            }"
+            >NSRDB 2019 Results</router-link
+          >
+          <router-link
+            tag="button"
+            :to="{
               name: 'Update System',
               params: { systemId: selected.object_id },
+              query: { returnTo: 'systems' },
             }"
             >Update System</router-link
           >
@@ -184,7 +193,7 @@ export default class Systems extends Vue {
   }
 }
 </script>
-<style>
+<style scoped>
 div.grid {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -217,6 +226,7 @@ tr {
   display: grid;
   padding: 0.5em;
   grid-template-columns: 2fr 2fr 1fr;
+  border-bottom: 1px solid #ccc;
 }
 
 th {

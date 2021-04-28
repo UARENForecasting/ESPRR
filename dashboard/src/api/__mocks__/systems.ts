@@ -7,9 +7,64 @@
  * e.g. import { listSystems } from "@/api/systems"
  * and calling listSystems.mockResolvedValues.
  */
+/* eslint-disable */
 import { PVSystem, StoredPVSystem } from "@/models";
+import { Table, FloatVector, DateVector, Builder, Utf8 } from "apache-arrow";
 
 let systemIndex = 0;
+
+const timeIndex = [
+  (new Date("2021-01-01T00:00Z")).getTime(),
+  (new Date("2021-01-02T00:00Z")).getTime(),
+  (new Date("2021-01-03T00:00Z")).getTime(),
+];
+
+const tsTable = Table.new(
+  [
+    FloatVector.from(Float32Array.from([1.0, 2.0, 3.0])),
+    FloatVector.from(Float32Array.from([1.0, 2.0, 3.0])),
+    FloatVector.from(Float32Array.from(timeIndex)),
+  ],
+  ["ac_power", "clearsky_ac_power", "time"]
+);
+
+
+const monthBuilder = Builder.new({
+  type: new Utf8(),
+  nullValues: [null]
+});
+const statBuilder = Builder.new({
+  type: new Utf8(),
+  nullValues: [null]
+});
+const intervalBuilder = Builder.new({
+  type: new Utf8(),
+  nullValues: [null]
+});
+
+const stats = ["p95 daytime ramp", "p05 daytime ramp", "typical sunrise ramp", "typical sunset ramp"];
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+for (const stat of stats) {
+  for (const month of months) {
+    statBuilder.append(stat);
+    monthBuilder.append(month);
+    intervalBuilder.append("5-min");
+  }
+};
+const values: Array<number> = [];
+for (let i = 0; i < 48; i++) {
+  values.push(0.5);
+}
+const statisticsTable = Table.new(
+  [
+    monthBuilder.finish().toVector(),
+    statBuilder.finish().toVector(),
+    intervalBuilder.finish().toVector(),
+    FloatVector.from(Float32Array.from(values))
+  ],
+  ["month", "statistic", "interval", "value"]
+);
 
 const systems: Array<StoredPVSystem> = [
   {
@@ -123,17 +178,90 @@ const updateSystem = jest.fn(async function (
   systemId: string,
   definition: PVSystem
 ): Promise<Record<string, any> | null> {
+  let sysId: string;
   for (let i = 0; i < systems.length; i++) {
     if (systems[i].object_id == systemId) {
+      sysId = systems[i].object_id;
       systems[i].definition = definition;
-      return null;
+      return {
+        object_id: sysId,
+      };
     }
   }
-  const response = {
-    object_id: String(systemIndex),
-  };
-  systemIndex++;
-  return response;
+  return null;
 });
 
-export { listSystems, getSystem, createSystem, deleteSystem, updateSystem };
+const startProcessing = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  return { result: "ok" };
+});
+const getResult = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string
+): Promise<Record<string, any>> {
+  return { status: "complete" };
+});
+
+const fetchResultTimeseries = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Response> {
+  return new Response(new Blob());
+});
+
+const getResultTimeseries = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Table | string> {
+  if (accept == "text/csv") {
+    return "stuff";
+  } else {
+    return tsTable;
+  }
+});
+
+const fetchResultStatistics = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Response> {
+  return new Response(new Blob());
+});
+const getResultStatistics = jest.fn(async function (
+  token: string,
+  systemId: string,
+  dataset: string,
+  accept = "application/vnd.apache.arrow.file"
+): Promise<Table | string> {
+  if (accept == "text/csv") {
+    return "stuff";
+  } else {
+    return statisticsTable;
+  }
+});
+
+export {
+  listSystems,
+  getSystem,
+  createSystem,
+  deleteSystem,
+  updateSystem,
+  startProcessing,
+  fetchResultTimeseries,
+  fetchResultStatistics,
+  getResultTimeseries,
+  getResultStatistics,
+  getResult,
+  statisticsTable,
+  tsTable,
+  systems
+};

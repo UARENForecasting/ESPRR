@@ -7,6 +7,7 @@ import {
   updateSystem,
   listSystems,
 } from "@/api/systems";
+import { errorFactory } from "./testutils";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import VueRouter from "vue-router";
@@ -16,21 +17,12 @@ import flushPromises from "flush-promises";
 // use systems mock module
 jest.mock("@/api/systems");
 
-function errorFactory(error: string) {
-  return {
-    detail: [
-      {
-        loc: ["theError"],
-        msg: error,
-      },
-    ],
-  };
-}
-
 const localVue = createLocalVue();
 localVue.use(VueRouter);
 
 const mocks = { $auth };
+
+const stubs = { "system-map": true };
 
 describe("Test System Definition", () => {
   beforeEach(() => {
@@ -46,6 +38,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     await flushPromises();
     expect(wrapper.findAll("input").length).toBe(8);
@@ -56,6 +49,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.albedo = 0;
@@ -78,6 +72,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.tracking.tilt = 12;
@@ -125,6 +120,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     // @ts-expect-error accessing vm method
     wrapper.vm.updateBounds({
@@ -159,6 +155,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     // @ts-expect-error vm method
     wrapper.vm.updateBounds({
@@ -189,6 +186,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
       },
@@ -213,6 +211,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
       },
@@ -241,6 +240,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
       },
@@ -269,6 +269,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9",
       },
@@ -281,7 +282,7 @@ describe("Test System Definition", () => {
     expect(updateSystem).toHaveBeenCalled();
     // @ts-expect-error ts complains about history on VueRouter
     expect(router.history.current.path).toBe(
-      "/system/6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9"
+      "/system/6b61d9ac-2e89-11eb-be2b-4dc7a6bhe0a9/edit"
     );
     appTarget.remove();
   });
@@ -290,6 +291,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.ac_capacity = null;
@@ -301,6 +303,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     wrapper.vm.$data.definition.ac_capacity = 1;
@@ -316,6 +319,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
 
     await flushPromises();
@@ -334,6 +338,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
       },
@@ -391,6 +396,7 @@ describe("Test System Definition", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     // @ts-expect-error vm method
     wrapper.vm.updateBounds({
@@ -411,6 +417,90 @@ describe("Test System Definition", () => {
     expect(errorLis.at(0).text()).toBe("theError: error");
     expect(errorLis.at(1).text()).toBe("System: is bad");
 
+    appTarget.remove();
+  });
+  it("Test update system return to details", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    router.push({
+      name: "Update System",
+      params: { systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9" },
+      query: { returnTo: "details" },
+    });
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      stubs,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      },
+    });
+    await flushPromises();
+    // @ts-expect-error accessing vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34.9,
+        longitude: -112.9,
+      },
+      se_corner: {
+        latitude: 33,
+        longitude: -111,
+      },
+    });
+    await flushPromises();
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    expect(updateSystem).toHaveBeenCalled();
+    // @ts-expect-error ts compains about history on VueRouter
+    expect(router.history.current.path).toBe(
+      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
+    );
+    appTarget.remove();
+  });
+  it("Test update system return to listing", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    router.push({
+      name: "Update System",
+      params: { systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9" },
+      query: { returnTo: "listing" },
+    });
+
+    const wrapper = mount(SystemDefinition, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      stubs,
+      propsData: {
+        systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+      },
+    });
+    await flushPromises();
+    // @ts-expect-error accessing vm method
+    wrapper.vm.updateBounds({
+      nw_corner: {
+        latitude: 34.9,
+        longitude: -112.9,
+      },
+      se_corner: {
+        latitude: 33,
+        longitude: -111,
+      },
+    });
+    await flushPromises();
+    wrapper.find("button[type='submit']").trigger("click");
+    await flushPromises();
+    expect(updateSystem).toHaveBeenCalled();
+    // @ts-expect-error ts compains about history on VueRouter
+    expect(router.history.current.path).toBe("/");
     appTarget.remove();
   });
 });
