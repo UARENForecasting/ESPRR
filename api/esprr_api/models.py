@@ -308,9 +308,9 @@ class SystemDataMeta(ThisBase):
 class ManagementSystemDataStatus(ThisBase):
     system_id: UUID
     dataset: str
-    version: str
+    version: Optional[str]
     status: DataStatusEnum
-    hash_changed: bool
+    hash_changed: Optional[bool]
     user: str
 
     def __hash__(self):
