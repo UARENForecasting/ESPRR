@@ -150,7 +150,7 @@ def test_qmanager_evaluate_failed_jobs(system_id):
         for i in range(7)
     ]
     out = qm.evaluate_failed_jobs(current_stat)
-    assert len(out) == 1  # only 0 is queued failed and not hash change
+    assert len(out) == 3  # all actually in db
     assert out[0][1] == "0"
     assert "error" in out[0][2]
 
@@ -196,3 +196,4 @@ def test_sync_jobs(system_id, mocker):
     queuing.sync_jobs()
     assert startt.report_failure.call_count == 1
     assert set(qm.q.job_ids) == {f"{system_id}:2", f"{system_id}:5", f"{system_id}:6"}
+    assert len(qm.q.failed_job_registry.get_job_ids()) == 0

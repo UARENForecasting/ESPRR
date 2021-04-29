@@ -167,12 +167,9 @@ class QueueManager:
         out = []
 
         for failed_job in self.q.failed_job_registry.get_job_ids():
-            if failed_job not in jobd:
-                self.q.failed_job_registry.remove(failed_job, delete_job=True)
-            elif (
-                jobd[failed_job].status == "queued"
-                and not jobd[failed_job].hash_changed
-            ):
+            if failed_job in jobd:
+                exc_info = Job.fetch(failed_job, connection=self.redis_conn).exc_info
+                logger.error("Job %s failed with %s", failed_job, exc_info)
                 msg = json.dumps(
                     {
                         "error": {
@@ -186,6 +183,7 @@ class QueueManager:
                 out.append(
                     (str(jobd[failed_job].system_id), jobd[failed_job].dataset, msg)
                 )
+            self.q.failed_job_registry.remove(failed_job, delete_job=True)
         if lo := len(out):
             logger.info("%s jobs processed from failed job registry", lo)
         return out
