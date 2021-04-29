@@ -17,19 +17,12 @@
         :imperial="false"
         :metric="true"
       ></l-control-scale>
-
-      <v-path-transforms
+      <reshape-rectangle
         v-if="sitePolygon"
-        :latLngs="sitePolygon"
-        :draggable="draggable"
+        :draggable="editable"
         :rotation="false"
-        :scaling="false"
-        layer-type="overlay"
-        color="#777"
-        @transformed="handleTransformation"
-      >
-      </v-path-transforms>
-
+        :latLngs="sitePolygon"
+      />
       <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
         <l-rectangle
           v-for="system of all_systems"
@@ -63,9 +56,11 @@ import {
   LControlScale,
   LControlLayers,
   LLayerGroup,
-  LRectangle
+  LRectangle,
 } from "vue2-leaflet";
-import Vue2LeafletPathTransform from "vue2-leaflet-path-transform";
+
+import ReshapeRectangle from "@/components/leafletLayers/ReshapeRectangle.vue";
+
 import { BoundingBox } from "@/models";
 
 import { PVSystem, StoredPVSystem } from "@/models";
@@ -81,7 +76,8 @@ Vue.component("l-control-scale", LControlScale);
 Vue.component("l-control-layers", LControlLayers);
 Vue.component("l-layer-group", LLayerGroup);
 Vue.component("l-rectangle", LRectangle);
-Vue.component("v-path-transforms", Vue2LeafletPathTransform);
+Vue.component("reshape-rectangle", ReshapeRectangle);
+//Vue.component("v-path-transforms", Vue2LeafletPathTransform);
 
 @Component
 export default class SystemMap extends Vue {
@@ -104,7 +100,7 @@ export default class SystemMap extends Vue {
     this.map = this.$refs.systemMap.mapObject;
     this.initialize();
   }
-
+  
   initialize(): void {
     this.draggable = true;
     if (this.editable) {
@@ -158,11 +154,11 @@ export default class SystemMap extends Vue {
       L.latLng(boundingBox.se_corner.latitude, boundingBox.nw_corner.longitude),
     ];
   }
-  
+
   createRectangle(boundingBox: BoundingBox): Array<L.LatLng> {
     return [
       L.latLng(boundingBox.nw_corner.latitude, boundingBox.nw_corner.longitude),
-      L.latLng(boundingBox.se_corner.latitude, boundingBox.se_corner.longitude)
+      L.latLng(boundingBox.se_corner.latitude, boundingBox.se_corner.longitude),
     ];
   }
 
