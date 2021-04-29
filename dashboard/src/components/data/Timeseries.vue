@@ -16,6 +16,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import { StoredPVSystem } from "@/models";
 import { Table } from "apache-arrow";
 import Plotly from "plotly.js-basic-dist";
+import { getDisplayName } from "@/utils/DisplayNames";
 
 @Component
 export default class TimeseriesPlot extends Vue {
@@ -77,14 +78,22 @@ export default class TimeseriesPlot extends Vue {
   }
 
   get plotTitle(): string {
-    return `${this.dataset} ${this.system.definition.name} Performance`;
+    return `${getDisplayName(this.dataset)} ${
+      this.system.definition.name
+    } Performance`;
   }
 
   get layout(): Record<string, any> {
+    let tz: string;
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      tz = "local";
+    }
     return {
       title: this.plotTitle,
       xaxis: {
-        title: `Time`,
+        title: `Time (${tz})`,
       },
       yaxis: {
         title: "MW",
