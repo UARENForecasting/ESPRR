@@ -1,41 +1,6 @@
 <template>
   <div v-if="tableData" class="summary-table">
-    <h3>Statistics</h3>
-    Download:
-    <button id="download-statistics-csv" @click="downloadData('text/csv')">
-      CSV
-    </button>
-    <button
-      id="download-statistics-arrow"
-      @click="downloadData('application/vnd.apache.arrow.file')"
-    >
-      Apache Arrow
-    </button>
-    <br />
-    <label>
-      <b>Units</b>
-      <label title="Present statistics in terms of absolute power ramps">
-        Absolute Ramps (MW)
-        <input
-          type="radio"
-          id="absolute"
-          name="units"
-          value="0"
-          v-model.number="asRampRate"
-        />
-      </label>
-      <label title="Present statistics in terms of MW/min ramp rates">
-        Ramp Rates (MW/min)
-        <input
-          type="radio"
-          id="rate"
-          name="units"
-          value="1"
-          v-model.number="asRampRate"
-        />
-      </label>
-    </label>
-    <br />
+    <h3>Statistics ({{ units }})</h3>
     <label>
       <b>Interval</b>
       <select v-model="selectedInterval">
@@ -77,18 +42,24 @@ import { getDisplayName } from "@/utils/DisplayNames";
 @Component
 export default class StatisticsTable extends Vue {
   @Prop() tableData!: Table;
-  asRampRate!: number;
+  @Prop() asRampRate!: number;
   selectedInterval!: string;
 
   created(): void {
     this.selectedInterval = this.availableIntervals[0];
-    this.asRampRate = 0;
   }
   data(): Record<string, any> {
     return {
       selectedInterval: this.selectedInterval,
-      asRampRate: this.asRampRate,
     };
+  }
+
+  get units(): string {
+    if (this.asRampRate) {
+      return "MW/min";
+    } else {
+      return "MW";
+    }
   }
 
   get headers(): Array<string> {
@@ -128,11 +99,6 @@ export default class StatisticsTable extends Vue {
 
   get availableIntervals(): Array<string> {
     return Array.from(new Set(this.tableData.getColumn("interval")));
-  }
-
-  downloadData(contentType: string): void {
-    /* istanbul ignore next */
-    this.$emit("download-statistics", contentType);
   }
 }
 </script>

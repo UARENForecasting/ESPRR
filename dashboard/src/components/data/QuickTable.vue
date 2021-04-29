@@ -1,13 +1,13 @@
 <template>
-  <div v-if="tableData" class="summary-table">
-    <h3>Short Summary</h3>
+  <div v-if="tableData" class="quick-summary">
+    <h3>Summary ({{ units }})</h3>
     <table
-      class="striped-table result-summary"
+      class="quick-table result-summary"
       :style="`--numCol: ` + (headers.length + 1)"
     >
       <thead>
         <tr>
-          <th>Average</th>
+          <th>Yearly Average</th>
           <th v-for="(header, i) of headers" :key="i">
             {{ header }}
           </th>
@@ -34,7 +34,24 @@ import { getDisplayName } from "@/utils/DisplayNames";
 @Component
 export default class QuickTable extends Vue {
   @Prop() tableData!: Table;
+  @Prop() asRampRate!: number;
   headers = ["10-min", "60-min"];
+
+  get units(): string {
+    if (this.asRampRate) {
+      return "MW/min";
+    } else {
+      return "MW";
+    }
+  }
+
+  scaleFactor(interval: string): number {
+    if (this.asRampRate) {
+      return Number(interval.split("-")[0]);
+    } else {
+      return 1;
+    }
+  }
 
   get tableRows(): Record<string, Record<string, number>> {
     const stats: Array<string> = Array.from(
@@ -54,13 +71,25 @@ export default class QuickTable extends Vue {
           statData.filter(predicate.col("interval").eq(interval))
         );
         rows[niceStat][interval] = arr.reduce(
-          (total, val) => total + val.value / arr.length,
+          (total, val) => total + val.value,
           0
         );
+        rows[niceStat][interval] /= arr.length * this.scaleFactor(interval);
       }
     }
     return rows;
   }
 }
 </script>
-<style></style>
+<style>
+table.quick-table {
+  border-collapse: collapse;
+  border: 1px solid black;
+}
+table.quick-table th,
+table.quick-table tr td {
+  padding: 0.5em;
+  text-align: left;
+  border: 1px solid black;
+}
+</style>

@@ -1,12 +1,5 @@
 <template>
   <div class="timeseries-plot">
-    <h3>Timeseries</h3>
-    Download:
-    <button @click="downloadData('text/csv')">CSV</button>
-    <button @click="downloadData('application/vnd.apache.arrow.file')">
-      Apache Arrow
-    </button>
-    <br />
     <div :id="id"></div>
   </div>
 </template>
@@ -88,6 +81,7 @@ export default class TimeseriesPlot extends Vue {
     try {
       tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     } catch {
+      /* istanbul ignore next */
       tz = "local";
     }
     return {
@@ -96,18 +90,13 @@ export default class TimeseriesPlot extends Vue {
         title: `Time (${tz})`,
       },
       yaxis: {
-        title: "MW",
+        title: "Power (MW)",
       },
     };
   }
 
   resetSelected(): void {
     this.selected = this.availableFields[0];
-  }
-
-  downloadData(contentType: string): void {
-    /* istanbul ignore next */
-    this.$emit("download-timeseries", contentType);
   }
 }
 </script>

@@ -23,19 +23,79 @@
     <div class="results" v-if="status == 'complete'">
       <h2>Performance Results</h2>
       <hr />
+      <div class="container">
+        <div class="quick-table-flex">
+          <quick-table
+            v-if="statistics"
+            :tableData="statistics"
+            :asRampRate="asRampRate"
+          />
+        </div>
+        <div class="option-flex">
+          <h3>Options</h3>
+          <label>
+            <b>Display statistics as:</b>
+            <br />
+            <label title="Present statistics in terms of absolute power ramps">
+              <input
+                type="radio"
+                id="absolute"
+                name="units"
+                value="0"
+                v-model.number="asRampRate"
+              />
+              Absolute Ramps (MW)
+            </label>
+            <br />
+            <label title="Present statistics in terms of MW/min ramp rates">
+              <input
+                type="radio"
+                id="rate"
+                name="units"
+                value="1"
+                v-model.number="asRampRate"
+              />
+              Ramp Rates (MW/min)
+            </label>
+          </label>
+        </div>
+        <div class="download-flex">
+          <h3>Downloads</h3>
+          <div>
+            <strong>Timeseries: </strong>
+            <button @click="downloadTimeseries('text/csv')">CSV</button>
+            <button
+              @click="downloadTimeseries('application/vnd.apache.arrow.file')"
+            >
+              Apache Arrow
+            </button>
+          </div>
+          <div>
+            <strong>Statistics: </strong>
+            <button @click="downloadStatistics('text/csv')">CSV</button>
+            <button
+              @click="downloadStatistics('application/vnd.apache.arrow.file')"
+            >
+              Apache Arrow
+            </button>
+          </div>
+          <p>
+            Downloaded statistics are in terms of absolute ramps with units of
+            MW.
+          </p>
+        </div>
+      </div>
       <timeseries-plot
-        @download-timeseries="downloadTimeseries"
         v-if="timeseries"
         :timeseriesData="timeseries"
         :system="system"
         :dataset="dataset"
       />
       <statistics-table
-        @download-statistics="downloadStatistics"
         v-if="statistics"
         :tableData="statistics"
+        :asRampRate="asRampRate"
       />
-      <quick-table v-if="statistics" :tableData="statistics" />
     </div>
   </div>
 </template>
@@ -65,10 +125,12 @@ export default class DataSetResults extends Vue {
   timeout!: any;
   errors!: Record<string, any> | null;
   active!: boolean;
+  asRampRate!: number;
 
   created(): void {
     this.active = true;
     this.updateStatus();
+    this.asRampRate = 0;
   }
 
   destroyed(): void {
@@ -87,6 +149,7 @@ export default class DataSetResults extends Vue {
       errors: null,
       active: this.active,
       timeout: null,
+      asRampRate: null,
     };
   }
 
@@ -185,3 +248,13 @@ export default class DataSetResults extends Vue {
   }
 }
 </script>
+<style>
+.quick-table-flex {
+  margin-left: 1vw;
+  margin-right: 5vw;
+  margin-bottom: 3vh;
+}
+.option-flex {
+  margin-right: 5vw;
+}
+</style>
