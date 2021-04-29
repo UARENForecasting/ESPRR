@@ -105,7 +105,7 @@ describe("Test Results component", () => {
 
     await flushPromises();
     expect(wrapper.find(".errors").text()).toBe(
-      "Errors occurred during processing:\n    \n        it's bad"
+      "Errors occurred during processing:\n    \n        it's bad\n        Re-calculate"
     );
   });
   it("Test result status messages", async () => {
@@ -154,7 +154,9 @@ describe("Test Results component", () => {
     });
     jest.runAllTimers();
     await flushPromises();
-    expect(wrapper.text()).toBe("Result statistics are missing.");
+    expect(wrapper.find(".alert").text()).toBe(
+      "Result statistics are missing.\n      Re-calculate"
+    );
 
     // @ts-expect-error mocked fn
     getResult.mockImplementationOnce(async () => {
@@ -162,9 +164,13 @@ describe("Test Results component", () => {
         status: "timeseries missing",
       };
     });
+    // @ts-expect-error instance method
+    wrapper.vm.awaitResults();
     jest.runAllTimers();
     await flushPromises();
-    expect(wrapper.text()).toBe("Result timeseries are missing.");
+    expect(wrapper.find(".alert").text()).toBe(
+      "Result timeseries are missing.\n      Re-calculate"
+    );
   });
   it("Test results destroyed method", async () => {
     // @ts-expect-error mock queued state so timeout will be set
