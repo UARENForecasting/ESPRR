@@ -20,6 +20,9 @@
     <div v-if="status == 'running'">
       Performance calculation is running and will be ready soon.
     </div>
+    <div v-if="status != 'complete'">
+      <button @click="recompute">Re-calculate</button>
+    </div>
     <div class="results" v-if="status == 'complete'">
       <h2>Performance Results</h2>
       <hr />
@@ -33,31 +36,36 @@
         </div>
         <div class="option-flex">
           <h3>Options</h3>
-          <label>
-            <b>Display statistics as:</b>
-            <br />
-            <label title="Present statistics in terms of absolute power ramps">
-              <input
-                type="radio"
-                id="absolute"
-                name="units"
-                value="0"
-                v-model.number="asRampRate"
-              />
-              Absolute Ramps (MW)
+          <div class="stat-option">
+            <label>
+              <b>Display statistics as:</b>
+              <br />
+              <label
+                title="Present statistics in terms of absolute power ramps"
+              >
+                <input
+                  type="radio"
+                  id="absolute"
+                  name="units"
+                  value="0"
+                  v-model.number="asRampRate"
+                />
+                Absolute Ramps (MW)
+              </label>
+              <br />
+              <label title="Present statistics in terms of MW/min ramp rates">
+                <input
+                  type="radio"
+                  id="rate"
+                  name="units"
+                  value="1"
+                  v-model.number="asRampRate"
+                />
+                Ramp Rates (MW/min)
+              </label>
             </label>
-            <br />
-            <label title="Present statistics in terms of MW/min ramp rates">
-              <input
-                type="radio"
-                id="rate"
-                name="units"
-                value="1"
-                v-model.number="asRampRate"
-              />
-              Ramp Rates (MW/min)
-            </label>
-          </label>
+          </div>
+          <button @click="recompute">Re-calculate</button>
         </div>
         <div class="download-flex">
           <h3>Downloads</h3>
@@ -81,7 +89,10 @@
           </div>
           <p>
             Downloaded statistics are in terms of absolute ramps with units of
-            MW.
+            MW. <a href="https://arrow.apache.org">Apache Arrow</a> is an
+            optimized binary format. In python, use
+            <code>pandas.read_feather</code> to quickly read the data into a
+            DataFrame.
           </p>
         </div>
       </div>
@@ -246,6 +257,17 @@ export default class DataSetResults extends Vue {
     }
     downloadFile(filename, contents);
   }
+
+  /* istanbul ignore next */
+  async recompute(): Promise<void> {
+    const token = await this.$auth.getTokenSilently();
+    await SystemsAPI.startProcessing(
+      token,
+      this.system.object_id,
+      this.dataset
+    );
+    window.location.reload();
+  }
 }
 </script>
 <style>
@@ -256,5 +278,11 @@ export default class DataSetResults extends Vue {
 }
 .option-flex {
   margin-right: 5vw;
+}
+.download-flex {
+  width: 20%;
+}
+.stat-option {
+  margin-bottom: 1em;
 }
 </style>
