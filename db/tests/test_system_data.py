@@ -33,6 +33,31 @@ def test_create_system_data(cursor, auth0_id, system_id):
     assert cursor.fetchone()[0]
 
 
+def test_create_system_data_duplicate(cursor, auth0_id, system_id):
+    cursor.execute(
+        "insert into system_data (system_id, dataset, timeseries, statistics, error)"
+        " values (uuid_to_bin(%s, 1), %s, %s, %s, %s)",
+        (system_id, "a", "times", "stats", '{"error": "message"}'),
+    )
+    cursor.execute(
+        "select timeseries, statistics, error from system_data where system_id = uuid_to_bin(%s, 1)"
+        ' and dataset = "a"',
+        system_id,
+    )
+    out = cursor.fetchall()
+    assert len(out) == 1
+    assert out[0] == (b"times", b"stats", '{"error": "message"}')
+    cursor.execute(f'call create_system_data("{auth0_id}", "{system_id}", "a")')
+    cursor.execute(
+        "select timeseries, statistics, error from system_data where system_id = uuid_to_bin(%s, 1)"
+        ' and dataset = "a"',
+        system_id,
+    )
+    out = cursor.fetchall()
+    assert len(out) == 1
+    assert out[0] == (None, None, "[]")
+
+
 def test_create_system_data_bad_id(cursor, auth0_id):
     with pytest.raises(OperationalError) as err:
         cursor.execute(f'call create_system_data("{auth0_id}", "{str(uuid1())}", "a")')

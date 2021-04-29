@@ -195,11 +195,7 @@ async def run_system_model(
     qm: QueueManager = Depends(QueueManager),
 ):
     with storage.start_transaction() as st:
-        try:
-            st.create_system_model_data(system_id, dataset)
-        except HTTPException as err:
-            if err.status_code != 409:
-                raise
+        st.create_system_model_data(system_id, dataset)
     background_tasks.add_task(qm.enqueue_job, system_id, dataset, user)
 
 
