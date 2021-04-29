@@ -355,10 +355,17 @@ def test_create_system_model_data(
 
 
 def test_create_system_model_data_existing(storage_interface, system_id, dataset_name):
-    with pytest.raises(HTTPException) as err:
-        with storage_interface.start_transaction() as st:
-            st.create_system_model_data(system_id, dataset_name)
-    assert err.value.status_code == 409
+    with storage_interface.start_transaction() as st:
+        shash = st.get_system_hash(system_id)
+        st.update_system_model_data(
+            system_id, dataset_name, shash, b"time", b"stat", {"error": "message"}
+        )
+        before = st.get_system_model_meta(system_id, dataset_name)
+        st.create_system_model_data(system_id, dataset_name)
+        after = st.get_system_model_meta(system_id, dataset_name)
+    assert before.status == "error"
+    assert after.status == "queued"
+    assert after.error == []
 
 
 def test_create_system_model_data_dne(storage_interface, dataset_name):
