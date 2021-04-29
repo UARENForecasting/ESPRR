@@ -15,7 +15,6 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { StoredPVSystem } from "@/models";
 import { Table } from "apache-arrow";
-import { DateTime } from "luxon";
 import Plotly from "plotly.js-basic-dist";
 
 @Component
@@ -47,7 +46,7 @@ export default class TimeseriesPlot extends Vue {
     let index = this.timeseriesData.getColumn("time");
     const dateTimes: Array<Date> = [];
     for (let i = 0; i < index.length; i++) {
-      dateTimes.push(DateTime.fromMillis(index.get(i)).toJSDate());
+      dateTimes.push(new Date(index.get(i)));
     }
     return dateTimes;
   }
