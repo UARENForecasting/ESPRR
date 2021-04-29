@@ -7,25 +7,33 @@
           {{ error }}
         </li>
       </ul>
+      <br />
+      <button @click="recompute">Re-calculate</button>
     </div>
     <div v-if="status == 'queued'">
       Performance calculation is queued and will be processed shortly.
     </div>
-    <div v-if="status == 'statistics missing'">
-      Result statistics are missing.
-    </div>
-    <div v-if="status == 'timeseries missing'">
-      Result timeseries are missing.
-    </div>
     <div v-if="status == 'running'">
       Performance calculation is running and will be ready soon.
     </div>
-    <div v-if="status != 'complete'">
-      <button @click="recompute">Re-calculate</button>
-    </div>
-    <div class="results" v-if="status == 'complete'">
+    <div
+      class="results"
+      v-if="
+        (status == 'complete') |
+          (status == 'statistics missing') |
+          (status == 'timeseries missing')
+      "
+    >
       <h2>Performance Results</h2>
       <hr />
+      <div class="alert" v-if="status == 'timeseries missing'">
+        Result timeseries are missing.
+        <button @click="recompute">Re-calculate</button>
+      </div>
+      <div class="alert" v-if="status == 'statistics missing'">
+        Result statistics are missing.
+        <button @click="recompute">Re-calculate</button>
+      </div>
       <div class="container">
         <div class="quick-table-flex">
           <quick-table
@@ -168,6 +176,10 @@ export default class DataSetResults extends Vue {
     if (this.status == "complete") {
       this.loadTimeseries();
       this.loadStatistics();
+    } else if (this.status == "timeseries missing") {
+      this.loadStatistics();
+    } else if (this.status == "statistics missing") {
+      this.loadTimeseries();
     } else if (this.status == "error") {
       return;
     } else {
@@ -220,6 +232,9 @@ export default class DataSetResults extends Vue {
 
   /* istanbul ignore next */
   async downloadTimeseries(contentType: string): Promise<void> {
+    if (!this.timeseries) {
+      return;
+    }
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultTimeseries(
       token,
@@ -240,6 +255,9 @@ export default class DataSetResults extends Vue {
 
   /* istanbul ignore next */
   async downloadStatistics(contentType: string): Promise<void> {
+    if (!this.statistics) {
+      return;
+    }
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultStatistics(
       token,
@@ -271,6 +289,13 @@ export default class DataSetResults extends Vue {
 }
 </script>
 <style>
+.alert {
+  padding: 10px;
+  background-color: firebrick;
+  color: white;
+  font-size: 120%;
+  font-weight: bold;
+}
 .quick-table-flex {
   margin-left: 1vw;
   margin-right: 5vw;
