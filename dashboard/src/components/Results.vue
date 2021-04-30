@@ -309,7 +309,6 @@ export default class DataSetResults extends Vue {
   }
 }
 </script>
-<<<<<<< HEAD
 <style scoped>
 .alert {
   border: 1px solid #caa;
