@@ -228,7 +228,7 @@ export default {
         const oldLatLngs = this.mapObject.getLatLngs();
 
         if (newLatLngs === oldLatLngs) {
-          this.mapObject.setLatLngs(newLatLngs);  
+          this.mapObject.setLatLngs(newLatLngs);
         }
         this.mapObject.setLatLngs(newLatLngs);
       }

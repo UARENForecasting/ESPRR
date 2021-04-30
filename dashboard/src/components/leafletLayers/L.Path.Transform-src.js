@@ -890,10 +890,10 @@ L.PathTransform.Handle = L.CircleMarker.extend({
  * @type {Array}
  */
 L.PathTransform.Handle.CursorsByType = [
-  "nesw-resize",
-  "nwse-resize",
-  "nesw-resize",
-  "nwse-resize",
+  "ns-resize",
+  "ew-resize",
+  "ns-resize",
+  "ew-resize",
 ];
 
 /**
@@ -1117,7 +1117,6 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _update: function () {
     var matrix = this._matrix;
-
     // update handlers
     for (var i = 0, len = this._handlers.length; i < len; i++) {
       var handler = this._handlers[i];
@@ -1349,14 +1348,25 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rect =
       this._rect || this._getBoundingPolygon().addTo(this._handlersGroup);
 
+    const nBound = this._rect.getBounds().getNorth();
+    const sBound = this._rect.getBounds().getSouth();
+    const eBound = this._rect.getBounds().getEast();
+    const wBound = this._rect.getBounds().getWest();
+
+    const midLat = nBound - (nBound - sBound) / 2;
+    const midLon = eBound - (eBound - wBound) / 2;
+
+    const latLons = [];
+    latLons.push([nBound, midLon]);
+    latLons.push([midLat, eBound]);
+    latLons.push([sBound, midLon]);
+    latLons.push([midLat, wBound]);
+
     if (this.options.scaling) {
       this._handlers = [];
-      for (var i = 0; i < this.options.edgesCount; i++) {
-        // TODO: add stretching
+      for (var i = 0; i < latLons.length; i++) {
         this._handlers.push(
-          this._createHandler(this._rect._latlngs[0][i], i * 2, i).addTo(
-            this._handlersGroup
-          )
+          this._createHandler(latLons[i], i * 2, i).addTo(this._handlersGroup)
         );
       }
     }
@@ -1530,20 +1540,52 @@ L.Handler.PathTransform = L.Handler.extend({
    * @param  {Event} evt
    */
   _onScale: function (evt) {
-    var originPoint = this._originMarker._point;
-    var ratioX, ratioY;
-    if (this.options.uniformScaling) {
-      ratioX = originPoint.distanceTo(evt.layerPoint) / this._initialDist;
-      ratioY = ratioX;
+    /* Handle indices:
+     * 0 - North
+     * 1 - East
+     * 2 - South
+     * 3 - West
+     */
+    const handleDirection = this._activeMarker.options.index;
+    let originPoint = this._originMarker._point;
+
+    let ratioX;
+    let ratioY;
+
+    let centerX;
+    let centerY;
+
+    if (handleDirection % 2 == 0) {
+      // North-South handle
+      ratioY = (originPoint.y - evt.layerPoint.y) / this._initialDistY;
+      ratioX = 1 / ratioY;
+      if (originPoint.y > evt.layerPoint.y) {
+        centerY =
+          originPoint.y - ((originPoint.y - evt.layerPoint.y) / 2) * ratioY;
+      } else {
+        centerY =
+          evt.layerPoint.y - ((evt.layerPoint.y - originPoint.y) / 2) * ratioY;
+      }
+      centerX = originPoint.x;
     } else {
       ratioX = (originPoint.x - evt.layerPoint.x) / this._initialDistX;
-      ratioY = (originPoint.y - evt.layerPoint.y) / this._initialDistY;
+      ratioY = 1 / ratioX;
+      if (originPoint.x > evt.layerPoint.x) {
+        centerX =
+          originPoint.x - ((originPoint.x - evt.layerPoint.x) / 2) * ratioX;
+      } else {
+        centerX =
+          evt.layerPoint.x - ((evt.layerPoint.x - originPoint.x) / 2) * ratioX;
+      }
+      centerY = originPoint.y;
     }
 
+    const centerPoint = L.point(centerX, centerY);
     this._scale = new L.Point(ratioX, ratioY);
+    console.log(this._scale);
 
     // update matrix
-    this._matrix = this._initialMatrix.clone().scale(this._scale, originPoint);
+    this._matrix = this._initialMatrix.clone().scale(this._scale, centerPoint);
 
     this._update();
     this._path.fire("scale", {
@@ -1607,7 +1649,7 @@ L.Handler.PathTransform = L.Handler.extend({
   },
 
   /**
-   * Create corner marker
+   * Create edge marker
    * @param  {L.LatLng} latlng
    * @param  {Number}   type one of L.Handler.PathTransform.HandlerTypes
    * @param  {Number}   index
@@ -1643,6 +1685,7 @@ L.Handler.PathTransform = L.Handler.extend({
    * Hide handlers and rectangle
    */
   _onDragStart: function () {
+    console.log("on drag start");
     this._hideHandlers();
   },
 
@@ -1650,6 +1693,7 @@ L.Handler.PathTransform = L.Handler.extend({
    * Drag rectangle, re-create handlers
    */
   _onDragEnd: function (evt) {
+    console.log("drag end");
     var rect = this._rect;
     var matrix = (evt.layer ? evt.layer : this._path).dragging._matrix.slice();
 

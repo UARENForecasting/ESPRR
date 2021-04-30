@@ -20,8 +20,10 @@
       <reshape-rectangle
         v-if="sitePolygon"
         :draggable="editable"
+        :scaling="editable"
         :rotation="false"
         :latLngs="sitePolygon"
+        @transformed="handleTransformation"
       />
       <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
         <l-rectangle
@@ -100,7 +102,7 @@ export default class SystemMap extends Vue {
     this.map = this.$refs.systemMap.mapObject;
     this.initialize();
   }
-  
+
   initialize(): void {
     this.draggable = true;
     if (this.editable) {
