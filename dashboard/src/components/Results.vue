@@ -34,7 +34,22 @@
         Result statistics are missing.
         <button @click="recompute">Recalculate</button>
       </div>
-      <div class="container">
+      <div class="flex-container">
+        <div class="description-flex">
+          <h3>Data Processing</h3>
+          <p>
+            Irradiance, temperature, and wind data from the
+            {{ this.prettyDataset }} dataset were extracted for all gridpoints
+            covered by the system bounding box. The data were then processed
+            using a PVWatts model with parameters defined above to generate the
+            expected power timeseries. Ramps were calculated at various
+            intervals by resampling this timeseries and calculating the
+            derivative. These ramps were binned monthly to determine the
+            stress-case up and down ramps. The typical sunrise and sunset ramps
+            were calculated in a similar fashion using the expected clearsky
+            timeseries.
+          </p>
+        </div>
         <div class="quick-table-flex">
           <quick-table
             v-if="statistics"
@@ -128,6 +143,7 @@ import QuickTable from "@/components/data/QuickTable.vue";
 import * as SystemsAPI from "@/api/systems";
 import { Table } from "apache-arrow";
 import downloadFile from "@/utils/downloadFile";
+import { getDisplayName } from "@/utils/DisplayNames";
 
 Vue.component("timeseries-plot", TimeseriesPlot);
 Vue.component("statistics-table", StatisticsTable);
@@ -170,6 +186,10 @@ export default class DataSetResults extends Vue {
       timeout: null,
       asRampRate: null,
     };
+  }
+
+  get prettyDataset(): string {
+    return getDisplayName(this.dataset);
   }
 
   async initialize(): Promise<void> {
@@ -298,16 +318,32 @@ export default class DataSetResults extends Vue {
   font-size: 120%;
   font-weight: bold;
 }
-.quick-table-flex {
-  margin-left: 1vw;
-  margin-right: 5vw;
+.flex-container {
+  display: flex;
+  flex-direction: row;
+  max-width: 1400px;
   margin-bottom: 3vh;
 }
+@media (max-width: 800px) {
+  .flex-container {
+    flex-direction: column;
+  }
+}
+.description-flex {
+  margin-left: 1vw;
+  margin-right: 2vw;
+  flex: 20%;
+}
+.quick-table-flex {
+  margin-right: 2vw;
+  flex: 25%;
+}
 .option-flex {
-  margin-right: 5vw;
+  margin-right: 1vw;
+  flex: 15%;
 }
 .download-flex {
-  width: 20%;
+  flex: 20%;
 }
 .stat-option {
   margin-bottom: 1em;
