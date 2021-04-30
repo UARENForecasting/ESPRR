@@ -23,7 +23,9 @@
         :scaling="editable"
         :rotation="false"
         :latLngs="sitePolygon"
-        @transformed="handleTransformation"
+        @transformed="handleTransformaton"
+        @scaleend="handleTransformation"
+        
       />
       <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
         <l-rectangle
@@ -123,7 +125,6 @@ export default class SystemMap extends Vue {
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       zoom: 11,
       center: this.centerCoords(),
-      bounds: null,
     };
   }
   centerCoords(): L.LatLng {
@@ -166,6 +167,15 @@ export default class SystemMap extends Vue {
 
   handleTransformation(transformEvent: TransformationEvent): void {
     // enforce area and emit parameters
+    //console.log(JSON.stringify(transformEvent));
+    this.$emit(
+      "bounds-updated",
+      this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
+    );
+  }
+  handleTransformaton(transformEvent: TransformationEvent): void {
+    // enforce area and emit parameters
+    //console.log(JSON.stringify(transformEvent));
     this.$emit(
       "bounds-updated",
       this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
@@ -174,8 +184,14 @@ export default class SystemMap extends Vue {
 
   @Watch("system")
   updateFromBoundingBox(): void {
-    this.bounds = this.boundingBoxToLeafletBounds(this.system.boundary);
     this.centerMap();
+  }
+
+  get bounds() {
+    if (this.system && this.system.boundary) {
+      return this.boundingBoxToLeafletBounds(this.system.boundary);
+    }
+    return null;
   }
 
   @Watch("dc_capacity")
@@ -199,7 +215,10 @@ export default class SystemMap extends Vue {
     // determine length of one side of square from area
     const squareSideLength = Math.sqrt(area);
 
-    this.bounds = center.toBounds(squareSideLength * 1000);
+    this.$emit(
+      "bounds-updated",
+       this.leafletBoundsToBoundingBox(center.toBounds(squareSideLength * 1000))
+    );
   }
 
   placeSystem(event: L.LeafletMouseEvent): void {

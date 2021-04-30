@@ -173,7 +173,7 @@ export default {
 
     this.options.draggable = this.draggable;
 
-    this.mapObject = L.polygon(this.latLngs, this.options);
+    this.mapObject = L.rectangle(this.latLngs, this.options);
     L.DomEvent.on(this.mapObject, this.$listeners);
     propsBinder(this, this.mapObject, props);
     this.ready = true;

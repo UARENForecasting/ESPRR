@@ -377,7 +377,7 @@ export default class SystemDefinition extends Vue {
   }
 
   updateBounds(newBounds: BoundingBox): void {
-    console.log("new bounds: ", newBounds);
+    console.log("new bounds: ", JSON.stringify(newBounds));
     this.$set(this.definition, "boundary", newBounds);
   }
   get dcCapacity(): number | null {

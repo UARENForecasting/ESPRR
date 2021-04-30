@@ -1533,7 +1533,6 @@ L.Handler.PathTransform = L.Handler.extend({
       this._map.removeLayer(this._rotationMarker);
     }
 
-    //this._handleLine = this._rotationMarker = null;
   },
 
   /**
@@ -1582,7 +1581,6 @@ L.Handler.PathTransform = L.Handler.extend({
 
     const centerPoint = L.point(centerX, centerY);
     this._scale = new L.Point(ratioX, ratioY);
-    console.log(this._scale);
 
     // update matrix
     this._matrix = this._initialMatrix.clone().scale(this._scale, centerPoint);
@@ -1685,7 +1683,6 @@ L.Handler.PathTransform = L.Handler.extend({
    * Hide handlers and rectangle
    */
   _onDragStart: function () {
-    console.log("on drag start");
     this._hideHandlers();
   },
 
@@ -1693,7 +1690,6 @@ L.Handler.PathTransform = L.Handler.extend({
    * Drag rectangle, re-create handlers
    */
   _onDragEnd: function (evt) {
-    console.log("drag end");
     var rect = this._rect;
     var matrix = (evt.layer ? evt.layer : this._path).dragging._matrix.slice();
 
