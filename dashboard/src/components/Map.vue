@@ -42,12 +42,39 @@
         a square with an area corresponding to its DC capacity at a density of
         40 Megawatts per square kilometer.
       </p>
-      <p v-if="editable && bounds">
-        <input type="number" v-model.number="aspectInputX" />
-        <input type="number" v-model.number="aspectInputY" />
-        Click and drag to move the sytem's location or drag the white circle
-        handles to reshape. Area will be maintained while reshaping.
-      </p>
+      <div v-if="editable && bounds">
+        <p v-if="editable && bounds">
+          Click and drag to move the sytem's location. Use the
+          <i>Aspect Ratio</i>
+          boxes below to adjust the shape of the system's bounding box.
+        </p>
+        <fieldset>
+          <legend>Aspect Ratio</legend>
+          <label>
+            North-South
+            <input
+              style="width: 20px"
+              type="number"
+              min="1"
+              max="100"
+              v-model.number="aspectInputY"
+            />
+          </label>
+          <label>
+            East-West
+            <input
+              style="width: 20px"
+              type="number"
+              min="1"
+              max="100"
+              v-model.number="aspectInputX"
+            /> </label
+          ><br />
+          <span v-if="aspectInputsInvalid" class="warning-text"
+            >Aspect ratio dimensions must be between 1 and 100.</span
+          >
+        </fieldset>
+      </div>
     </div>
   </div>
 </template>
@@ -102,6 +129,7 @@ export default class SystemMap extends Vue {
   aspectInputY!: number;
   aspectX!: number;
   aspectY!: number;
+  initialized!: boolean;
 
   mapReady(): void {
     // @ts-expect-error accessing Leaflet API
@@ -120,6 +148,7 @@ export default class SystemMap extends Vue {
     if (this.system.boundary) {
       this.updateFromBoundingBox();
     }
+    this.initialized = true;
   }
 
   data(): any {
@@ -133,6 +162,7 @@ export default class SystemMap extends Vue {
       aspectY: 1,
       aspectInputX: 1,
       aspectInputY: 1,
+      initialized: false,
     };
   }
 
@@ -184,9 +214,20 @@ export default class SystemMap extends Vue {
 
   @Watch("system")
   updateFromBoundingBox(): void {
+    this.initAspectRatio();
     this.centerMap();
   }
 
+  initAspectRatio(): void {
+    if (this.bounds) {
+      const xDist = this.bounds
+        .getNorthWest()
+        .distanceTo(this.bounds.getNorthEast());
+      const yDist = this.bounds
+        .getNorthWest()
+        .distanceTo(this.bounds.getSouthWest());
+    }
+  }
   get bounds(): L.LatLngBounds | null {
     if (this.system && this.system.boundary) {
       return this.boundingBoxToLeafletBounds(this.system.boundary);
@@ -218,26 +259,20 @@ export default class SystemMap extends Vue {
     const reshaped = this.adjustBoundsToAspectRatio(boundsOfArea);
     this.$emit("bounds-updated", this.leafletBoundsToBoundingBox(reshaped));
   }
-  adjustBoundsToAspectRatio(bounds: L.LatLngBounds) {
+  adjustBoundsToAspectRatio(bounds: L.LatLngBounds): L.LatLngBounds {
     // naive scaling of lat/lon square bounds to aspect ratio
     if (this.aspectX != this.aspectY) {
       const xScale = this.aspectX / this.aspectY;
       const yScale = this.aspectY / this.aspectX;
-
-      const yMax = bounds.getNorth();
-      const yMin = bounds.getSouth();
-      const xMax = bounds.getEast();
-      const xMin = bounds.getWest();
-
-      // amount to adjust each bound in/out
-      const yAdjust = Math.abs(yMax - yMin) * yScale * 0.5;
-      const xAdjust = Math.abs(xMax - xMin) * xScale * 0.5;
-      console.log(xAdjust);
-      console.log(yAdjust);
-
+      const area = this.areaFromCapacity();
+      const center = bounds.getCenter();
+      // determine length of one side of square from area
+      const squareSideLength = Math.sqrt(area) * 1000;
+      const xRect = center.toBounds(squareSideLength * xScale);
+      const yRect = center.toBounds(squareSideLength * yScale);
       return L.latLngBounds(
-        [yMax + yAdjust, xMin - xAdjust],
-        [yMin - yAdjust, xMax + xAdjust]
+        [yRect.getNorth(), xRect.getWest()],
+        [yRect.getSouth(), xRect.getEast()]
       );
     } else {
       return bounds;
@@ -280,7 +315,7 @@ export default class SystemMap extends Vue {
     // Emit an event so parent components can update highlighting/selection
     this.$emit("new-selection", system);
   }
-  reshape() {
+  reshape(): void {
     if (this.bounds != null) {
       const center = this.bounds.getCenter();
       this.initializePolygon(center);
@@ -288,18 +323,28 @@ export default class SystemMap extends Vue {
   }
 
   @Watch("aspectInputY")
-  updateAspectY(newVal: number) {
-    if (!isNaN(newVal)) {
+  updateAspectY(newVal: number): void {
+    // @ts-expect-error empty input returns empty string
+    if (newVal != "" && !isNaN(newVal) && this.initialized) {
       this.aspectY = newVal;
       this.reshape();
     }
   }
   @Watch("aspectInputX")
-  updateAspectX(newVal: number) {
-    if (!isNaN(newVal)) {
+  updateAspectX(newVal: number): void {
+    // @ts-expect-error empty input returns empty string
+    if (newVal != "" && !isNaN(newVal) && this.initialized) {
       this.aspectX = newVal;
       this.reshape();
     }
+  }
+  get aspectInputsInvalid(): boolean {
+    return !(
+      this.aspectInputX > 0 &&
+      this.aspectInputX <= 100 &&
+      this.aspectInputY > 0 &&
+      this.aspectInputY <= 100
+    );
   }
 }
 </script>
@@ -312,5 +357,17 @@ export default class SystemMap extends Vue {
   display: grid;
   background-color: #eaeaea;
   padding: 0 1em;
+}
+/* remove number in/decrement */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 </style>

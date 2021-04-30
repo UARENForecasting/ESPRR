@@ -309,6 +309,7 @@ export default class DataSetResults extends Vue {
   }
 }
 </script>
+<<<<<<< HEAD
 <style scoped>
 .alert {
   border: 1px solid #caa;
@@ -325,6 +326,11 @@ export default class DataSetResults extends Vue {
   max-width: 1400px;
   margin-bottom: 3vh;
 }
+.quick-table-flex {
+  margin-left: 1vw;
+  margin-right: 5vw;
+}
+
 @media (max-width: 800px) {
   .flex-container {
     flex-direction: column;

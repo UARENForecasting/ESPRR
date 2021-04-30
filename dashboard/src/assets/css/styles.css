@@ -39,3 +39,14 @@ table.striped-table tr:nth-child(odd) td {
 #delete-dialog {
   z-index: 1000;
 }
+.alert {
+  padding: 10px;
+  background-color: firebrick;
+  color: white;
+  font-size: 120%;
+  font-weight: bold;
+}
+.warning-text {
+  color: red;
+  display: block;
+}
