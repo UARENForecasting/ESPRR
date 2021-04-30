@@ -3,12 +3,20 @@
   <div id="app">
     <header class="container">
       <!-- flex header with center aligned content -->
-      <h1>ESPRR</h1>
+      <div>
+        <h1>ESPRR</h1>
+        <h5>
+          Expected Solar Performance<br />
+          and Ramp Rate Tool
+        </h5>
+      </div>
 
       <div id="nav">
         <template v-if="$auth.isAuthenticated">
           <router-link to="/">Systems</router-link>
         </template>
+        <a href="/api/docs">API Documentation</a>
+        <a href="https://github.com/uarenforecasting/esprr">Code</a>
       </div>
 
       <!-- Login/Logout at right of navbar-->
@@ -27,7 +35,22 @@
         <template v-if="$auth.isAuthenticated">
           <router-view />
         </template>
-        <template v-else> Please log in to access ESPRR. </template>
+        <template v-else>
+          <div class="intro">
+            <p>
+              The Expected Solar Performance and Ramp Rate Tool (ESPRR) is an
+              open source, interactive web application to model expected power
+              and ramp rates for new solar PV plants in the Southwest while
+              properly accounting for location, size, orientation, and
+              geographic diversity. The tool consists of this web frontend
+              backed by a REST API to perform the calculations. Users can
+              interact directly with the API (<a href="/api/docs"
+                >documentation</a
+              >) to create systems and retrieve results.
+            </p>
+            <p>Please log in to access ESPRR.</p>
+          </div>
+        </template>
       </template>
 
       <!-- Display loading indicator -->
@@ -62,13 +85,19 @@ export default class App extends Vue {
 header.container {
   background: #ddd;
   border-bottom: 5px solid #bbb;
-  padding: 1em;
+  padding: 0.2em 1em;
   align-items: center;
 }
 header h1 {
+  display: inline;
   color: white;
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
     1px 1px 0 #000;
+}
+header h5 {
+  margin-left: 1em;
+  display: inline-block;
+  color: #888;
 }
 #nav {
   flex: flex-grow;
@@ -78,6 +107,7 @@ header h1 {
 #nav a {
   font-weight: bold;
   color: #2c3e50;
+  padding: 0 0.5em;
 }
 
 #nav a.router-link-exact-active {
@@ -90,5 +120,10 @@ header h1 {
 
 .auth-button {
   justify-self: right;
+}
+
+.intro {
+  padding: 2em;
+  max-width: 1024px;
 }
 </style>
