@@ -18,7 +18,7 @@
             <button class="delete-system" @click="showDeleteDialog = true">
               Delete System
             </button>
-            <ul ckass="details-list" v-if="system">
+            <ul class="details-list" v-if="system">
               <li><b>Name: </b>{{ system.definition.name }}</li>
               <li>
                 <b>AC Capacity (MW): </b>{{ system.definition.ac_capacity }}

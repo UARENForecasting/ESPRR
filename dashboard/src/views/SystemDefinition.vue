@@ -13,7 +13,14 @@
         <form v-if="definition" id="system-definition" @submit="submitSystem">
           <label
             title="A name for this system. Most special characters beyond space, comma, hyphen, and parentheses are not allowed."
-            >Name: <input type="text" v-model="definition.name"
+            >Name:
+            <input
+              type="text"
+              maxlength="128"
+              size="24"
+              required
+              pattern="^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]*$"
+              v-model="definition.name"
           /></label>
           <label title="AC Capacity of the system in MW"
             >AC Capacity (MW):
@@ -21,6 +28,7 @@
               type="number"
               step="any"
               min="0"
+              required
               v-model.number="definition.ac_capacity"
           /></label>
           <label title="Ratio of installed DC capacity to AC capacity"
@@ -29,6 +37,7 @@
               type="number"
               step="any"
               min="0"
+              required
               v-model.number="definition.dc_ac_ratio"
           /></label>
           <label title="Sets Albedo for common surface types"
@@ -56,6 +65,7 @@
               step="any"
               min="0"
               max="1"
+              required
               v-model.number="definition.albedo"
           /></label>
 
@@ -81,6 +91,7 @@
                   step="any"
                   min="0"
                   max="90"
+                  required
                   v-model.number="definition.tracking.tilt"
                 />
               </label>
@@ -93,6 +104,7 @@
                   step="any"
                   min="0"
                   max="360"
+                  required
                   v-model.number="definition.tracking.azimuth"
                 />
               </label>
@@ -107,6 +119,7 @@
                   step="any"
                   min="0"
                   max="90"
+                  required
                   v-model.number="definition.tracking.axis_tilt"
                 />
               </label>
@@ -119,6 +132,7 @@
                   step="any"
                   min="0"
                   max="360"
+                  required
                   v-model.number="definition.tracking.axis_azimuth"
                 />
               </label>
@@ -129,6 +143,7 @@
                   step="any"
                   min="0"
                   max="1"
+                  required
                   v-model.number="definition.tracking.gcr"
                 />
               </label>
@@ -390,6 +405,7 @@ export default class SystemDefinition extends Vue {
 <style scoped>
 label {
   display: block;
+  padding-bottom: 0.2em;
 }
 .definition-container {
   display: grid;
@@ -420,8 +436,13 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* Firefox */
 input[type="number"] {
+  /* Firefox no in/decrement*/
   -moz-appearance: textfield;
+  width: 3em;
+}
+
+.tracking {
+  margin: 0.5em 3em 1em 0;
 }
 </style>
