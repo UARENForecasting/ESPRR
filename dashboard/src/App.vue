@@ -40,13 +40,12 @@
             <p>
               The Expected Solar Performance and Ramp Rate Tool (ESPRR) is an
               open source, interactive web application to model expected power
-              and ramp rates for new solar PV plants in the Southwest while
-              properly accounting for location, size, orientation, and
-              geographic diversity. The tool consists of this web frontend
-              backed by a REST API to perform the calculations. Users can
-              interact directly with the API (<a href="/api/docs"
-                >documentation</a
-              >) to create systems and retrieve results.
+              and ramp rates for solar PV plants in the Southwest. It
+              accounts for plant location, size, orientation, and
+              geographic extent. The tool consists of this web frontend
+              backed by a REST API (<a href="/api/docs"
+                >API documentation</a
+              >).
             </p>
             <p>Please log in to access ESPRR.</p>
           </div>
