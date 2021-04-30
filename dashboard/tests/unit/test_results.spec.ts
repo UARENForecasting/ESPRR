@@ -105,7 +105,7 @@ describe("Test Results component", () => {
 
     await flushPromises();
     expect(wrapper.find(".errors").text()).toBe(
-      "Errors occurred during processing:\n    \n        it's bad\n        Re-calculate"
+      "Errors occurred during processing:\n    \n        it's bad\n        Recalculate"
     );
   });
   it("Test result status messages", async () => {
@@ -155,7 +155,7 @@ describe("Test Results component", () => {
     jest.runAllTimers();
     await flushPromises();
     expect(wrapper.find(".alert").text()).toBe(
-      "Result statistics are missing.\n      Re-calculate"
+      "Result statistics are missing.\n      Recalculate"
     );
 
     // @ts-expect-error mocked fn
@@ -169,7 +169,7 @@ describe("Test Results component", () => {
     jest.runAllTimers();
     await flushPromises();
     expect(wrapper.find(".alert").text()).toBe(
-      "Result timeseries are missing.\n      Re-calculate"
+      "Result timeseries are missing.\n      Recalculate"
     );
   });
   it("Test results destroyed method", async () => {

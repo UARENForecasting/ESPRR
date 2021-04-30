@@ -60,7 +60,9 @@ describe("Tests authenticated routes", () => {
       mocks,
     });
     await flushPromises();
-    expect(home.find("main").text()).toBe("Please log in to access ESPRR.");
+    expect(home.find("main").text()).toContain(
+      "Please log in to access ESPRR."
+    );
     const button = home.find("button");
     expect(button.text()).toMatch(/Log in/);
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
