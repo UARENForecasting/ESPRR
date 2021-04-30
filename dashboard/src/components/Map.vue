@@ -23,7 +23,7 @@
         :scaling="editable"
         :rotation="false"
         :latLngs="sitePolygon"
-        @transformed="handleTransformaton"
+        @transformed="handleTransformation"
         @scaleend="handleTransformation"
       />
       <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
@@ -43,8 +43,8 @@
         40 Megawatts per square kilometer.
       </p>
       <p v-if="editable && bounds">
-        Click and drag to move the sytem's location or drag the white circle handles
-        to reshape. Area will be maintained while reshaping.
+        Click and drag to move the sytem's location or drag the white circle
+        handles to reshape. Area will be maintained while reshaping.
       </p>
     </div>
   </div>
@@ -171,13 +171,6 @@ export default class SystemMap extends Vue {
       this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
     );
   }
-  handleTransformaton(transformEvent: TransformationEvent): void {
-    // enforce area and emit parameters
-    this.$emit(
-      "bounds-updated",
-      this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
-    );
-  }
 
   @Watch("system")
   updateFromBoundingBox(): void {
@@ -219,12 +212,12 @@ export default class SystemMap extends Vue {
   }
 
   placeSystem(event: L.LeafletMouseEvent): void {
-    if (!this.bounds) {
+    if (this.bounds == null) {
       const center = event.latlng;
       this.initializePolygon(center);
-      this.map.fitBounds(this.bounds, { animate: true });
+      this.map.fitBounds(this.bounds!, { animate: true });
     }
-    this.$emit("bounds-updated", this.leafletBoundsToBoundingBox(this.bounds));
+    this.$emit("bounds-updated", this.leafletBoundsToBoundingBox(this.bounds!));
   }
 
   boundingBoxToLeafletBounds(bb: BoundingBox): L.LatLngBounds {
