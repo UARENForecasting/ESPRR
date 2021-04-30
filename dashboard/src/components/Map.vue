@@ -25,7 +25,6 @@
         :latLngs="sitePolygon"
         @transformed="handleTransformaton"
         @scaleend="handleTransformation"
-        
       />
       <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
         <l-rectangle
@@ -96,7 +95,6 @@ export default class SystemMap extends Vue {
   center!: L.LatLng;
   draggable!: boolean;
   scaling!: boolean;
-  bounds!: L.LatLngBounds;
   map!: L.Map;
 
   mapReady(): void {
@@ -127,6 +125,7 @@ export default class SystemMap extends Vue {
       center: this.centerCoords(),
     };
   }
+
   centerCoords(): L.LatLng {
     if (this.bounds) {
       return this.bounds.getCenter();
@@ -167,7 +166,6 @@ export default class SystemMap extends Vue {
 
   handleTransformation(transformEvent: TransformationEvent): void {
     // enforce area and emit parameters
-    //console.log(JSON.stringify(transformEvent));
     this.$emit(
       "bounds-updated",
       this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
@@ -175,7 +173,6 @@ export default class SystemMap extends Vue {
   }
   handleTransformaton(transformEvent: TransformationEvent): void {
     // enforce area and emit parameters
-    //console.log(JSON.stringify(transformEvent));
     this.$emit(
       "bounds-updated",
       this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
@@ -187,7 +184,7 @@ export default class SystemMap extends Vue {
     this.centerMap();
   }
 
-  get bounds() {
+  get bounds(): L.LatLngBounds | null {
     if (this.system && this.system.boundary) {
       return this.boundingBoxToLeafletBounds(this.system.boundary);
     }
@@ -217,7 +214,7 @@ export default class SystemMap extends Vue {
 
     this.$emit(
       "bounds-updated",
-       this.leafletBoundsToBoundingBox(center.toBounds(squareSideLength * 1000))
+      this.leafletBoundsToBoundingBox(center.toBounds(squareSideLength * 1000))
     );
   }
 

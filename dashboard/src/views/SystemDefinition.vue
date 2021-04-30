@@ -181,7 +181,6 @@
           :dc_capacity="dcCapacity"
           @bounds-updated="updateBounds"
         />
-        <pre>{{ JSON.stringify(definition.boundary, 2) }}</pre>
       </div>
     </div>
     <div v-else>The System could not be found.</div>
@@ -377,7 +376,6 @@ export default class SystemDefinition extends Vue {
   }
 
   updateBounds(newBounds: BoundingBox): void {
-    console.log("new bounds: ", JSON.stringify(newBounds));
     this.$set(this.definition, "boundary", newBounds);
   }
   get dcCapacity(): number | null {

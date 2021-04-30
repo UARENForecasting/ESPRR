@@ -8,6 +8,8 @@
 </template>
 
 <script>
+/* eslint-disable */
+import Vue from "vue";
 import L from "leaflet";
 import { findRealParent, propsBinder } from "vue2-leaflet";
 import "./L.Path.Transform-src.js";
@@ -130,7 +132,7 @@ const props = {
   },
 };
 export default {
-  name: "LPathTransform",
+  name: "ReshapeRectangle",
   props,
   data() {
     return {
@@ -173,7 +175,7 @@ export default {
 
     this.options.draggable = this.draggable;
 
-    this.mapObject = L.rectangle(this.latLngs, this.options);
+    this.mapObject = L.polygon(this.latLngs, this.options);
     L.DomEvent.on(this.mapObject, this.$listeners);
     propsBinder(this, this.mapObject, props);
     this.ready = true;
@@ -328,6 +330,22 @@ export default {
     },
     getGeoJSONData() {
       return this.mapObject.toGeoJSON();
+    },
+  },
+  watch: {
+    latLngs: function (newVal, oldVal) {
+      console.log("updating latlng");
+      // disable/enable for redraw
+      this.mapObject.transform.disable();
+      Vue.nextTick(() => {
+        this.mapObject.transform
+          .setOptions({
+            rotation: this.rotation,
+            scaling: this.scaling,
+            handlerOptions: this.handlerOptions,
+          })
+          .enable();
+      });
     },
   },
 };

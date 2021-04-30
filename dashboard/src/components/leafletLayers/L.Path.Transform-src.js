@@ -1120,10 +1120,10 @@ L.Handler.PathTransform = L.Handler.extend({
     // update handlers
     for (var i = 0, len = this._handlers.length; i < len; i++) {
       var handler = this._handlers[i];
-      if (handler !== this._originMarker) {
-        handler._point = matrix.transform(handler._initialPoint);
-        handler._updatePath();
-      }
+      //if (handler !== this._originMarker) {
+      handler._point = matrix.transform(handler._initialPoint);
+      handler._updatePath();
+      //}
     }
 
     matrix = matrix.clone().flip();
@@ -1506,7 +1506,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._activeMarker = marker;
 
     this._originMarker = this._handlers[(marker.options.index + 2) % 4];
-    this._scaleOrigin = this._originMarker.getLatLng();
+    this._scaleOrigin = this._rect.getBounds().getCenter(); //.getLatLng();
 
     this._initialMatrix = this._matrix.clone();
     this._cachePoints();
@@ -1532,7 +1532,6 @@ L.Handler.PathTransform = L.Handler.extend({
     if (this._rotationMarker) {
       this._map.removeLayer(this._rotationMarker);
     }
-
   },
 
   /**
@@ -1553,33 +1552,37 @@ L.Handler.PathTransform = L.Handler.extend({
 
     let centerX;
     let centerY;
-
     if (handleDirection % 2 == 0) {
-      // North-South handle
-      ratioY = (originPoint.y - evt.layerPoint.y) / this._initialDistY;
-      ratioX = 1 / ratioY;
+      // North-South Handle
       if (originPoint.y > evt.layerPoint.y) {
-        centerY =
-          originPoint.y - ((originPoint.y - evt.layerPoint.y) / 2) * ratioY;
+        centerY = originPoint.y - (originPoint.y - evt.layerPoint.y) / 2;
       } else {
-        centerY =
-          evt.layerPoint.y - ((evt.layerPoint.y - originPoint.y) / 2) * ratioY;
+        centerY = evt.layerPoint.y - (evt.layerPoint.y - originPoint.y) / 2;
       }
+
+      // Apply a limit to how thin a selection can be
+      ratioY =
+        Math.max(Math.abs(originPoint.y - evt.layerPoint.y), 10) /
+        Math.abs(this._initialDistY);
+      ratioX = 1 / ratioY;
       centerX = originPoint.x;
     } else {
-      ratioX = (originPoint.x - evt.layerPoint.x) / this._initialDistX;
-      ratioY = 1 / ratioX;
+      // East-West Handle
+
       if (originPoint.x > evt.layerPoint.x) {
-        centerX =
-          originPoint.x - ((originPoint.x - evt.layerPoint.x) / 2) * ratioX;
+        centerX = originPoint.x - (originPoint.x - evt.layerPoint.x) / 2;
       } else {
-        centerX =
-          evt.layerPoint.x - ((evt.layerPoint.x - originPoint.x) / 2) * ratioX;
+        centerX = evt.layerPoint.x - (evt.layerPoint.x - originPoint.x) / 2;
       }
+
+      // Apply a limit to how thin a selection can be
+      ratioX =
+        Math.max(Math.abs(originPoint.x - evt.layerPoint.x), 10) /
+        Math.abs(this._initialDistX);
+      ratioY = 1 / ratioX;
       centerY = originPoint.y;
     }
-
-    const centerPoint = L.point(centerX, centerY);
+    let centerPoint = L.point(centerX, centerY);
     this._scale = new L.Point(ratioX, ratioY);
 
     // update matrix
