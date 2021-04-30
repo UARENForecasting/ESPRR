@@ -19,7 +19,7 @@ describe("Test main", () => {
 
     await flushPromises();
     // @ts-expect-error possibly null
-    expect(document.querySelector("main").textContent.trim()).toEqual(
+    expect(document.querySelector("main").textContent.trim()).toContain(
       "Please log in to access ESPRR."
     );
   });

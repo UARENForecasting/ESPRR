@@ -1,6 +1,6 @@
 <template>
   <div v-if="tableData" class="quick-summary">
-    <h3>Summary ({{ units }})</h3>
+    <h3>Ramp Summary ({{ units }})</h3>
     <table
       class="quick-table result-summary"
       :style="`--numCol: ` + (headers.length + 1)"
