@@ -1,12 +1,5 @@
 <template>
   <div class="timeseries-plot">
-    <h3>Timeseries</h3>
-    Download:
-    <button @click="downloadData('text/csv')">CSV</button>
-    <button @click="downloadData('application/vnd.apache.arrow.file')">
-      Apache Arrow
-    </button>
-    <br />
     <div :id="id"></div>
   </div>
 </template>
@@ -15,8 +8,8 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { StoredPVSystem } from "@/models";
 import { Table } from "apache-arrow";
-import { DateTime } from "luxon";
 import Plotly from "plotly.js-basic-dist";
+import { getDisplayName } from "@/utils/DisplayNames";
 
 @Component
 export default class TimeseriesPlot extends Vue {
@@ -47,7 +40,7 @@ export default class TimeseriesPlot extends Vue {
     let index = this.timeseriesData.getColumn("time");
     const dateTimes: Array<Date> = [];
     for (let i = 0; i < index.length; i++) {
-      dateTimes.push(DateTime.fromMillis(index.get(i)).toJSDate());
+      dateTimes.push(new Date(index.get(i)));
     }
     return dateTimes;
   }
@@ -78,28 +71,32 @@ export default class TimeseriesPlot extends Vue {
   }
 
   get plotTitle(): string {
-    return `${this.dataset} ${this.system.definition.name} Performance`;
+    return `${getDisplayName(this.dataset)} ${
+      this.system.definition.name
+    } Performance`;
   }
 
   get layout(): Record<string, any> {
+    let tz: string;
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      /* istanbul ignore next */
+      tz = "local";
+    }
     return {
       title: this.plotTitle,
       xaxis: {
-        title: `Time`,
+        title: `Time (${tz})`,
       },
       yaxis: {
-        title: "MW",
+        title: "Power (MW)",
       },
     };
   }
 
   resetSelected(): void {
     this.selected = this.availableFields[0];
-  }
-
-  downloadData(contentType: string): void {
-    /* istanbul ignore next */
-    this.$emit("download-timeseries", contentType);
   }
 }
 </script>

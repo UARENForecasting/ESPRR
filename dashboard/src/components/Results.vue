@@ -7,33 +7,113 @@
           {{ error }}
         </li>
       </ul>
+      <br />
+      <button @click="recompute">Re-calculate</button>
     </div>
     <div v-if="status == 'queued'">
       Performance calculation is queued and will be processed shortly.
     </div>
-    <div v-if="status == 'statistics missing'">
-      Result statistics are missing.
-    </div>
-    <div v-if="status == 'timeseries missing'">
-      Result timeseries are missing.
-    </div>
     <div v-if="status == 'running'">
       Performance calculation is running and will be ready soon.
     </div>
-    <div class="results" v-if="status == 'complete'">
+    <div
+      class="results"
+      v-if="
+        (status == 'complete') |
+          (status == 'statistics missing') |
+          (status == 'timeseries missing')
+      "
+    >
       <h2>Performance Results</h2>
       <hr />
+      <div class="alert" v-if="status == 'timeseries missing'">
+        Result timeseries are missing.
+        <button @click="recompute">Re-calculate</button>
+      </div>
+      <div class="alert" v-if="status == 'statistics missing'">
+        Result statistics are missing.
+        <button @click="recompute">Re-calculate</button>
+      </div>
+      <div class="container">
+        <div class="quick-table-flex">
+          <quick-table
+            v-if="statistics"
+            :tableData="statistics"
+            :asRampRate="asRampRate"
+          />
+        </div>
+        <div class="option-flex">
+          <h3>Options</h3>
+          <div class="stat-option">
+            <label>
+              <b>Display statistics as:</b>
+              <br />
+              <label
+                title="Present statistics in terms of absolute power ramps"
+              >
+                <input
+                  type="radio"
+                  id="absolute"
+                  name="units"
+                  value="0"
+                  v-model.number="asRampRate"
+                />
+                Absolute Ramps (MW)
+              </label>
+              <br />
+              <label title="Present statistics in terms of MW/min ramp rates">
+                <input
+                  type="radio"
+                  id="rate"
+                  name="units"
+                  value="1"
+                  v-model.number="asRampRate"
+                />
+                Ramp Rates (MW/min)
+              </label>
+            </label>
+          </div>
+          <button @click="recompute">Re-calculate</button>
+        </div>
+        <div class="download-flex">
+          <h3>Downloads</h3>
+          <div>
+            <strong>Timeseries: </strong>
+            <button @click="downloadTimeseries('text/csv')">CSV</button>
+            <button
+              @click="downloadTimeseries('application/vnd.apache.arrow.file')"
+            >
+              Apache Arrow
+            </button>
+          </div>
+          <div>
+            <strong>Statistics: </strong>
+            <button @click="downloadStatistics('text/csv')">CSV</button>
+            <button
+              @click="downloadStatistics('application/vnd.apache.arrow.file')"
+            >
+              Apache Arrow
+            </button>
+          </div>
+          <p>
+            Downloaded statistics are in terms of absolute ramps with units of
+            MW. <a href="https://arrow.apache.org">Apache Arrow</a> is an
+            optimized binary format. In python, use
+            <code>pandas.read_feather</code> to quickly read the data into a
+            DataFrame.
+          </p>
+        </div>
+      </div>
       <timeseries-plot
-        @download-timeseries="downloadTimeseries"
         v-if="timeseries"
         :timeseriesData="timeseries"
         :system="system"
         :dataset="dataset"
       />
       <statistics-table
-        @download-statistics="downloadStatistics"
         v-if="statistics"
         :tableData="statistics"
+        :asRampRate="asRampRate"
       />
     </div>
   </div>
@@ -43,6 +123,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { StoredPVSystem } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
+import QuickTable from "@/components/data/QuickTable.vue";
 
 import * as SystemsAPI from "@/api/systems";
 import { Table } from "apache-arrow";
@@ -50,6 +131,7 @@ import downloadFile from "@/utils/downloadFile";
 
 Vue.component("timeseries-plot", TimeseriesPlot);
 Vue.component("statistics-table", StatisticsTable);
+Vue.component("quick-table", QuickTable);
 
 @Component
 export default class DataSetResults extends Vue {
@@ -62,10 +144,12 @@ export default class DataSetResults extends Vue {
   timeout!: any;
   errors!: Record<string, any> | null;
   active!: boolean;
+  asRampRate!: number;
 
   created(): void {
     this.active = true;
     this.updateStatus();
+    this.asRampRate = 0;
   }
 
   destroyed(): void {
@@ -84,6 +168,7 @@ export default class DataSetResults extends Vue {
       errors: null,
       active: this.active,
       timeout: null,
+      asRampRate: null,
     };
   }
 
@@ -91,6 +176,10 @@ export default class DataSetResults extends Vue {
     if (this.status == "complete") {
       this.loadTimeseries();
       this.loadStatistics();
+    } else if (this.status == "timeseries missing") {
+      this.loadStatistics();
+    } else if (this.status == "statistics missing") {
+      this.loadTimeseries();
     } else if (this.status == "error") {
       return;
     } else {
@@ -143,6 +232,9 @@ export default class DataSetResults extends Vue {
 
   /* istanbul ignore next */
   async downloadTimeseries(contentType: string): Promise<void> {
+    if (!this.timeseries) {
+      return;
+    }
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultTimeseries(
       token,
@@ -163,6 +255,9 @@ export default class DataSetResults extends Vue {
 
   /* istanbul ignore next */
   async downloadStatistics(contentType: string): Promise<void> {
+    if (!this.statistics) {
+      return;
+    }
     const token = await this.$auth.getTokenSilently();
     const contents: Blob = await SystemsAPI.fetchResultStatistics(
       token,
@@ -180,5 +275,39 @@ export default class DataSetResults extends Vue {
     }
     downloadFile(filename, contents);
   }
+
+  /* istanbul ignore next */
+  async recompute(): Promise<void> {
+    const token = await this.$auth.getTokenSilently();
+    await SystemsAPI.startProcessing(
+      token,
+      this.system.object_id,
+      this.dataset
+    );
+    window.location.reload();
+  }
 }
 </script>
+<style>
+.alert {
+  padding: 10px;
+  background-color: firebrick;
+  color: white;
+  font-size: 120%;
+  font-weight: bold;
+}
+.quick-table-flex {
+  margin-left: 1vw;
+  margin-right: 5vw;
+  margin-bottom: 3vh;
+}
+.option-flex {
+  margin-right: 5vw;
+}
+.download-flex {
+  width: 20%;
+}
+.stat-option {
+  margin-bottom: 1em;
+}
+</style>

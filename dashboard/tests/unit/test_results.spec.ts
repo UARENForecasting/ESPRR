@@ -1,6 +1,7 @@
 import Results from "@/components/Results.vue";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
+import QuickTable from "@/components/data/QuickTable.vue";
 import { $auth } from "./mockauth";
 import { systems, tsTable, statisticsTable } from "@/api/__mocks__/systems";
 import { getResult } from "@/api/systems";
@@ -44,10 +45,41 @@ describe("Test Results component", () => {
     await flushPromises();
     const plot = wrapper.findComponent(TimeseriesPlot);
     const statTable = wrapper.findComponent(StatisticsTable);
+    const summaryTable = wrapper.findComponent(QuickTable);
     expect(plot.exists()).toBe(true);
     expect(plot.props("timeseriesData")).toEqual(tsTable);
     expect(statTable.exists()).toBe(true);
     expect(statTable.props("tableData")).toEqual(statisticsTable);
+    expect(summaryTable.exists()).toBe(true);
+    expect(summaryTable.props("tableData")).toEqual(statisticsTable);
+  });
+  it("Test results ramp switch", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        system: systems[0],
+      },
+    });
+
+    await flushPromises();
+    const statTable = wrapper.findComponent(StatisticsTable);
+    const summaryTable = wrapper.findComponent(QuickTable);
+    expect(statTable.props("asRampRate")).toEqual(0);
+    expect(summaryTable.props("asRampRate")).toEqual(0);
+
+    const rampRadio = wrapper.find("#rate");
+    rampRadio.trigger("click");
+    await flushPromises();
+
+    expect(statTable.props("asRampRate")).toEqual(1);
+    expect(summaryTable.props("asRampRate")).toEqual(1);
   });
   it("Test result status error", async () => {
     // @ts-expect-error mocked fn
@@ -73,7 +105,7 @@ describe("Test Results component", () => {
 
     await flushPromises();
     expect(wrapper.find(".errors").text()).toBe(
-      "Errors occurred during processing:\n    \n        it's bad"
+      "Errors occurred during processing:\n    \n        it's bad\n        Re-calculate"
     );
   });
   it("Test result status messages", async () => {
@@ -122,7 +154,9 @@ describe("Test Results component", () => {
     });
     jest.runAllTimers();
     await flushPromises();
-    expect(wrapper.text()).toBe("Result statistics are missing.");
+    expect(wrapper.find(".alert").text()).toBe(
+      "Result statistics are missing.\n      Re-calculate"
+    );
 
     // @ts-expect-error mocked fn
     getResult.mockImplementationOnce(async () => {
@@ -130,9 +164,13 @@ describe("Test Results component", () => {
         status: "timeseries missing",
       };
     });
+    // @ts-expect-error instance method
+    wrapper.vm.awaitResults();
     jest.runAllTimers();
     await flushPromises();
-    expect(wrapper.text()).toBe("Result timeseries are missing.");
+    expect(wrapper.find(".alert").text()).toBe(
+      "Result timeseries are missing.\n      Re-calculate"
+    );
   });
   it("Test results destroyed method", async () => {
     // @ts-expect-error mock queued state so timeout will be set

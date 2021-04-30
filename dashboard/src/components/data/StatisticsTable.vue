@@ -1,17 +1,6 @@
 <template>
   <div v-if="tableData" class="summary-table">
-    <h3>Statistics</h3>
-    Download:
-    <button id="download-statistics-csv" @click="downloadData('text/csv')">
-      CSV
-    </button>
-    <button
-      id="download-statistics-arrow"
-      @click="downloadData('application/vnd.apache.arrow.file')"
-    >
-      Apache Arrow
-    </button>
-    <br />
+    <h3>Statistics ({{ units }})</h3>
     <label>
       <b>Interval</b>
       <select v-model="selectedInterval">
@@ -27,7 +16,7 @@
       <thead>
         <tr>
           <th>Month</th>
-          <th v-for="(header, i) of headers" :key="i">
+          <th v-for="(header, i) of niceHeaders" :key="i">
             {{ header }}
           </th>
         </tr>
@@ -48,11 +37,12 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { Table, predicate } from "apache-arrow";
+import { getDisplayName } from "@/utils/DisplayNames";
 
 @Component
 export default class StatisticsTable extends Vue {
   @Prop() tableData!: Table;
-
+  @Prop() asRampRate!: number;
   selectedInterval!: string;
 
   created(): void {
@@ -64,10 +54,22 @@ export default class StatisticsTable extends Vue {
     };
   }
 
-  get headers(): Array<string | number> {
+  get units(): string {
+    if (this.asRampRate) {
+      return "MW/min";
+    } else {
+      return "MW";
+    }
+  }
+
+  get headers(): Array<string> {
     return Array.from(
       new Set(this.filteredTable.getColumn("statistic").toArray())
     );
+  }
+
+  get niceHeaders(): Array<string> {
+    return this.headers.map(getDisplayName);
   }
 
   get filteredTable(): Table {
@@ -76,24 +78,27 @@ export default class StatisticsTable extends Vue {
     );
   }
 
+  get scaleFactor(): number {
+    if (this.asRampRate) {
+      return Number(this.selectedInterval.split("-")[0]);
+    } else {
+      return 1;
+    }
+  }
+
   get tableRows(): Record<string, Record<string, number>> {
     const rows: Record<string, Record<string, number>> = {};
     for (const row of this.filteredTable) {
       if (!(row["month"] in rows)) {
         rows[row["month"]] = {};
       }
-      rows[row["month"]][row["statistic"]] = row.value;
+      rows[row["month"]][row["statistic"]] = row.value / this.scaleFactor;
     }
     return rows;
   }
 
   get availableIntervals(): Array<string> {
     return Array.from(new Set(this.tableData.getColumn("interval")));
-  }
-
-  downloadData(contentType: string): void {
-    /* istanbul ignore next */
-    this.$emit("download-statistics", contentType);
   }
 }
 </script>
