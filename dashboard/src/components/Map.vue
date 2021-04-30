@@ -294,7 +294,7 @@ export default class SystemMap extends Vue {
       this.reshape();
     }
   }
-  @Watch("aspectX")
+  @Watch("aspectInputX")
   updateAspectX(newVal: number) {
     if (!isNaN(newVal)) {
       this.aspectX = newVal;
