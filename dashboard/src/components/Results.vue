@@ -40,14 +40,15 @@
           <p>
             Irradiance, temperature, and wind data from the
             {{ this.prettyDataset }} dataset were extracted for all gridpoints
-            covered by the system bounding box. The data were then processed
-            using a PVWatts model with parameters defined above to generate the
-            expected power timeseries. Ramps were calculated at various
-            intervals by resampling this timeseries and calculating the
-            derivative. These ramps were binned monthly to determine the
-            stress-case up and down ramps. The typical sunrise and sunset ramps
-            were calculated in a similar fashion using the expected clearsky
-            timeseries.
+            contained within or intersecting the system bounding box. The data
+            were then processed using a PV model with parameters defined above
+            to generate the expected power timeseries. The PV model is based on
+            the NREL PVWatts model and accounts for angle of incidence and
+            temperature losses. Ramps were calculated at various intervals by
+            resampling this timeseries and calculating the derivatives. These
+            ramps were binned by month to determine the stress-case up and down
+            ramps. The typical sunrise and sunset ramps were calculated in a
+            similar fashion using the expected clearsky timeseries.
           </p>
         </div>
         <div class="quick-table-flex">
