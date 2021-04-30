@@ -8,7 +8,7 @@
         </li>
       </ul>
       <br />
-      <button @click="recompute">Re-calculate</button>
+      <button @click="recompute">Recalculate</button>
     </div>
     <div v-if="status == 'queued'">
       Performance calculation is queued and will be processed shortly.
@@ -28,11 +28,11 @@
       <hr />
       <div class="alert" v-if="status == 'timeseries missing'">
         Result timeseries are missing.
-        <button @click="recompute">Re-calculate</button>
+        <button @click="recompute">Recalculate</button>
       </div>
       <div class="alert" v-if="status == 'statistics missing'">
         Result statistics are missing.
-        <button @click="recompute">Re-calculate</button>
+        <button @click="recompute">Recalculate</button>
       </div>
       <div class="container">
         <div class="quick-table-flex">
@@ -73,7 +73,7 @@
               </label>
             </label>
           </div>
-          <button @click="recompute">Re-calculate</button>
+          <button @click="recompute">Recalculate</button>
         </div>
         <div class="download-flex">
           <h3>Downloads</h3>
@@ -98,9 +98,9 @@
           <p>
             Downloaded statistics are in terms of absolute ramps with units of
             MW. <a href="https://arrow.apache.org">Apache Arrow</a> is an
-            optimized binary format. In python, use
-            <code>pandas.read_feather</code> to quickly read the data into a
-            DataFrame.
+            optimized binary format that can quickly be read with pandas or R.
+            In python, use <code>pandas.read_feather</code> to quickly read the
+            data into a DataFrame.
           </p>
         </div>
       </div>
@@ -288,11 +288,13 @@ export default class DataSetResults extends Vue {
   }
 }
 </script>
-<style>
+<style scoped>
 .alert {
+  border: 1px solid #caa;
+  border-radius: 0.5em;
   padding: 10px;
-  background-color: firebrick;
-  color: white;
+  background-color: #ecc;
+  list-style: none;
   font-size: 120%;
   font-weight: bold;
 }
@@ -309,5 +311,8 @@ export default class DataSetResults extends Vue {
 }
 .stat-option {
   margin-bottom: 1em;
+}
+.summary-table {
+  margin: 1vh 1vw 3vh 1vw;
 }
 </style>
