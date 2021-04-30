@@ -1,6 +1,18 @@
+/* eslint-disable */
+/**
+ * This file contains a modified version of the Leaflet.Path.Transform package.
+ * The original code can be found at https://github.com/w8r/Leaflet.Path.Transform,
+ * and carries an MIT license.
+ *
+ * The updates allow for reshaping a rectangle while retainining the rectangles Area.
+ * Changes includes updating the order and style of the marker handles and altering the
+ * `onScale` behavior.
+ */
+
 /**
  * Leaflet vector features drag functionality
  * @author Alexander Milevski <info@w8r.name>
+ * @license MIT
  * @preserve
  */
 

@@ -1,5 +1,13 @@
 <!--
-    Vue2Leaflet Path transform
+  This file contains a modified version of the `vue2-leaflet-path-transform` plugin.
+  Copyright (c) 2018 Muhridin Ibragimov
+  MIT License.
+  Original code may be found at https://github.com/mudin/vue2-leaflet-path-transform.
+
+  Changes include:
+  - Depend upon altered local version of Leaflet Path Transform package.
+  - Add watcher for changes to latLng prop which triggers a redraw of the control layer
+    such that handles stay in sync with the shape.
  -->
 <template>
   <div style="display: none">
@@ -8,6 +16,7 @@
 </template>
 
 <script>
+/* istanbul ignore file */
 /* eslint-disable */
 import Vue from "vue";
 import L from "leaflet";

@@ -17,7 +17,7 @@
         :imperial="false"
         :metric="true"
       ></l-control-scale>
-      <reshape-rectangle
+      <static-area-rectangle
         v-if="sitePolygon"
         :draggable="editable"
         :scaling="editable"
@@ -43,7 +43,8 @@
         40 Megawatts per square kilometer.
       </p>
       <p v-if="editable && bounds">
-        Click and drag to move the sytem's location.
+        Click and drag to move the sytem's location or drag the white circle handles
+        to reshape. Area will be maintained while reshaping.
       </p>
     </div>
   </div>
@@ -62,7 +63,7 @@ import {
   LRectangle,
 } from "vue2-leaflet";
 
-import ReshapeRectangle from "@/components/leafletLayers/ReshapeRectangle.vue";
+import StaticAreaRectangle from "@/components/leafletLayers/StaticAreaRectangle.vue";
 
 import { BoundingBox } from "@/models";
 
@@ -79,8 +80,7 @@ Vue.component("l-control-scale", LControlScale);
 Vue.component("l-control-layers", LControlLayers);
 Vue.component("l-layer-group", LLayerGroup);
 Vue.component("l-rectangle", LRectangle);
-Vue.component("reshape-rectangle", ReshapeRectangle);
-//Vue.component("v-path-transforms", Vue2LeafletPathTransform);
+Vue.component("static-area-rectangle", StaticAreaRectangle);
 
 @Component
 export default class SystemMap extends Vue {
