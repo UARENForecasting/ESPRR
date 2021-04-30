@@ -334,7 +334,6 @@ export default {
   },
   watch: {
     latLngs: function (newVal, oldVal) {
-      console.log("updating latlng");
       // disable/enable for redraw
       this.mapObject.transform.disable();
       Vue.nextTick(() => {
