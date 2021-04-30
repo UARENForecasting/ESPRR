@@ -20,7 +20,7 @@
       <static-area-rectangle
         v-if="sitePolygon"
         :draggable="editable"
-        :scaling="editable"
+        :scaling="false"
         :rotation="false"
         :latLngs="sitePolygon"
         @transformed="handleTransformation"
@@ -43,6 +43,8 @@
         40 Megawatts per square kilometer.
       </p>
       <p v-if="editable && bounds">
+        <input type="number" v-model.number="aspectInputX" />
+        <input type="number" v-model.number="aspectInputY" />
         Click and drag to move the sytem's location or drag the white circle
         handles to reshape. Area will be maintained while reshaping.
       </p>
@@ -96,6 +98,10 @@ export default class SystemMap extends Vue {
   draggable!: boolean;
   scaling!: boolean;
   map!: L.Map;
+  aspectInputX!: number;
+  aspectInputY!: number;
+  aspectX!: number;
+  aspectY!: number;
 
   mapReady(): void {
     // @ts-expect-error accessing Leaflet API
@@ -123,6 +129,10 @@ export default class SystemMap extends Vue {
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       zoom: 11,
       center: this.centerCoords(),
+      aspectX: 1,
+      aspectY: 1,
+      aspectInputX: 1,
+      aspectInputY: 1,
     };
   }
 
@@ -204,13 +214,35 @@ export default class SystemMap extends Vue {
 
     // determine length of one side of square from area
     const squareSideLength = Math.sqrt(area);
-
-    this.$emit(
-      "bounds-updated",
-      this.leafletBoundsToBoundingBox(center.toBounds(squareSideLength * 1000))
-    );
+    const boundsOfArea = center.toBounds(squareSideLength * 1000);
+    const reshaped = this.adjustBoundsToAspectRatio(boundsOfArea);
+    this.$emit("bounds-updated", this.leafletBoundsToBoundingBox(reshaped));
   }
+  adjustBoundsToAspectRatio(bounds: L.LatLngBounds) {
+    // naive scaling of lat/lon square bounds to aspect ratio
+    if (this.aspectX != this.aspectY) {
+      const xScale = this.aspectX / this.aspectY;
+      const yScale = this.aspectY / this.aspectX;
 
+      const yMax = bounds.getNorth();
+      const yMin = bounds.getSouth();
+      const xMax = bounds.getEast();
+      const xMin = bounds.getWest();
+
+      // amount to adjust each bound in/out
+      const yAdjust = Math.abs(yMax - yMin) * yScale * 0.5;
+      const xAdjust = Math.abs(xMax - xMin) * xScale * 0.5;
+      console.log(xAdjust);
+      console.log(yAdjust);
+
+      return L.latLngBounds(
+        [yMax + yAdjust, xMin - xAdjust],
+        [yMin - yAdjust, xMax + xAdjust]
+      );
+    } else {
+      return bounds;
+    }
+  }
   placeSystem(event: L.LeafletMouseEvent): void {
     if (this.bounds == null) {
       const center = event.latlng;
@@ -247,6 +279,27 @@ export default class SystemMap extends Vue {
   emitSelection(system: StoredPVSystem): void {
     // Emit an event so parent components can update highlighting/selection
     this.$emit("new-selection", system);
+  }
+  reshape() {
+    if (this.bounds != null) {
+      const center = this.bounds.getCenter();
+      this.initializePolygon(center);
+    }
+  }
+
+  @Watch("aspectInputY")
+  updateAspectY(newVal: number) {
+    if (!isNaN(newVal)) {
+      this.aspectY = newVal;
+      this.reshape();
+    }
+  }
+  @Watch("aspectX")
+  updateAspectX(newVal: number) {
+    if (!isNaN(newVal)) {
+      this.aspectX = newVal;
+      this.reshape();
+    }
   }
 }
 </script>
