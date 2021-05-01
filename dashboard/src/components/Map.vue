@@ -226,6 +226,21 @@ export default class SystemMap extends Vue {
       const yDist = this.bounds
         .getNorthWest()
         .distanceTo(this.bounds.getSouthWest());
+
+      const xRatio = xDist / yDist;
+      // Just set ratio so that one of the dimensions is 1, we aren't guarunteed
+      // something that will reduce nicely.
+      if (xRatio < 1) {
+        this.aspectY = 1 / xRatio;
+        this.aspectInputY = 1 / xRatio;
+        this.aspectX = 1;
+        this.aspectInputX = 1;
+      } else {
+        this.aspectX = xRatio;
+        this.aspectInputX = xRatio;
+        this.aspectY = 1;
+        this.aspectInputY = 1;
+      }
     }
   }
   get bounds(): L.LatLngBounds | null {
@@ -262,8 +277,15 @@ export default class SystemMap extends Vue {
   adjustBoundsToAspectRatio(bounds: L.LatLngBounds): L.LatLngBounds {
     // naive scaling of lat/lon square bounds to aspect ratio
     if (this.aspectX != this.aspectY) {
-      const xScale = this.aspectX / this.aspectY;
-      const yScale = this.aspectY / this.aspectX;
+      // aspect ratio -> ratio * a = b
+      // > a * b = 1
+      // > a * ratio * a = 1
+      // > ratio * a^2 = 1
+      // > a = sqrt(1/ratio)
+      const xToYRatio = this.aspectX / this.aspectY;
+      const yScale = Math.sqrt(1 / xToYRatio);
+      const xScale = Math.sqrt(xToYRatio);
+
       const area = this.areaFromCapacity();
       const center = bounds.getCenter();
       // determine length of one side of square from area
