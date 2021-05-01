@@ -350,25 +350,35 @@ export default class SystemMap extends Vue {
 
   @Watch("aspectInputY")
   updateAspectY(newVal: number): void {
-    // @ts-expect-error empty input returns empty string
-    if (newVal != "" && !isNaN(newVal) && this.initialized) {
+    if (
+      // @ts-expect-error empty input returns empty string
+      newVal != "" &&
+      !isNaN(newVal) &&
+      this.initialized &&
+      !this.aspectInputsInvalid
+    ) {
       this.aspectY = newVal;
       this.reshape();
     }
   }
   @Watch("aspectInputX")
   updateAspectX(newVal: number): void {
-    // @ts-expect-error empty input returns empty string
-    if (newVal != "" && !isNaN(newVal) && this.initialized) {
+    if (
+      // @ts-expect-error empty input returns empty string
+      newVal != "" &&
+      !isNaN(newVal) &&
+      this.initialized &&
+      !this.aspectInputsInvalid
+    ) {
       this.aspectX = newVal;
       this.reshape();
     }
   }
   get aspectInputsInvalid(): boolean {
     return !(
-      this.aspectInputX > 0 &&
+      this.aspectInputX >= 1 &&
       this.aspectInputX <= 100 &&
-      this.aspectInputY > 0 &&
+      this.aspectInputY >= 1 &&
       this.aspectInputY <= 100
     );
   }
