@@ -156,7 +156,6 @@ class PVSystem(ThisBase):
     ac_capacity: float = Field(
         ..., description="Total AC capcity of the plant in MW", gt=0
     )
-    dc_ac_ratio: float = Field(..., description="Ratio of DC to AC capacity ", gt=0)
     # split into multiple inverters based on capacity and location
     # losses all set
     albedo: float = Field(
