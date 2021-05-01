@@ -316,11 +316,10 @@ export default class SystemDefinition extends Vue {
             token,
             systemResponse.object_id,
             "NSRDB_2019"
-          ).then((otherResponse: any) => {
-            console.log("Started processing: ", otherResponse);
+          ).then(() => {
+            this.navigateToPrevious();
+            this.errors = null;
           });
-          this.navigateToPrevious();
-          this.errors = null;
         })
         .catch((errors: any) => {
           this.errors = flattenErrors(errors);
@@ -332,11 +331,10 @@ export default class SystemDefinition extends Vue {
             token,
             response.object_id,
             "NSRDB_2019"
-          ).then((otherResponse: any) => {
-            console.log("Started processing: ", otherResponse);
+          ).then(() => {
+            this.navigateToPrevious();
+            this.errors = null;
           });
-          this.navigateToPrevious();
-          this.errors = null;
         })
         .catch((errors: any) => {
           this.errors = flattenErrors(errors);

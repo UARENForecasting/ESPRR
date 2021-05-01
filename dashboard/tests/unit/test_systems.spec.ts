@@ -52,7 +52,7 @@ describe("Test Systems list", () => {
 
     await flushPromises();
     expect(wrapper.find(".systems-table").find("p").text()).toEqual(
-      "No Systems yet. Create a new system."
+      "No Systems yet.\n        Create a new System"
     );
   });
   it("test delete", async () => {
