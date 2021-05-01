@@ -55,6 +55,7 @@
             <input
               style="width: 3em"
               type="number"
+              step="any"
               min="1"
               max="100"
               v-model.number="aspectInputY"
@@ -64,6 +65,7 @@
             East-West
             <input
               style="width: 3em"
+              step="any"
               type="number"
               min="1"
               max="100"
