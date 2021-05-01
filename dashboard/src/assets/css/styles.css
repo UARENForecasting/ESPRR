@@ -40,9 +40,11 @@ table.striped-table tr:nth-child(odd) td {
   z-index: 1000;
 }
 .alert {
+  border: 1px solid #caa;
+  border-radius: 0.5em;
   padding: 10px;
-  background-color: firebrick;
-  color: white;
+  background-color: #ecc;
+  list-style: none;
   font-size: 120%;
   font-weight: bold;
 }

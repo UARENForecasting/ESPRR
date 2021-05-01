@@ -310,24 +310,11 @@ export default class DataSetResults extends Vue {
 }
 </script>
 <style scoped>
-.alert {
-  border: 1px solid #caa;
-  border-radius: 0.5em;
-  padding: 10px;
-  background-color: #ecc;
-  list-style: none;
-  font-size: 120%;
-  font-weight: bold;
-}
 .flex-container {
   display: flex;
   flex-direction: row;
   max-width: 1400px;
   margin-bottom: 3vh;
-}
-.quick-table-flex {
-  margin-left: 1vw;
-  margin-right: 5vw;
 }
 
 @media (max-width: 800px) {
@@ -337,18 +324,19 @@ export default class DataSetResults extends Vue {
 }
 .description-flex {
   margin-left: 1vw;
-  margin-right: 2vw;
+  margin-right: 1.5vw;
   flex: 20%;
 }
 .quick-table-flex {
-  margin-right: 2vw;
+  margin: 0 0.5vw;
   flex: 25%;
 }
 .option-flex {
-  margin-right: 1vw;
+  margin: 0 0.5vw;
   flex: 15%;
 }
 .download-flex {
+  margin: 0 0.5vw;
   flex: 20%;
 }
 .stat-option {
