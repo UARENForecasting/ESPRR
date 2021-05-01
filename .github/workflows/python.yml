@@ -44,6 +44,10 @@ jobs:
           chmod +x ./dbmate
           ./dbmate --wait up
 
+      - name: try getting a secret
+        run: |
+          echo ${{ secrets.CODECOV_TOKEN }}
+
       - name: Test
         run: |
           pytest api/esprr_api --cov=esprr_api --cov-report=term-missing --cov-report=xml
