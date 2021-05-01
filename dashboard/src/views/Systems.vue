@@ -38,7 +38,12 @@
           </tbody>
         </table>
         <!-- update with link to system form -->
-        <p v-else>No Systems yet. <a href="#">Create a new system.</a></p>
+        <p v-else>
+          No Systems yet.
+          <router-link :to="{ name: 'New System' }" class="new-system-link"
+            >Create a new System</router-link
+          >
+        </p>
       </div>
       <div class="details">
         <template v-if="selected">

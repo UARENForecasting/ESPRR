@@ -53,7 +53,7 @@
           <label>
             North-South
             <input
-              style="width: 20px"
+              style="width: 3em"
               type="number"
               min="1"
               max="100"
@@ -63,7 +63,7 @@
           <label>
             East-West
             <input
-              style="width: 20px"
+              style="width: 3em"
               type="number"
               min="1"
               max="100"
@@ -214,7 +214,9 @@ export default class SystemMap extends Vue {
 
   @Watch("system")
   updateFromBoundingBox(): void {
-    this.initAspectRatio();
+    if (this.editable) {
+      this.initAspectRatio();
+    }
     this.centerMap();
   }
 
