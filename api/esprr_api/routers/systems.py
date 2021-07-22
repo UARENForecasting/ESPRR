@@ -244,7 +244,7 @@ def _convert_data(
                     "try retrieving as application/vnd.apache.arrow.file and converting"
                 ),
             )
-        csv = df.to_csv(None, index=False)
+        csv = df.tz_convert("Etc/GMT+7").to_csv(None, index=False)
         return response_class(csv)
 
 
@@ -258,8 +258,8 @@ def _convert_data(
                 "application/vnd.apache.arrow.file": {},
                 "text/csv": {
                     "example": """time,ac
-2019-01-01 00:00:00+00:00,10.2
-2019-02-01 01:00:00+00:00,8.2
+2019-01-01 00:00:00-07:00,10.2
+2019-02-01 01:00:00-07:00,8.2
 """
                 },
             },
