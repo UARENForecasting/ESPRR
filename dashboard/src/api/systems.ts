@@ -120,7 +120,7 @@ export async function startProcessing(
   const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
     headers: new Headers({
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application-json",
+      "Content-Type": "application/json",
     }),
     method: "post",
   });
