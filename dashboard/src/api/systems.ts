@@ -59,6 +59,7 @@ export async function createSystem(
   const response = await fetch("/api/systems/", {
     headers: new Headers({
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     }),
     method: "post",
     body: JSON.stringify(definition),
@@ -96,6 +97,7 @@ export async function updateSystem(
   const response = await fetch(`/api/systems/${systemId}`, {
     headers: new Headers({
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     }),
     method: "post",
     body: JSON.stringify(definition),
@@ -118,6 +120,7 @@ export async function startProcessing(
   const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
     headers: new Headers({
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     }),
     method: "post",
   });
