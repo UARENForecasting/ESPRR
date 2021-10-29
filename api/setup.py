@@ -10,6 +10,7 @@ if __name__ == "__main__":
             "cryptography",
             "dask",
             "fastapi",
+            "fiona",
             "geopandas",
             "httpx",
             "pandas",
