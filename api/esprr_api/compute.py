@@ -100,6 +100,11 @@ def compute_total_system_power(
             out = part
         else:
             out += part  # type: ignore
+    # hack to make output more consistent with actuals in not-clear conditions
+    clear = out["ac_power"] > 0.99 * out["clearsky_ac_power"]
+    out["ac_power"] = out["ac_power"].where(
+        clear, other=out["ac_power"] * 0.75
+    )  # type: ignore
     return out
 
 
