@@ -62,7 +62,7 @@ def compute_single_location(
             axis_azimuth=system.tracking.axis_azimuth,
             gcr=system.tracking.gcr,
             backtrack=system.tracking.backtracking,
-            max_angle=50.,
+            max_angle=50.0,
         )
     else:
         pvsystem = PVSystem(
