@@ -46,7 +46,7 @@ def compute_single_location(
         module_type="glass_polymer",
         racking_model="open_rack",
         module_parameters=dict(
-            gamma_pdc=-0.003,
+            gamma_pdc=-0.004,
             pdc0=fractional_capacity * system.dc_ac_ratio,
         ),
         inverter_parameters=dict(
@@ -62,6 +62,7 @@ def compute_single_location(
             axis_azimuth=system.tracking.axis_azimuth,
             gcr=system.tracking.gcr,
             backtrack=system.tracking.backtracking,
+            max_angle=50.0,
         )
     else:
         pvsystem = PVSystem(
