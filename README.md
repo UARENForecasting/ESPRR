@@ -85,7 +85,7 @@ cd dashboard
 
 npm install .
 
-npm run server -- --port 8080
+npm run serve -- --port 8080
 ```
 
 The development server should be available at (http://127.0.0.1:8080)[http://127.0.0.1:8080]
