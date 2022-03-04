@@ -115,28 +115,29 @@ grant execute on procedure `create_system` to 'apiuser'@'%';
 
 -- TODO: Complete system grouping code
 -- update system
-create definer = 'update_objects'@'localhost'
-  procedure update_system (auth0id varchar(32), systemid char(36), new_name varchar(128), system_def JSON)
-    comment 'Update a system definition'
+create definer = 'insert_objects'@'localhost'
+  procedure add_system_to_group(auth0id varchar(32), systemid char(36), groupid char(128))
+    comment 'Add a system to a group'
     modifies sql data sql security definer
   begin
-    declare binid binary(16) default (uuid_to_bin(systemid, 1));
-    declare allowed boolean default (check_users_system(auth0id, systemid));
-    declare uid binary(16) default get_user_binid(auth0id);
+    declare bin_system_id binary(16) default (uuid_to_bin(systemid, 1));
+    declare bin_group_id binary(16) default (uuid_to_bin(group, 1));
 
+    declare allowed boolean default (
+        check_users_system(auth0id, systemid)
+        AND check_users_system_group(auth0id, groupid)
+    );
     if allowed then
-      update systems set name = new_name, definition = system_def where id = binid;
+      insert into system_group_mapping (system_id, group_id) VALUES (bin_system_id, bin_group_id);
     else
-      signal sqlstate '42000' set message_text = 'Updating system not allowed',
+      signal sqlstate '42000' set message_text = 'Adding system to group not allowed',
         mysql_errno = 1142;
     end if;
   end;
 
-grant select(id), update on systems to 'update_objects'@'localhost';
-grant execute on function `check_users_system` to 'update_objects'@'localhost';
-grant execute on function `get_user_binid` to 'update_objects'@'localhost';
-grant execute on procedure `update_system` to 'update_objects'@'localhost';
-grant execute on procedure `update_system` to 'apiuser'@'%';
+grant insert on system_group_mapping to 'insert_objects'@'localhost';
+grant execute on procedure `add_system_to_group` to 'insert_objects'@'localhost';
+grant execute on procedure `add_system_to_group` to 'apiuser'@'%';
 
 -- delete system
 create definer = 'delete_objects'@'localhost'
