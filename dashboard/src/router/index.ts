@@ -1,5 +1,6 @@
 import VueRouter, { RouteConfig } from "vue-router";
 import Systems from "../views/Systems.vue";
+import Groups from "../views/Groups.vue";
 import SystemDefinition from "../views/SystemDefinition.vue";
 import SystemDetails from "../views/System.vue";
 import { authGuard } from "../auth/authGuard";
@@ -9,6 +10,11 @@ const routes: Array<RouteConfig> = [
     path: "/",
     name: "Systems",
     component: Systems,
+  },
+  {
+    path: "/groups",
+    name: "Groups",
+    component: Groups,
   },
   {
     path: "/system/new",
