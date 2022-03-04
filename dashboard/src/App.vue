@@ -15,7 +15,6 @@
         <template v-if="$auth.isAuthenticated">
           <router-link to="/">Systems</router-link>
           <router-link to="/groups">Groups</router-link>
-
         </template>
         <a href="/api/docs">API Documentation</a>
         <a href="https://github.com/uarenforecasting/esprr">Code</a>
