@@ -174,11 +174,11 @@ def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFr
                 ),
                 (
                     (f"{p}-min", "worst case ramp up"),
-                    _largest_ramps(p, data.ac_power, 0.999, zenith),
+                    _largest_ramps(p, data.ac_power, 0.9999, zenith),
                 ),
                 (
                     (f"{p}-min", "worst case ramp down"),
-                    _largest_ramps(p, data.ac_power, 0.001, zenith),
+                    _largest_ramps(p, data.ac_power, 0.0001, zenith),
                 ),
                 (
                     (f"{p}-min", "typical sunrise ramp"),
