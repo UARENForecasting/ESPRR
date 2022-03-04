@@ -126,7 +126,7 @@ def test_compute_statistics(system_def):
     out = compute.compute_statistics(system_def, data)
     assert isinstance(out, pd.DataFrame)
     assert len(out.columns) == 4
-    assert len(out) == 5 * 4 * 2
+    assert len(out) == 5 * 6 * 2
 
 
 def test_get_dataset(nsrdb_data, dataset_name):
