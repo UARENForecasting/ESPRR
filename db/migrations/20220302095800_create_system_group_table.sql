@@ -13,6 +13,18 @@ create table system_groups (
     on delete cascade on update restrict
 ) engine=innodb row_format=compressed;
 
+create table system_group_mapping (
+  group_id binary(16) not null,
+  system_id binary(16) not null,
+  created_at timestamp not null default current_timestamp,
+  primary key (group_id, system_id),
+  foreign key (group_id)
+    references system_groups(id)
+    on delete cascade on update restrict,
+  foreign key systems(id)
+    references system_groups(id)
+    on delete cascade on update restrict
+) engine=innodb row_format=compressed;
 
 create definer = 'select_objects'@'localhost'
   function check_users_system_group (auth0id varchar(32), groupid char(36))
@@ -24,7 +36,7 @@ create definer = 'select_objects'@'localhost'
                                               and user_id = get_user_binid(auth0id));
   end;
 
-grant execute on function `check_users_group` to 'select_objects'@'localhost';
+grant execute on function `check_users_system_group` to 'select_objects'@'localhost';
 
 -- get a group of systems
 create definer = 'select_objects'@'localhost'
@@ -51,11 +63,11 @@ grant execute on procedure `get_system_groups` to 'apiuser'@'%';
 -- list system_groups
 create definer = 'select_objects'@'localhost'
   procedure list_system_groups (auth0id varchar(32))
-    comment 'List all user system groupss'
+    comment 'List all user system groups'
     reads sql data sql security definer
   begin
     select bin_to_uuid(id, 1) as group_id, bin_to_uuid(user_id, 1) as user_id,
-           name, definition, created_at, modified_at from systems
+           name, created_at, modified_at from system_groups
      where user_id = get_user_binid(auth0id);
   end;
 
@@ -67,12 +79,20 @@ create definer = 'select_objects'@'localhost'
   function get_group_systems(auth0id varchar(32), groupid varchar(36))
   comment 'Get name and id of each system that belongs to a group'
   begin
-    select systems.name, systems.id from
+    select bin_to_uuid(systems.id, 1) as object_id,
+           bin_to_uuid(systems.user_id, 1) as user_id,
+           name,
+           definition,
+           created_at,
+           modified_at
+    from systems WHERE id in (
+        select system_id
+        from system_group_mapping
+        where group_id = uuid_to_bin(groupid, 1);
+    );
   end;
 
 grant execute on function `get_group_systems` to 'select_objects'@'localhost';
-
-
 
 -- create system group
 create definer = 'insert_objects'@'localhost'
@@ -93,6 +113,7 @@ grant execute on procedure `create_system` to 'insert_objects'@'localhost';
 grant execute on procedure `create_system` to 'apiuser'@'%';
 
 
+-- TODO: Complete system grouping code
 -- update system
 create definer = 'update_objects'@'localhost'
   procedure update_system (auth0id varchar(32), systemid char(36), new_name varchar(128), system_def JSON)

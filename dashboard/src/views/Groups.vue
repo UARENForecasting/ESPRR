@@ -7,33 +7,24 @@
     <hr />
     <div class="grid">
       <div class="groups-table">
-        <table v-if="systems.length > 0">
+        <table v-if="groups.length > 0">
           <thead>
             <tr>
               <th>Name</th>
-              <th>AC Capacity (MW)</th>
-              <th>Orientation/Tracking</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-bind:class="{
                 'selected-site':
-                  selected && system.object_id == selected.object_id,
+                  selected && group.object_id == selected.object_id,
               }"
-              v-for="system of systems"
-              :key="system.object_id"
+              v-for="group of groups"
+              :key="group.object_id"
               role="button"
-              @click="setSelected(system)"
+              @click="setSelected(group)"
             >
-              <td>{{ system.definition.name }}</td>
-              <td>{{ system.definition.ac_capacity }}</td>
-              <td>
-                <template v-if="'backtracking' in system.definition.tracking">
-                  Single Axis
-                </template>
-                <template v-else> Fixed Tilt</template>
-              </td>
+              <td>{{ group.definition.name }}</td>
             </tr>
           </tbody>
         </table>
@@ -47,73 +38,35 @@
       </div>
       <div class="details">
         <template v-if="selected">
-          <h3>System Details</h3>
-          <router-link
-            tag="button"
-            :to="{
-              name: 'System Details',
-              params: { systemId: selected.object_id },
-            }"
-            >NSRDB 2019 Results</router-link
-          >
+          <h3>Group Details</h3>
+          <!--
           <router-link
             tag="button"
             :to="{
               name: 'Update System',
               params: { systemId: selected.object_id },
-              query: { returnTo: 'systems' },
+              query: { returnTo: 'groups' },
             }"
-            >Update System</router-link
-          >
-          <button class="delete-system" @click="showDeleteDialog = true">
-            Delete System
-          </button>
-          <ul ckass="details-list" v-if="selected">
-            <li><b>Name: </b>{{ selected.definition.name }}</li>
-            <li>
-              <b>AC Capacity (MW): </b>{{ selected.definition.ac_capacity }}
-            </li>
-            <li><b>DC/AC Ratio: </b>{{ selected.definition.dc_ac_ratio }}</li>
-            <li><b>Albedo: </b>{{ selected.definition.albedo }}</li>
-            <li>
-              <template v-if="'backtracking' in selected.definition.tracking">
-                <b>Tracking: </b>
-                <ul class="tracking-details-list">
-                  <li>
-                    <b>Axis Tilt: </b
-                    >{{ selected.definition.tracking.axis_tilt }}&deg;
-                  </li>
-                  <li>
-                    <b>Axis Azimuth: </b
-                    >{{ selected.definition.tracking.axis_azimuth }}&deg;
-                  </li>
-                  <li>
-                    <b>Ground Coverage Ratio: </b
-                    >{{ selected.definition.tracking.gcr }}
-                  </li>
-                  <li>
-                    <b>Backtracking: </b
-                    >{{ selected.definition.tracking.backtracking }}
-                  </li>
-                </ul>
-              </template>
-              <template v-else>
-                <b>Panel Orientation: </b>
-                <ul class="tracking-details-list">
-                  <li>
-                    <b>Tilt: </b>{{ selected.definition.tracking.tilt }}&deg;
-                  </li>
-                  <li>
-                    <b>Azimuth: </b
-                    >{{ selected.definition.tracking.azimuth }}&deg;
-                  </li>
-                </ul>
-              </template>
-            </li>
+            >
+            -->
+            <a>Update Group</a>
+          <!--</router-link>-->
+          <!--<button class="delete-system" @click="showDeleteDialog = true">
+            Delete Group
+          </button>-->
+          <a>Delete System</a>
+          <p>
+            <b>Name: </b>{{ selected.definition.name }}
+          </p>
+          <ul class="details-list">
+            <li
+             v-for="system of selected.definition.systems"
+             :key="system.object_id" >{{ system.definition.name }}</li>
+            <!-- TODO: put the group overview stuff here -->
           </ul>
           <system-map
             :system="selected.definition"
-            :all_systems="notSelectedSystems"
+            :all_systems="selected.definition.systems"
             @new-selection="setSelected"
           />
         </template>
@@ -138,16 +91,53 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { StoredPVSystem } from "@/models";
+import { StoredPVSystem, StoredPVSystemGroup } from "@/models";
 
 import * as SystemsAPI from "@/api/systems";
 import SystemMap from "@/components/Map.vue";
 
 Vue.component("system-map", SystemMap);
 
+let some_systems = [
+    {
+        "object_id":"92688f97-9bee-11ec-8c79-0242ac110002",
+        "object_type":"system",
+        "created_at":"2022-03-04T19:09:10+00:00",
+        "modified_at":"2022-03-04T19:09:10+00:00",
+        "definition":{
+            "name":"New System","boundary":{"nw_corner":{"latitude":33.47725534446616,"longitude":-112.10808312274808},"se_corner":{"latitude":33.47569940977952,"longitude":-112.10621776166168}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}
+    },
+    {
+        "object_id":"1524579a-9c05-11ec-8c79-0242ac110002",
+        "object_type":"system",
+        "created_at":"2022-03-04T21:50:18+00:00",
+        "modified_at":"2022-03-04T21:50:18+00:00",
+        "definition":{
+            "name":"New System 1",
+            "boundary":{
+            "nw_corner":{
+                "latitude":33.47614197858108,
+                "longitude":-112.16302036131157
+            },
+            "se_corner":{
+                "latitude":33.47458604389473,
+                "longitude":-112.16115502419449}
+            },
+            "ac_capacity":1,
+            "dc_ac_ratio":1.2,
+            "albedo":0.2,
+            "tracking":{"tilt":0,"azimuth":180}}
+    },{
+        "object_id":"17bdf125-9c05-11ec-8c79-0242ac110002","object_type":"system","created_at":"2022-03-04T21:50:22+00:00","modified_at":"2022-03-04T21:50:22+00:00","definition":{"name":"New System 2","boundary":{"nw_corner":{"latitude":33.447604570515075,"longitude":-111.93297031768007},"se_corner":{"latitude":33.446048635836284,"longitude":-111.9311055944852}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}
+    }
+];
+
+let some_more_systems = [{"object_id":"1c444276-9c05-11ec-8c79-0242ac110002","object_type":"system","created_at":"2022-03-04T21:50:30+00:00","modified_at":"2022-03-04T21:50:30+00:00","definition":{"name":"New System 3","boundary":{"nw_corner":{"latitude":33.56002104168809,"longitude":-112.0283285405074},"se_corner":{"latitude":33.5584651069795,"longitude":-112.0264613938828}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}},{"object_id":"1f27b96a-9c05-11ec-8c79-0242ac110002","object_type":"system","created_at":"2022-03-04T21:50:35+00:00","modified_at":"2022-03-04T21:50:35+00:00","definition":{"name":"New System 4","boundary":{"nw_corner":{"latitude":33.49369608811077,"longitude":-112.02832487957924},"se_corner":{"latitude":33.49214015341977,"longitude":-112.0264591643916}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}},{"object_id":"23108cc5-9c05-11ec-8c79-0242ac110002","object_type":"system","created_at":"2022-03-04T21:50:41+00:00","modified_at":"2022-03-04T21:50:41+00:00","definition":{"name":"New System 5","boundary":{"nw_corner":{"latitude":33.17229979504934,"longitude":-111.93479395902408},"se_corner":{"latitude":33.170743860443224,"longitude":-111.9329351141132}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}},{"object_id":"26ddb97d-9c05-11ec-8c79-0242ac110002","object_type":"system","created_at":"2022-03-04T21:50:48+00:00","modified_at":"2022-03-04T21:50:48+00:00","definition":{"name":"New System 6","boundary":{"nw_corner":{"latitude":33.42468531239764,"longitude":-111.72325569978534},"se_corner":{"latitude":33.42312937772493,"longitude":-111.72139146902272}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}},{"object_id":"2d6c30d5-9c05-11ec-8c79-0242ac110002","object_type":"system","created_at":"2022-03-04T21:50:59+00:00","modified_at":"2022-03-04T21:50:59+00:00","definition":{"name":"New System 7","boundary":{"nw_corner":{"latitude":33.41769571762809,"longitude":-112.36881572254464},"se_corner":{"latitude":33.41613978295722,"longitude":-112.36695164184606}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}},{"object_id":"322d1035-9c05-11ec-8c79-0242ac110002","object_type":"system","created_at":"2022-03-04T21:51:07+00:00","modified_at":"2022-03-04T21:51:07+00:00","definition":{"name":"New System 8","boundary":{"nw_corner":{"latitude":33.55497978499569,"longitude":-112.16002058692186},"se_corner":{"latitude":33.55342385028843,"longitude":-112.15815354926356}},"ac_capacity":1,"dc_ac_ratio":1.2,"albedo":0.2,"tracking":{"tilt":0,"azimuth":180}}}];
+
 @Component
 export default class Groups extends Vue {
-  systems!: Array<StoredPVSystem>;
+  //systems!: Array<StoredPVSystem>;
+  groups!: Array<StoredPVSystemGroup>;
   selected!: Record<string, any>;
   showDeleteDialog!: boolean;
 
@@ -159,7 +149,7 @@ export default class Groups extends Vue {
 
   data(): Record<string, any> {
     return {
-      systems: [],
+      groups: [],
       selected: null,
       showDeleteDialog: false,
     };
@@ -169,37 +159,54 @@ export default class Groups extends Vue {
     // Load the the list of systems from the api
     // const token = await this.$auth.getTokenSilently();
     // this.systems = await SystemsAPI.listSystems(token);
-    this.systems = [
+    this.groups = [
         {
-            name: "Group 1",
-            systems: []
+            created_at: "now",
+            modified_at: "then",
+            object_id: "shvifty-five",
+            object_type: "system_group",
+            definition:  {
+                   name: "Group 1",
+                   systems: some_systems
+           }
+        },
+        {
+            created_at: "now",
+            modified_at: "then",
+            object_id: "shvifty-six",
+            object_type: "system_group",
+            definition:  {
+                   name: "Group 2",
+                   systems: some_more_systems
+           }
         }
+
     ];
-    //if (this.systems.length) {
-    //  this.setSelected(this.systems[0]);
-    //}
+    if (this.groups.length) {
+      this.setSelected(this.groups[0]);
+    }
   }
-  async deleteSystem(): Promise<void> {
+  async deleteGroup(): Promise<void> {
     if (this.selected != null) {
       const token = await this.$auth.getTokenSilently();
-      SystemsAPI.deleteSystem(token, this.selected.object_id)
-        .then(() => {
-          this.getSystems();
-          this.showDeleteDialog = false;
-        })
-        .catch((error: any) => {
-          // TODO: display errors to user
-          console.error(error);
-          this.showDeleteDialog = false;
-        });
+      //SystemsAPI.deleteSystem(token, this.selected.object_id)
+      //  .then(() => {
+      //    this.getSystems();
+      //    this.showDeleteDialog = false;
+      //  })
+      //  .catch((error: any) => {
+      //    // TODO: display errors to user
+      //    console.error(error);
+      //    this.showDeleteDialog = false;
+      //  });
     }
   }
   setSelected(selectedSystem: Record<string, any>): void {
     this.selected = selectedSystem;
   }
-  get notSelectedSystems(): Array<StoredPVSystem> {
-    return this.systems.filter((system: StoredPVSystem) => {
-      return system.object_id != this.selected.object_id;
+  get notSelectedSystems(): Array<StoredPVSystemGroup> {
+    return this.groups.filter((group: StoredPVSystemGroup) => {
+      return group.object_id != this.selected.object_id;
     });
   }
 }
