@@ -188,7 +188,6 @@ def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFr
                     (f"{p}-min", "typical sunset ramp"),
                     _typical_ss_ramps(p, data.clearsky_ac_power, 0.05, zenith),
                 ),
-                
             )
         },
     ).round(2)
