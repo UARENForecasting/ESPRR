@@ -50,7 +50,7 @@ create definer = 'select_objects'@'localhost'
     declare allowed boolean default (check_users_system_group(auth0id, groupid));
 
     if allowed then
-      select bin_to_uuid(id, 1) as groupid, bin_to_uuid(user_id, 1) as user_id,
+      select bin_to_uuid(id, 1) as group_id, bin_to_uuid(user_id, 1) as user_id,
       name, created_at, modified_at from system_groups where id = binid;
     else
       signal sqlstate '42000' set message_text = 'System inaccessible',
@@ -83,19 +83,26 @@ create definer = 'select_objects'@'localhost'
     comment 'Get name and id of each system that belongs to a group'
     reads sql data sql security definer
   begin
-    select bin_to_uuid(systems.id, 1) as object_id,
-           bin_to_uuid(systems.user_id, 1) as user_id,
-           name,
-           definition,
-           created_at,
-           modified_at
-    from systems WHERE id in (
-        select system_id
-        from system_group_mapping
-        where group_id = uuid_to_bin(groupid, 1)
-    );
+    declare allowed boolean default(check_users_system_group(auth0id, groupid));
+    if allowed then
+        select bin_to_uuid(systems.id, 1) as object_id,
+               bin_to_uuid(systems.user_id, 1) as user_id,
+               name,
+               definition,
+               created_at,
+               modified_at
+        from systems WHERE id in (
+            select system_id
+            from system_group_mapping
+            where group_id = uuid_to_bin(groupid, 1)
+        );
+    else
+        signal sqlstate '42000' set message_text = 'System group inaccessible',
+          mysql_errno = 1142;
+    end if;
   end;
 
+grant select on `system_group_mapping` to 'select_objects'@'localhost';
 grant execute on procedure `get_group_systems` to 'select_objects'@'localhost';
 
 -- create system group
@@ -115,6 +122,28 @@ grant insert on system_groups to 'insert_objects'@'localhost';
 grant execute on function `get_user_binid` to 'insert_objects'@'localhost';
 grant execute on procedure `create_system_group` to 'insert_objects'@'localhost';
 grant execute on procedure `create_system_group` to 'apiuser'@'%';
+
+-- update system group name
+create definer = 'update_objects'@'localhost'
+  procedure update_system_group (auth0id varchar(32), groupid char(36), new_name varchar(128))
+    comment 'Update system group'
+    modifies sql data sql security definer
+  begin
+
+    declare allowed boolean default(check_users_system_group(auth0id, groupid));
+    declare binid binary(16) default (uuid_to_bin(groupid, 1));
+    if allowed then
+        update system_groups set name = new_name where id = binid;
+    else
+        signal sqlstate '42000' set message_text = 'Updating system group not allowed',
+          mysql_errno = 1142;
+    end if;
+  end;
+
+grant select, update on system_groups to 'update_objects'@'localhost';
+grant execute on function `check_users_system_group` to 'update_objects'@'localhost';
+grant execute on procedure `update_system_group` to 'update_objects'@'localhost';
+grant execute on procedure `update_system_group` to 'apiuser'@'%';
 
 
 -- add a system to a group
@@ -143,7 +172,7 @@ grant execute on procedure `add_system_to_group` to 'insert_objects'@'localhost'
 grant execute on procedure `add_system_to_group` to 'apiuser'@'%';
 
 -- remove a system from a group
-create definer = 'insert_objects'@'localhost'
+create definer = 'delete_objects'@'localhost'
   procedure remove_system_from_group(auth0id varchar(32), systemid char(36), groupid char(128))
     comment 'Add a system to a group'
     modifies sql data sql security definer
@@ -163,8 +192,9 @@ create definer = 'insert_objects'@'localhost'
     end if;
   end;
 
-grant insert on system_group_mapping to 'insert_objects'@'localhost';
-grant execute on procedure `remove_system_from_group` to 'insert_objects'@'localhost';
+grant select, delete on system_group_mapping to 'delete_objects'@'localhost';
+grant execute on function `check_users_system_group` to 'delete_objects'@'localhost';
+grant execute on procedure `remove_system_from_group` to 'delete_objects'@'localhost';
 grant execute on procedure `remove_system_from_group` to 'apiuser'@'%';
 
 -- delete system
@@ -174,7 +204,7 @@ create definer = 'delete_objects'@'localhost'
     modifies sql data sql security definer
   begin
     declare binid binary(16) default (uuid_to_bin(groupid, 1));
-    declare allowed boolean default (check_users_system(auth0id, groupid));
+    declare allowed boolean default (check_users_system_group(auth0id, groupid));
     declare uid binary(16) default get_user_binid(auth0id);
 
     if allowed then
@@ -185,7 +215,7 @@ create definer = 'delete_objects'@'localhost'
     end if;
   end;
 
-grant select(id), delete on systems to 'delete_objects'@'localhost';
+grant select(id), delete on system_groups to 'delete_objects'@'localhost';
 grant execute on function `check_users_system_group` to 'delete_objects'@'localhost';
 grant execute on procedure `delete_system_group` to 'delete_objects'@'localhost';
 grant execute on procedure `delete_system_group` to 'apiuser'@'%';
@@ -193,6 +223,7 @@ grant execute on procedure `delete_system_group` to 'apiuser'@'%';
 -- migrate:down
 drop procedure delete_system_group;
 drop procedure create_system_group;
+drop procedure update_system_group;
 drop procedure list_system_groups;
 drop procedure get_system_group;
 drop procedure get_group_systems;

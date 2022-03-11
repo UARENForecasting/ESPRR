@@ -344,6 +344,38 @@ class StorageInterface:
         out: bytes = res["statistics"]
         return out
 
+    @ensure_user_exists
+    def create_system_group(self, name: str):
+        created = self._call_procedure_for_single("create_system_group", name)
+        return models.StoredObjectID(
+            object_id=created["group_id"], object_type="system_group"
+        )
+
+    def _parse_system_group(self, group_def, group_system):
+        systems = [self._parse_system(sys) for sys in group_systems]
+        group_def['object_id'] = group_def.pop('group_id')
+        group_def['object_type'] = 'system_group']
+        return model.StoredSystemGroup(**group_def)
+
+    def delete_system_group(self, group_id: UUID):
+        return
+
+    def get_system_group(self, group_id: UUID):
+        group = self._call_procedure_for_single("get_system_group", group_id)
+        group_systems = self._call_procedure("get_group_systems", group_id)
+        return self._parse_system_group(group, group_systems)
+
+    def list_system_groups(self):
+        return
+
+    def add_system_to_group(self, system_id: UUID, group_id: UUID):
+        return
+
+    def remove_system_from_group(self, system_id: UUID, group_id:UUID):
+        return
+
+
+
 
 class ComputeManagementInterface(StorageInterface):
     """A special interface to the database (that requires different permissions)

@@ -140,7 +140,7 @@ def test_add_system_to_group(cursor, auth0_id, group_id, system_def):
     assert res[1] == group_id
 
 
-def test_add_system_to_group_no_access(cursor, auth0_id, group_id, system_def):
+def test_add_system_to_group_no_system_access(cursor, auth0_id, group_id, system_def):
     num = cursor.execute(
         "call create_system(%s, %s, %s)", ("auth0|otheruser", "Another system", system_def[1])
     )
@@ -153,30 +153,73 @@ def test_add_system_to_group_no_access(cursor, auth0_id, group_id, system_def):
     assert err.value.args[0] == 1142
 
 
-# BELOW ARE COPIED SYSTEM TESTS FOR REFERENCE THAT HAVE NOT  YET BEEN ADJUSTED
-def test_update_system_same_name(cursor, system_id, auth0_id, system_def):
-    old_name = system_def[0]
-    cursor.execute("select count(name) from systems where name = %s", old_name)
-    assert len(cursor.fetchall()) == 1
-    cursor.execute("call create_system(%s, %s, %s)", (auth0_id, "aname", system_def[1]))
-    sysid = cursor.fetchone()[0]
-    with pytest.raises(IntegrityError) as err:
-        cursor.execute(
-            "call update_system(%s, %s, %s, %s)", (auth0_id, sysid, old_name, "{}")
-        )
-    assert err.value.args[0] == 1062
-
-
-def test_update_system_bad_user(cursor, system_id, bad_user):
+def test_add_system_to_group_no_group_access(cursor, auth0_id, group_id, system_def):
+    num = cursor.execute(
+        "call create_system(%s, %s, %s)", ("auth0|otheruser", "Another system", system_def[1])
+    )
+    assert num == 1
+    new_system_id = cursor.fetchone()[0]
     with pytest.raises(OperationalError) as err:
         cursor.execute(
-            "call update_system(%s, %s, %s, %s)",
-            (bad_user, system_id, "A System", "{}"),
+            "call add_system_to_group(%s, %s, %s)",
+            ('auth0|otheruser', new_system_id, group_id)
         )
     assert err.value.args[0] == 1142
 
 
-def test_update_system_bad_json(cursor, system_id, auth0_id):
+def test_update_system_group_name(cursor, auth0_id, group_id):
+    new_name = "Wow good group"
+    cursor.execute(
+        "call update_system_group(%s, %s, %s)",
+        (auth0_id, group_id, new_name)
+    )
+    cursor.execute(
+        "select name from system_groups where id = uuid_to_bin(%s, 1)",
+        (group_id))
+    name = cursor.fetchone()[0]
+    assert new_name == name
+
+
+def test_update_system_group_same_name(cursor, auth0_id, group_name, group_id):
+    cursor.execute(
+        "select count(name) from systems where name = %s",
+        group_name
+    )
+    assert len(cursor.fetchall()) == 1
+    num = cursor.execute(
+        "call create_system_group(%s, %s)",
+        (auth0_id, "Another group")
+    )
+    assert num == 1
+    new_system_id = cursor.fetchone()[0]
+    with pytest.raises(IntegrityError) as err:
+        cursor.execute(
+            "call update_system_group(%s, %s, %s)",
+            (auth0_id, new_system_id, group_name)
+        )
+    assert err.value.args[0] == 1062
+
+
+def test_update_system_group_bad_user(cursor, group_id,bad_user):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call update_system_group(%s, %s, %s)",
+            (bad_user, group_id, "A System"),
+        )
+    assert err.value.args[0] == 1142
+
+
+def test_update_system_group_dne(cursor, group_id, auth0_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call update_system_group(%s, %s, %s)",
+            (auth0_id, str(uuid1()), "A System"),
+        )
+    assert err.value.args[0] == 1142
+
+
+def test_update_system_group_long_name(cursor, system_id, auth0_id):
+    name = "a sys group" * 50
     with pytest.raises(OperationalError) as err:
         cursor.execute(
             "call update_system(%s, %s, %s, %s)", (auth0_id, system_id, "A System", "{")
@@ -184,39 +227,110 @@ def test_update_system_bad_json(cursor, system_id, auth0_id):
     assert err.value.args[0] == 3140
 
 
-def test_delete_system(cursor, system_id, auth0_id):
-    assert (
-        cursor.execute("select 1 from systems where id = uuid_to_bin(%s, 1)", system_id)
-        == 1
+def test_remove_system_from_group(cursor, group_id, system_id, auth0_id):
+    cursor.execute(
+        "select bin_to_uuid(system_id, 1) from system_group_mapping where group_id = uuid_to_bin(%s, 1)",
+        group_id
     )
-    cursor.execute("call delete_system(%s, %s)", (auth0_id, system_id))
+    assert cursor.fetchone()[0] == system_id
+    cursor.execute(
+        "call remove_system_from_group(%s, %s, %s)",
+        (auth0_id, system_id, group_id)
+    )
     assert (
-        cursor.execute("select 1 from systems where id = uuid_to_bin(%s, 1)", system_id)
+        cursor.execute(
+            "select 1 from system_group_mapping where group_id = uuid_to_bin(%s, 1)",
+            group_id
+        )
         == 0
     )
 
 
-def test_delete_system_bad_user(cursor, system_id, bad_user):
-    assert (
-        cursor.execute("select 1 from systems where id = uuid_to_bin(%s, 1)", system_id)
-        == 1
-    )
+def test_remove_system_from_group_bad_user(
+        cursor, group_id, system_id, bad_user):
     with pytest.raises(OperationalError) as err:
-        cursor.execute("call delete_system(%s, %s)", (bad_user, system_id))
-    assert err.value.args[0] == 1142
-    assert (
-        cursor.execute("select 1 from systems where id = uuid_to_bin(%s, 1)", system_id)
-        == 1
-    )
+        cursor.execute(
+            "call remove_system_from_group(%s, %s, %s)",
+            (bad_user, system_id, group_id)
+        )
+        assert err.value.args[0] == 1142
 
 
-def test_delete_system_bad_id(cursor, auth0_id):
+
+def test_remove_system_from_group_system_dne(
+        cursor, group_id, auth0_id):
     with pytest.raises(OperationalError) as err:
-        cursor.execute("call delete_system(%s, %s)", (auth0_id, str(uuid1())))
-    assert err.value.args[0] == 1142
+        cursor.execute(
+            "call remove_system_from_group(%s, %s, %s)",
+            (auth0_id, str(uuid1()), group_id)
+        )
+        assert err.value.args[0] == 1142
 
 
-def test_get_system_hash(cursor, auth0_id, system_id, system_hash):
-    cursor.execute(f'call get_system_hash("{auth0_id}", "{system_id}")')
-    out = cursor.fetchone()[0]
-    assert out == system_hash
+def test_delete_system_group(cursor, auth0_id, group_id):
+    cursor.execute(
+        "select 1 from system_groups where id = uuid_to_bin(%s, 1)",
+        group_id
+    )
+    assert cursor.fetchone()[0]
+    cursor.execute(
+        "call delete_system_group(%s, %s)",
+        (auth0_id, group_id)
+    )
+    cursor.execute(
+        "select 1 from system_groups where id = uuid_to_bin(%s, 1)",
+        group_id
+    )
+    assert cursor.fetchone() is None
+
+
+def test_delete_system_group_bad_user(cursor, bad_user, group_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call delete_system_group(%s, %s)",
+            (bad_user, group_id)
+        )
+        assert err.value.args[0] == 1142
+
+
+def test_delete_system_group_system_dne(cursor, auth0_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call delete_system_group(%s, %s)",
+            (auth0_id, str(uuid1()))
+        )
+        assert err.value.args[0] == 1142
+
+
+def test_get_group_systems(
+        dictcursor, auth0_id, group_id, system_id, system_def, user_id):
+    dictcursor.execute(
+        "call get_group_systems(%s, %s)",
+        (auth0_id, group_id)
+    )
+    system = dictcursor.fetchone()
+    assert system['object_id'] == system_id
+    assert system['definition'] == system_def[1]
+    assert system['name'] == system_def[0]
+    assert system['user_id'] == user_id
+    assert 'created_at' in system
+    assert 'modified_at' in system
+
+
+def test_get_group_systems_bad_user(
+        cursor, bad_user, group_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call get_group_systems(%s, %s)",
+            (bad_user, group_id)
+        )
+        assert err.value.args[0] == 1142
+
+
+def test_get_group_systems_group_dne(cursor, auth0_id):
+    with pytest.raises(OperationalError) as err:
+        cursor.execute(
+            "call get_group_systems(%s, %s)",
+            (auth0_id, str(uuid1()))
+        )
+        assert err.value.args[0] == 1142
