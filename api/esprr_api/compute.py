@@ -191,7 +191,7 @@ def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFr
 def _get_dataset(dataset_name: models.DatasetEnum) -> NSRDBDataset:
     # will take about two seconds to load grid, could possibly preload
     # before the RQ fork, but not worth it for now
-    ds = NSRDBDataset()
+    ds = NSRDBDataset(dataset_name)
     ds.load_grid()
     return ds
 
