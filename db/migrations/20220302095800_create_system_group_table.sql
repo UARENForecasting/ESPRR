@@ -85,7 +85,7 @@ create definer = 'select_objects'@'localhost'
   begin
     declare allowed boolean default(check_users_system_group(auth0id, groupid));
     if allowed then
-        select bin_to_uuid(systems.id, 1) as object_id,
+        select bin_to_uuid(systems.id, 1) as system_id,
                bin_to_uuid(systems.user_id, 1) as user_id,
                name,
                definition,
@@ -104,6 +104,7 @@ create definer = 'select_objects'@'localhost'
 
 grant select on `system_group_mapping` to 'select_objects'@'localhost';
 grant execute on procedure `get_group_systems` to 'select_objects'@'localhost';
+grant execute on procedure `get_group_systems` to 'apiuser'@'%';
 
 -- create system group
 create definer = 'insert_objects'@'localhost'
@@ -220,7 +221,41 @@ grant execute on function `check_users_system_group` to 'delete_objects'@'localh
 grant execute on procedure `delete_system_group` to 'delete_objects'@'localhost';
 grant execute on procedure `delete_system_group` to 'apiuser'@'%';
 
+create procedure _add_example_data_2()
+  modifies sql data
+begin
+  set @sysid = uuid_to_bin('6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9', 1);
+  set @groupid = uuid_to_bin('3e622aaa-a187-11ec-ad64-54bf64606445', 1);
+  set @userid = uuid_to_bin('17fbf1c6-34bd-11eb-af43-f4939feddd82', 1);
+  insert into system_groups (
+    id, name, user_id
+  ) VALUES (
+    @groupid, "A System Group", @userid
+  );
+  insert into system_group_mapping (
+    group_id, system_id
+  ) VALUES (
+    @groupid, @sysid
+  );
+end;
+
+drop procedure add_example_data;
+
+create procedure add_example_data()
+begin
+  call _add_example_data_0();
+  call _add_example_data_1();
+  call _add_example_data_2();
+end;
+
 -- migrate:down
+drop procedure add_example_data;
+create procedure add_example_data()
+begin
+  call _add_example_data_0();
+  call _add_example_data_1();
+end;
+
 drop procedure delete_system_group;
 drop procedure create_system_group;
 drop procedure update_system_group;
@@ -232,3 +267,4 @@ drop procedure remove_system_from_group;
 drop function check_users_system_group;
 drop table system_group_mapping;
 drop table system_groups;
+drop procedure _add_example_data_2;

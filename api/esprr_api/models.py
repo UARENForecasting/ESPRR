@@ -328,19 +328,22 @@ class ManagementSystemDataStatus(ThisBase):
         )
 
 
-class SystemGroup(ThisBase):
+class BaseSystemGroup(ThisBase):
     """Container for multiple systems"""
 
     name: str = UserString(
         ...,
         description="Name of the system group",
     )
-    systems: List[StoredPVSystem] = []
 
 
-class StoredSystemGroup(ThisBase):
-    definition = SystemGroup
-    object_type = "system_group"
+class SystemGroup(BaseSystemGroup):
+    systems: List[StoredPVSystem]
+
+
+class StoredSystemGroup(StoredObject):
+    # Use union so that we can omit systems when listing
+    definition: Union[BaseSystemGroup, SystemGroup]
 
     class Config:
         schema_extra = {
@@ -351,6 +354,7 @@ class StoredSystemGroup(ThisBase):
                 "modified_at": "2020-12-01T01:23:00+00:00",
                 "definition": {
                     "name": "Test system group",
-                    "systems": [StoredPVSystem.Config.schema_extra]
+                    "systems": [StoredPVSystem.Config.schema_extra],
+                },
             }
         }

@@ -351,14 +351,24 @@ class StorageInterface:
             object_id=created["group_id"], object_type="system_group"
         )
 
-    def _parse_system_group(self, group_def, group_system):
-        systems = [self._parse_system(sys) for sys in group_systems]
-        group_def['object_id'] = group_def.pop('group_id')
-        group_def['object_type'] = 'system_group']
-        return model.StoredSystemGroup(**group_def)
+    def update_system_group(self, group_id: UUID, name: str):
+        self._call_procedure_for_single("update_system_group", group_id, name)
+        return models.StoredObjectID(object_id=group_id, object_type="system_group")
 
     def delete_system_group(self, group_id: UUID):
-        return
+        self._call_procedure("delete_system_group", group_id)
+
+    def _parse_system_group(self, group, group_systems=None):
+        definition = {"name": group.pop("name")}
+        if group_systems is not None:
+            # systems are an optional field, so that when we're listing
+            # groups, we don't have to make so many calls
+            systems = [self._parse_system(sys) for sys in group_systems]
+            definition["systems"] = systems
+        group["object_id"] = group.pop("group_id")
+        group["object_type"] = "system_group"
+        group["definition"] = definition
+        return models.StoredSystemGroup(**group)
 
     def get_system_group(self, group_id: UUID):
         group = self._call_procedure_for_single("get_system_group", group_id)
@@ -366,15 +376,17 @@ class StorageInterface:
         return self._parse_system_group(group, group_systems)
 
     def list_system_groups(self):
-        return
+        groups = self._call_procedure("list_system_groups")
+        out = []
+        for group in groups:
+            out.append(self._parse_system_group(group))
+        return out
 
     def add_system_to_group(self, system_id: UUID, group_id: UUID):
-        return
+        self._call_procedure("add_system_to_group", system_id, group_id)
 
-    def remove_system_from_group(self, system_id: UUID, group_id:UUID):
-        return
-
-
+    def remove_system_from_group(self, system_id: UUID, group_id: UUID):
+        self._call_procedure("remove_system_from_group", system_id, group_id)
 
 
 class ComputeManagementInterface(StorageInterface):
