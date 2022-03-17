@@ -52,9 +52,25 @@
             tag="button"
             :to="{
               name: 'System Details',
-              params: { systemId: selected.object_id },
+              params: { systemId: selected.object_id, dataset: 'NSRDB_2018' },
             }"
-            >NSRDB 2019 Results</router-link
+            >2018 Results</router-link
+          >
+          <router-link
+            tag="button"
+            :to="{
+              name: 'System Details',
+              params: { systemId: selected.object_id, dataset: 'NSRDB_2019' },
+            }"
+            >2019 Results</router-link
+          >
+          <router-link
+            tag="button"
+            :to="{
+              name: 'System Details',
+              params: { systemId: selected.object_id, dataset: 'NSRDB_2020' },
+            }"
+            >2020 Results</router-link
           >
           <router-link
             tag="button"

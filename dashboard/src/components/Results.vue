@@ -10,6 +10,10 @@
       <br />
       <button @click="recompute">Recalculate</button>
     </div>
+    <div v-if="status == 'broken'">
+      Calculations could not be performed for this dataset. Please contact an
+      administrator.
+    </div>
     <div v-if="status == 'queued'">
       Performance calculation is queued and will be processed shortly.
     </div>
@@ -217,15 +221,17 @@ export default class DataSetResults extends Vue {
 
   async updateStatus(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    SystemsAPI.getResult(token, this.system.object_id, this.dataset).then(
-      (statusResponse: any) => {
+    SystemsAPI.getResult(token, this.system.object_id, this.dataset)
+      .then((statusResponse: any) => {
         this.status = statusResponse.status;
         if (this.status == "error") {
           this.errors = statusResponse.error;
         }
         this.initialize();
-      }
-    );
+      })
+      .catch(() => {
+        this.recompute();
+      });
   }
 
   async loadTimeseries(): Promise<void> {
@@ -300,12 +306,13 @@ export default class DataSetResults extends Vue {
   /* istanbul ignore next */
   async recompute(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    await SystemsAPI.startProcessing(
-      token,
-      this.system.object_id,
-      this.dataset
-    );
-    window.location.reload();
+    await SystemsAPI.startProcessing(token, this.system.object_id, this.dataset)
+      .then(() => {
+        this.updateStatus();
+      })
+      .catch(() => {
+        this.status = "broken";
+      });
   }
 }
 </script>

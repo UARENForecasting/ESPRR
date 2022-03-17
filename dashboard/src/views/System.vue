@@ -68,7 +68,7 @@
         </div>
       </div>
       <div>
-        <results v-if="system" :system="system" />
+        <results v-if="system" :system="system" :dataset="dataset" />
       </div>
       <transition name="fade">
         <div v-if="showDeleteDialog" id="delete-dialog">
@@ -103,6 +103,7 @@ Vue.component("results", Results);
 @Component
 export default class SystemDetails extends Vue {
   @Prop() systemId!: string;
+  @Prop() dataset!: string;
 
   systems!: Array<StoredPVSystem>;
   system!: Record<string, any>;

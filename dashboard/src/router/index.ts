@@ -17,7 +17,7 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard,
   },
   {
-    path: "/system/:systemId",
+    path: "/system/:systemId/:dataset",
     name: "System Details",
     component: SystemDetails,
     props: true,
