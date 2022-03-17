@@ -31,7 +31,8 @@ class NSRDBDataset:
 
     def __init__(self, data_path: Optional[Path] = None) -> None:
         self.data_path: Path = (
-            data_path if data_path is not None else settings.nsrdb_data_path["NSRDB_2019"]
+            data_path if data_path is not None
+            else settings.nsrdb_data_path["NSRDB_2019"]
         )
         self._grid: Optional[geopandas.GeoSeries] = None
         self._boundary: Optional[geometry.Polygon] = None
