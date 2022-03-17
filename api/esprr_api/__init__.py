@@ -29,10 +29,10 @@ class Settings(BaseSettings):
     redis_health_check_interval: int = 10
 
     nsrdb_data_path: dict[str, Path] = {
-                        "NSRDB_2018": Path("/d4/uaren/nsrdb/nsrdb_2018.zarr"),
-                        "NSRDB_2019": Path("/d4/uaren/nsrdb/nsrdb_2019.zarr"),
-                        "NSRDB_2020": Path("/d4/uaren/nsrdb/nsrdb_2020.zarr"),
-                    }
+        "NSRDB_2018": Path("/d4/uaren/nsrdb/nsrdb_2018.zarr"),
+        "NSRDB_2019": Path("/d4/uaren/nsrdb/nsrdb_2019.zarr"),
+        "NSRDB_2020": Path("/d4/uaren/nsrdb/nsrdb_2020.zarr"),
+    }
     sync_jobs_period: int = 15
 
     class Config:
