@@ -10,6 +10,10 @@
       <br />
       <button @click="recompute">Recalculate</button>
     </div>
+    <div v-if="status == 'nonexistent'">
+      You are trying to access an invalid dataset. Valid datasets are
+      {{ this.validDatasets.join(", ") }}.
+    </div>
     <div v-if="status == 'broken'">
       Calculations could not be performed for this dataset. Please contact an
       administrator.
@@ -167,10 +171,21 @@ export default class DataSetResults extends Vue {
   active!: boolean;
   asRampRate!: number;
 
+  validDatasets = ["NSRDB_2019", "NSRDB_2018", "NSRDB_2017"];
+
+  isValidDataset(): boolean {
+    return this.validDatasets.indexOf(this.dataset) > -1;
+  }
   created(): void {
-    this.active = true;
-    this.updateStatus();
-    this.asRampRate = 0;
+    if (this.isValidDataset()) {
+      this.active = true;
+      this.updateStatus();
+      this.asRampRate = 0;
+    } else {
+      // The user entered an invalid dataset
+      this.status = "nonexistent";
+      return;
+    }
   }
 
   destroyed(): void {
