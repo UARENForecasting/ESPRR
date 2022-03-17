@@ -13,7 +13,7 @@ from pvlib.solarposition import get_solarposition  # type: ignore
 
 
 from . import models, storage, utils
-from .data.nsrdb import NSRDBDataset
+from .data.nsrdb import NSRDBDataset, find_dataset_path
 
 
 class CachedLocation(Location):
@@ -199,7 +199,8 @@ def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFr
 def _get_dataset(dataset_name: models.DatasetEnum) -> NSRDBDataset:
     # will take about two seconds to load grid, could possibly preload
     # before the RQ fork, but not worth it for now
-    ds = NSRDBDataset(dataset_name)
+    dataset_path = find_dataset_path(dataset_name)
+    ds = NSRDBDataset(dataset_path)
     ds.load_grid()
     return ds
 

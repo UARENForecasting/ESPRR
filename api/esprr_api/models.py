@@ -272,6 +272,7 @@ class DatasetEnum(str, Enum):
     nsrdb_2019 = "NSRDB_2019"
     nsrdb_2020 = "NSRDB_2020"
 
+
 class DataStatusEnum(str, Enum):
     queued = "queued"
     running = "running"
