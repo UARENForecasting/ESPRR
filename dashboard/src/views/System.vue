@@ -9,8 +9,11 @@
             <router-link
               tag="button"
               :to="{
-                name: 'Update System',
-                params: { systemId: system.object_id },
+                name: 'Update System dataset return',
+                params: {
+                  systemId: system.object_id,
+                  dataset: this.dataset,
+                },
                 query: { returnTo: 'details' },
               }"
               >Update System</router-link
@@ -68,7 +71,7 @@
         </div>
       </div>
       <div>
-        <results v-if="system" :system="system" />
+        <results v-if="system" :system="system" :dataset="dataset" />
       </div>
       <transition name="fade">
         <div v-if="showDeleteDialog" id="delete-dialog">
@@ -103,6 +106,7 @@ Vue.component("results", Results);
 @Component
 export default class SystemDetails extends Vue {
   @Prop() systemId!: string;
+  @Prop() dataset!: string;
 
   systems!: Array<StoredPVSystem>;
   system!: Record<string, any>;

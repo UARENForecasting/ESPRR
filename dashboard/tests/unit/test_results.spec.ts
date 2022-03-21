@@ -213,4 +213,27 @@ describe("Test Results component", () => {
     expect(wrapper.vm.$data.status).toBe(null);
     expect(wrapper.vm.$data.errors).toBe(null);
   });
+  it("Test results bad dataset", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        system: systems[0],
+        dataset: "NSRDB_2017",
+      },
+    });
+
+    await flushPromises();
+    const warning = wrapper.find(".no-dataset-warning");
+    expect(warning.text()).toBe(
+      "You are trying to access an invalid dataset. Valid datasets are\n" +
+        "    NSRDB_2018, NSRDB_2019, NSRDB_2020."
+    );
+  });
 });

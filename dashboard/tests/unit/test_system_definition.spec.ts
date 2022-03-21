@@ -425,8 +425,11 @@ describe("Test System Definition", () => {
     document.body.appendChild(appTarget);
 
     router.push({
-      name: "Update System",
-      params: { systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9" },
+      name: "Update System dataset return",
+      params: {
+        systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+        dataset: "NSRDB_2019",
+      },
       query: { returnTo: "details" },
     });
 
@@ -438,6 +441,7 @@ describe("Test System Definition", () => {
       stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+        dataset: "NSRDB_2019",
       },
     });
     await flushPromises();
@@ -458,7 +462,7 @@ describe("Test System Definition", () => {
     expect(updateSystem).toHaveBeenCalled();
     // @ts-expect-error ts compains about history on VueRouter
     expect(router.history.current.path).toBe(
-      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
+      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9/NSRDB_2019"
     );
     appTarget.remove();
   });
