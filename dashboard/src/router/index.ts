@@ -30,6 +30,13 @@ const routes: Array<RouteConfig> = [
     props: true,
     beforeEnter: authGuard,
   },
+  {
+    path: "/system/:systemId/edit/:dataset",
+    name: "Update System dataset return",
+    component: SystemDefinition,
+    props: true,
+    beforeEnter: authGuard,
+  },
 ];
 
 const router = new VueRouter({

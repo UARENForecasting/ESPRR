@@ -210,6 +210,7 @@ interface HTMLInputEvent extends Event {
 @Component
 export default class SystemDefinition extends Vue {
   @Prop() systemId!: string;
+  @Prop() dataset!: string;
 
   definition!: PVSystem;
   trackingType!: string;
@@ -290,11 +291,12 @@ export default class SystemDefinition extends Vue {
 
   navigateToPrevious(): void {
     if ("returnTo" in this.$route.query) {
-      if (this.$route.query.returnTo == "details") {
+      if (this.$route.query.returnTo == "details" && this.dataset) {
         this.$router.push({
           name: "System Details",
           params: {
             systemId: this.systemId,
+            dataset: this.dataset,
           },
         });
       } else {
@@ -315,7 +317,7 @@ export default class SystemDefinition extends Vue {
           SystemsApi.startProcessing(
             token,
             systemResponse.object_id,
-            "NSRDB_2019"
+            this.dataset
           ).then(() => {
             this.navigateToPrevious();
             this.errors = null;

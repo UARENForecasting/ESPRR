@@ -9,8 +9,11 @@
             <router-link
               tag="button"
               :to="{
-                name: 'Update System',
-                params: { systemId: system.object_id },
+                name: 'Update System dataset return',
+                params: {
+                  systemId: system.object_id,
+                  dataset: this.dataset,
+                },
                 query: { returnTo: 'details' },
               }"
               >Update System</router-link
