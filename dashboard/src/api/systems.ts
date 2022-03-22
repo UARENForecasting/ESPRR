@@ -107,7 +107,14 @@ export async function updateSystem(
   } else if (response.status == 422) {
     throw await response.json();
   } else if (response.status == 409) {
-    throw `Site with name ${definition.name} already exists`;
+    throw {
+      detail: [
+        {
+          loc: ["body", "name"],
+          msg: `Site with name ${definition.name} already exists`,
+        },
+      ],
+    };
   } else {
     throw "Could not create system";
   }

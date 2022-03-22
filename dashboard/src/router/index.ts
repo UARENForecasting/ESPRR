@@ -17,7 +17,7 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard,
   },
   {
-    path: "/system/:systemId",
+    path: "/system/:systemId/:dataset",
     name: "System Details",
     component: SystemDetails,
     props: true,
@@ -26,6 +26,13 @@ const routes: Array<RouteConfig> = [
   {
     path: "/system/:systemId/edit",
     name: "Update System",
+    component: SystemDefinition,
+    props: true,
+    beforeEnter: authGuard,
+  },
+  {
+    path: "/system/:systemId/edit/:dataset",
+    name: "Update System dataset return",
     component: SystemDefinition,
     props: true,
     beforeEnter: authGuard,

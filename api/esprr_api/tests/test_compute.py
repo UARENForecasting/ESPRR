@@ -130,7 +130,7 @@ def test_compute_statistics(system_def):
 
 
 def test_get_dataset(nsrdb_data, dataset_name):
-    settings.nsrdb_data_path = nsrdb_data
+    settings.nsrdb_data_path["NSRDB_2019"] = nsrdb_data
     ds = compute._get_dataset(dataset_name)
     assert isinstance(ds, nsrdb.NSRDBDataset)
     ds.grid

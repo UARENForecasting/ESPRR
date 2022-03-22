@@ -16,7 +16,9 @@ export const displayNames: Record<string, any> = {
   "worst case ramp down": "Worst-case ramp down (p0.001)",
   "typical sunrise ramp": "Typical Sunrise",
   "typical sunset ramp": "Typical Sunset",
+  NSRDB_2018: "NSRDB 2018",
   NSRDB_2019: "NSRDB 2019",
+  NSRDB_2020: "NSRDB 2020",
 };
 
 export function getDisplayName(machineName: string): string {
