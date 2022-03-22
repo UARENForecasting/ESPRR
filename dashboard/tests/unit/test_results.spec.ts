@@ -4,7 +4,7 @@ import StatisticsTable from "@/components/data/StatisticsTable.vue";
 import QuickTable from "@/components/data/QuickTable.vue";
 import { $auth } from "./mockauth";
 import { systems, tsTable, statisticsTable } from "@/api/__mocks__/systems";
-import { getResult } from "@/api/systems";
+import { getResult, startProcessing } from "@/api/systems";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import flushPromises from "flush-promises";
@@ -235,5 +235,31 @@ describe("Test Results component", () => {
       "You are trying to access an invalid dataset. Valid datasets are\n" +
         "    NSRDB_2018, NSRDB_2019, NSRDB_2020."
     );
+  });
+  it("Test result dne", async () => {
+    // @ts-expect-error mocked fn
+    getResult.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    // @ts-expect-error mocked fn
+    startProcessing.mockImplementationOnce(async () => {
+        return;
+    });
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        system: systems[0],
+      },
+    });
+
+    await flushPromises();
+    expect(startProcessing).toHaveBeenCalled();
   });
 });
