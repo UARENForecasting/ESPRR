@@ -286,7 +286,7 @@ def test_get_group_systems(
 ):
     dictcursor.execute("call get_group_systems(%s, %s)", (auth0_id, group_id))
     system = dictcursor.fetchone()
-    assert system["object_id"] == system_id
+    assert system["system_id"] == system_id
     assert system["definition"] == system_def[1]
     assert system["name"] == system_def[0]
     assert system["user_id"] == user_id
