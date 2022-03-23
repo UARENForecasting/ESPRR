@@ -215,14 +215,11 @@ class StorageInterface:
     ) -> dict:
         """Wrapper handling try/except logic when a single value is expected"""
         # adapted from the SolarForecastArbiter API under the above MIT license
-        try:
-            result: dict = self._call_procedure(
-                procedure_name,
-                *args,
-                with_current_user=with_current_user,
-            )[0]
-        except IndexError:
-            raise HTTPException(status_code=404)
+        result: dict = self._call_procedure(
+            procedure_name,
+            *args,
+            with_current_user=with_current_user,
+        )[0]
         return result
 
     def create_user_if_not_exists(self) -> str:
@@ -352,7 +349,7 @@ class StorageInterface:
         )
 
     def update_system_group(self, group_id: UUID, name: str):
-        self._call_procedure_for_single("update_system_group", group_id, name)
+        self._call_procedure("update_system_group", group_id, name)
         return models.StoredObjectID(object_id=group_id, object_type="system_group")
 
     def delete_system_group(self, group_id: UUID):
