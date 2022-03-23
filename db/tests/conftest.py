@@ -43,17 +43,21 @@ def bad_user(request):
 def system_id():
     return str(uuid1())
 
+
 @pytest.fixture(scope="session")
 def group_id():
     return str(uuid1())
+
 
 @pytest.fixture(scope="session")
 def system_def():
     return "A System", json.dumps({"version": "1", "other_parameters": []})
 
+
 @pytest.fixture(scope="session")
 def group_name():
     return "A Group"
+
 
 @pytest.fixture(scope="session")
 def system_hash():
@@ -67,14 +71,7 @@ def otherid():
 
 @pytest.fixture(scope="session")
 def standard_test_data(
-    auth0_id,
-    user_id,
-    connection,
-    system_id,
-    system_def,
-    otherid,
-    group_id,
-    group_name
+    auth0_id, user_id, connection, system_id, system_def, otherid, group_id, group_name
 ):
     curs = connection.cursor()
     curs.executemany(
@@ -89,12 +86,12 @@ def standard_test_data(
     curs.execute(
         "insert into system_groups (id, user_id, name) values "
         "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1), %s)",
-        (group_id, user_id, group_name)
+        (group_id, user_id, group_name),
     )
     curs.execute(
         "insert into system_group_mapping (system_id, group_id) values "
         "(uuid_to_bin(%s, 1), uuid_to_bin(%s, 1))",
-        (system_id, group_id)
+        (system_id, group_id),
     )
     extime = dt.datetime(2020, 1, 3, 12, 34)
     err = "[]"

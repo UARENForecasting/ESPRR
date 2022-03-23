@@ -141,12 +141,12 @@ def stored_system(system_def, system_id):
 
 @pytest.fixture()
 def group_id():
-    return '3e622aaa-a187-11ec-ad64-54bf64606445'
+    return "3e622aaa-a187-11ec-ad64-54bf64606445"
 
 
 @pytest.fixture()
 def group_name():
-    return 'A System Group'
+    return "A System Group"
 
 
 @pytest.fixture()
@@ -155,12 +155,9 @@ def stored_system_group(group_id, group_name, stored_system):
     return models.StoredSystemGroup(
         object_id=group_id,
         object_type="system_group",
-        definition={
-            "name": group_name,
-            "systems": [stored_system]
-        },
+        definition={"name": group_name, "systems": [stored_system]},
         created_at=extime,
-        modified_at=extime
+        modified_at=extime,
     )
 
 
