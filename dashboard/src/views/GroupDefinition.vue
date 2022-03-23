@@ -1,7 +1,7 @@
 <template>
   <div class="system-definition-form">
-    <h2 v-if="systemId">Update System</h2>
-    <h2 v-else>Create New System</h2>
+    <h2 v-if="groupId">Update System Group</h2>
+    <h2 v-else>Create New System Group</h2>
     <hr />
     <div v-if="definition" class="definition-container">
       <div id="definition-inputs">
@@ -10,7 +10,11 @@
             <b>{{ error }}:</b> {{ errors[error] }}
           </li>
         </ul>
-        <form v-if="definition" id="system-definition" @submit="submitSystem">
+        <form
+          v-if="definition"
+          id="system-definition"
+          @submit="submitSystemGroup"
+        >
           <label
             title="A name for this system. Most special characters beyond space, comma, hyphen, and parentheses are not allowed."
             >Name:
@@ -22,198 +26,48 @@
               pattern="^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]*$"
               v-model="definition.name"
           /></label>
-          <label title="AC Capacity of the system in MW"
-            >AC Capacity (MW):
-            <input
-              type="number"
-              step="any"
-              min="0"
-              required
-              v-model.number="definition.ac_capacity"
-          /></label>
-          <label title="Ratio of installed DC capacity to AC capacity"
-            >DC/AC Ratio:
-            <input
-              type="number"
-              step="any"
-              min="0"
-              required
-              v-model.number="definition.dc_ac_ratio"
-          /></label>
-          <label title="Sets Albedo for common surface types"
-            >Surface Type:
-            <select
-              id="albedoSelect"
-              name="albedoSelect"
-              @change="changeAlbedo"
-            >
-              <option value="" disable selected>manually set albedo</option>
-              <option
-                v-for="k in Object.keys(surfaceTypes)"
-                :key="k"
-                :name="k"
-                :value="k"
-              >
-                {{ k }}
-              </option>
-            </select>
-          </label>
-          <label title="Albedo of the ground where system is installed"
-            >Albedo:
-            <input
-              type="number"
-              step="any"
-              min="0"
-              max="1"
-              required
-              v-model.number="definition.albedo"
-          /></label>
-
-          <fieldset class="tracking">
-            <legend>Panel Orientation/Tracking</legend>
-            <label
-              title="Choose between PV panels that are mounted at a fixed orientation or on a single-axis tracking system"
-            >
-              Tracking Type:
-              <input type="radio" v-model="trackingType" value="fixed" />Fixed
-              Tilt
+          <h2>Systems:</h2>
+          <ul v-if="this.systems">
+            <li v-if="this.systems.length == 0">No systems defined</li>
+            <li v-for="system of this.systems" :key="system.object_id">
               <input
-                type="radio"
-                v-model="trackingType"
-                value="singleAxis"
-              />Single Axis
-            </label>
-            <fieldset class="fixed" v-if="trackingType == 'fixed'">
-              <label title="Tilt of the panels in degrees from horizontal">
-                Tilt:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="90"
-                  required
-                  v-model.number="definition.tracking.tilt"
-                />
-              </label>
-              <label
-                title="Azimuth of the panels in degrees from North. 180 == South"
-              >
-                Azimuth:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="360"
-                  required
-                  v-model.number="definition.tracking.azimuth"
-                />
-              </label>
-            </fieldset>
-            <fieldset class="fixed" v-else>
-              <label
-                title="Tilt (in degrees) of the axis of rotation with respect to horizontal. Typically 0."
-              >
-                Axis Tilt:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="90"
-                  required
-                  v-model.number="definition.tracking.axis_tilt"
-                />
-              </label>
-              <label
-                title="The compass direction along which the axis of rotation lies. Measured in decimal degrees east of north. Typically 0."
-              >
-                Axis Azimuth:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="360"
-                  required
-                  v-model.number="definition.tracking.axis_azimuth"
-                />
-              </label>
-              <label>
-                Ground Coverage Ratio:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="1"
-                  required
-                  v-model.number="definition.tracking.gcr"
-                />
-              </label>
-              <label
-                title='Controls whether the tracker has the capability to "backtrack" to avoid row-to-row shading. False denotes no backtrack capability. True denotes backtrack capability.'
-              >
-                Backtracking:
-                <input
-                  type="radio"
-                  v-model="definition.tracking.backtracking"
-                  :value="true"
-                />True
-                <input
-                  type="radio"
-                  v-model="definition.tracking.backtracking"
-                  :value="false"
-                />False
-              </label>
-            </fieldset>
-          </fieldset>
-          <button type="submit" :disabled="!boundarySelected">
-            <template v-if="systemId">Update</template
-            ><template v-else>Create</template> System</button
-          ><span v-if="!boundarySelected"
-            >You must place the system on the map to the left before
-            creation.</span
-          >
+                type="checkbox"
+                :value="system.object_id"
+                v-model="selectedSystems"
+              />
+              {{ system.definition.name }}
+            </li>
+          </ul>
+          <button type="submit">
+            <template v-if="groupId">Update</template
+            ><template v-else>Create</template> System Group
+          </button>
         </form>
       </div>
-      <div id="definition-map" v-if="this.systems">
-        <system-map
-          :editable="true"
-          :system="definition"
-          :all_systems="otherSystems"
-          :dc_capacity="dcCapacity"
-          @bounds-updated="updateBounds"
-        />
-      </div>
     </div>
-    <div v-else>The System could not be found.</div>
+    <div v-else>The System Group could not be found.</div>
   </div>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import * as SystemsApi from "@/api/systems";
+import { Component, Vue, Prop } from "vue-property-decorator";
+import * as SystemsAPI from "@/api/systems";
+import * as GroupsAPI from "@/api/systemGroups";
 import flattenErrors from "@/api/errors";
 import SystemMap from "@/components/Map.vue";
 import SurfaceTypes from "@/constants/surface_albedo.json";
 
-import {
-  StoredPVSystem,
-  PVSystem,
-  FixedTracking,
-  SingleAxisTracking,
-  BoundingBox,
-} from "@/models";
+import { StoredPVSystem, StoredPVSystemGroup, PVSystemGroup } from "@/models";
 
 Vue.component("system-map", SystemMap);
 
-interface HTMLInputEvent extends Event {
-  target: HTMLInputElement & EventTarget;
-}
-
 @Component
 export default class SystemDefinition extends Vue {
-  @Prop() systemId!: string;
+  @Prop() groupId!: string;
 
-  definition!: PVSystem;
+  definition!: PVSystemGroup;
   trackingType!: string;
   systems!: Array<StoredPVSystem>;
+  selectedSystems!: Array<string>;
   errors!: Record<string, string> | null;
   surfaceTypes: Record<string, number> = SurfaceTypes;
 
@@ -223,41 +77,30 @@ export default class SystemDefinition extends Vue {
       trackingType: this.trackingType,
       systems: null,
       errors: null,
+      selectedSystems: [],
     };
   }
 
   created(): void {
-    if (this.systemId) {
-      this.loadSystem();
+    if (this.groupId) {
+      this.loadGroup();
       this.loadSystems();
     } else {
-      // @ts-expect-error don't expect boundary at creation
       this.definition = {
-        name: "New System",
-        tracking: {
-          tilt: 0,
-          azimuth: 180,
-        },
-        albedo: 0.2,
-        ac_capacity: 1,
-        dc_ac_ratio: 1.2,
+        name: "New System Group",
+        systems: [],
       };
-      this.trackingType = "fixed";
       this.loadSystems();
     }
   }
 
-  async loadSystem(): Promise<void> {
-    // fetch system from api and set definition and set trackingType
+  async loadGroup(): Promise<void> {
+    // fetch system group from api and set definition
     const token = await this.$auth.getTokenSilently();
-    SystemsApi.getSystem(token, this.systemId)
-      .then((system: StoredPVSystem) => {
-        this.definition = system.definition;
-        if ("axis_tilt" in this.definition.tracking) {
-          this.trackingType = "singleAxis";
-        } else {
-          this.trackingType = "fixed";
-        }
+    GroupsAPI.getSystemGroup(token, this.groupId)
+      .then((group: StoredPVSystemGroup) => {
+        this.definition = group.definition;
+        this.setSelectedSystems();
       })
       .catch(() => {
         // 404 case, don't set definition
@@ -265,15 +108,9 @@ export default class SystemDefinition extends Vue {
       });
   }
 
-  validateSystem(): boolean {
-    // validate the system with the systems/check endpoint
-    /* istanbul ignore next */
-    return true;
-  }
-
   async loadSystems(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    SystemsApi.listSystems(token)
+    SystemsAPI.listSystems(token)
       .then((systems: Array<StoredPVSystem>) => {
         this.systems = systems;
       })
@@ -289,34 +126,18 @@ export default class SystemDefinition extends Vue {
   }
 
   navigateToPrevious(): void {
-    if ("returnTo" in this.$route.query) {
-      if (this.$route.query.returnTo == "details") {
-        this.$router.push({
-          name: "System Details",
-          params: {
-            systemId: this.systemId,
-          },
-        });
-      } else {
-        this.$router.push({ name: "Systems" });
-      }
-    } else {
-      this.$router.push({ name: "Systems" });
-    }
+    this.$router.push({ name: "Groups" });
   }
 
-  async submitSystem(e: Event): Promise<void> {
+  async submitSystemGroup(e: Event): Promise<void> {
     e.preventDefault();
     // validate and post system
     const token = await this.$auth.getTokenSilently();
-    if (this.systemId) {
-      SystemsApi.updateSystem(token, this.systemId, this.definition)
-        .then((systemResponse: StoredPVSystem) => {
-          SystemsApi.startProcessing(
-            token,
-            systemResponse.object_id,
-            "NSRDB_2019"
-          ).then(() => {
+    let post_def = { name: this.definition.name };
+    if (this.groupId) {
+      GroupsAPI.updateSystemGroup(token, this.groupId, post_def)
+        .then(() => {
+          this.syncGroupSystems(token).then(() => {
             this.navigateToPrevious();
             this.errors = null;
           });
@@ -325,13 +146,10 @@ export default class SystemDefinition extends Vue {
           this.errors = flattenErrors(errors);
         });
     } else {
-      SystemsApi.createSystem(token, this.definition)
-        .then((response: any) => {
-          SystemsApi.startProcessing(
-            token,
-            response.object_id,
-            "NSRDB_2019"
-          ).then(() => {
+      GroupsAPI.createSystemGroup(token, post_def)
+        .then((groupResponse: StoredPVSystemGroup) => {
+          this.groupId = groupResponse.object_id;
+          this.syncGroupSystems(token).then(() => {
             this.navigateToPrevious();
             this.errors = null;
           });
@@ -341,62 +159,35 @@ export default class SystemDefinition extends Vue {
         });
     }
   }
-
-  changeAlbedo(e: HTMLInputEvent): void {
-    this.definition.albedo = this.surfaceTypes[e.target.value];
-  }
-
-  @Watch("trackingType")
-  changeTracking(newTrackingType: string, oldTrackingType: string): void {
-    // Change the model used for tracking on the system definition
-    // when the tracking type changes.
-    let newParameters: FixedTracking | SingleAxisTracking;
-    if (oldTrackingType == newTrackingType || !oldTrackingType) {
-      newParameters = this.definition.tracking;
-    } else {
-      if (newTrackingType == "fixed") {
-        const currentParams = this.definition.tracking as SingleAxisTracking;
-        newParameters = {
-          tilt: currentParams.axis_tilt,
-          azimuth: currentParams.axis_azimuth,
-        };
-      } else {
-        const currentParams = this.definition.tracking as FixedTracking;
-        newParameters = {
-          axis_tilt: currentParams.tilt,
-          axis_azimuth: currentParams.azimuth,
-          gcr: 0.4,
-          backtracking: true,
-        };
-      }
-    }
-    this.definition.tracking = newParameters;
-  }
-
-  updateBounds(newBounds: BoundingBox): void {
-    this.$set(this.definition, "boundary", newBounds);
-  }
-  get dcCapacity(): number | null {
-    if (this.definition.ac_capacity && this.definition.dc_ac_ratio) {
-      return this.definition.ac_capacity * this.definition.dc_ac_ratio;
-    } else {
-      return null;
-    }
-  }
-
-  get otherSystems(): Array<StoredPVSystem> {
-    let otherSystems: Array<StoredPVSystem>;
-    if (this.systemId) {
-      otherSystems = this.systems.filter((system: StoredPVSystem) => {
-        return system.object_id != this.systemId;
+  async syncGroupSystems(token: string): Promise<void> {
+    if (typeof this.definition.systems !== "undefined") {
+      let originalSystems = this.definition.systems.map(
+        (system: StoredPVSystem) => {
+          return system.object_id;
+        }
+      );
+      let removedSystems = originalSystems.filter(
+        (systemId: string) => !this.selectedSystems.includes(systemId)
+      );
+      let newSystems = this.selectedSystems.filter(
+        (systemId: string) => !originalSystems.includes(systemId)
+      );
+      newSystems.forEach((systemId: string) => {
+        GroupsAPI.addSystemToSystemGroup(token, this.groupId, systemId);
       });
-    } else {
-      otherSystems = this.systems;
+      removedSystems.forEach((systemId: string) => {
+        GroupsAPI.removeSystemFromSystemGroup(token, this.groupId, systemId);
+      });
     }
-    return otherSystems;
   }
-  get boundarySelected(): boolean {
-    return "boundary" in this.definition;
+  async setSelectedSystems(): Promise<void> {
+    if (this.definition.systems) {
+      this.selectedSystems = this.definition.systems.map(
+        (system: StoredPVSystem) => {
+          return system.object_id;
+        }
+      );
+    }
   }
 }
 </script>

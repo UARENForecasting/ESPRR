@@ -39,7 +39,7 @@ export interface StoredPVSystem {
 
 export interface PVSystemGroup {
   name: string;
-  systems: Array<StoredPVSystem>;
+  systems?: Array<StoredPVSystem>;
 }
 
 export interface StoredPVSystemGroup {

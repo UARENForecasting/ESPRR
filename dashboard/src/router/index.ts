@@ -2,6 +2,7 @@ import VueRouter, { RouteConfig } from "vue-router";
 import Systems from "../views/Systems.vue";
 import Groups from "../views/Groups.vue";
 import SystemDefinition from "../views/SystemDefinition.vue";
+import GroupDefinition from "../views/GroupDefinition.vue";
 import SystemDetails from "../views/System.vue";
 import { authGuard } from "../auth/authGuard";
 
@@ -20,6 +21,19 @@ const routes: Array<RouteConfig> = [
     path: "/system/new",
     name: "New System",
     component: SystemDefinition,
+    beforeEnter: authGuard,
+  },
+  {
+    path: "/groups/new",
+    name: "New Group",
+    component: GroupDefinition,
+    beforeEnter: authGuard,
+  },
+  {
+    path: "/system_group/:groupId/edit",
+    name: "Update Group",
+    component: GroupDefinition,
+    props: true,
     beforeEnter: authGuard,
   },
   {

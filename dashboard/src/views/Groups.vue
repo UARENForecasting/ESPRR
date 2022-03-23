@@ -1,7 +1,7 @@
 <template>
   <div class="groups" v-if="$auth.isAuthenticated">
     <h2>Groups</h2>
-    <router-link :to="{ name: 'New System' }" class="new-system-link"
+    <router-link :to="{ name: 'New Group' }" class="new-group-link"
       >Create New Group</router-link
     >
     <hr />
@@ -30,32 +30,30 @@
         </table>
         <!-- update with link to system form -->
         <p v-else>
-          No Systems yet.
-          <router-link :to="{ name: 'New System' }" class="new-system-link"
-            >Create a new System</router-link
+          No System Groups yet.
+          <router-link :to="{ name: 'New Group' }" class="new-system-link"
+            >Create a new Group</router-link
           >
         </p>
       </div>
       <div class="details">
         <template v-if="selected">
           <h3>Group Details</h3>
-          <!--
           <router-link
             tag="button"
             :to="{
-              name: 'Update System',
-              params: { systemId: selected.object_id },
+              name: 'Update Group',
+              params: { groupId: selected.object_id },
               query: { returnTo: 'groups' },
             }"
-            >
-            -->
-          <a>Update Group</a>
-          <!--</router-link>-->
-          <!--<button class="delete-system" @click="showDeleteDialog = true">
+          >
+            Update Group
+          </router-link>
+          <button class="delete-group" @click="showDeleteDialog = true">
             Delete Group
-          </button>-->
-          <a>Delete System</a>
+          </button>
           <p><b>Name: </b>{{ selected.definition.name }}</p>
+          <b>Systems:</b>
           <ul class="details-list">
             <li
               v-for="system of selected.definition.systems"
@@ -77,10 +75,10 @@
       <div v-if="showDeleteDialog" id="delete-dialog">
         <div class="modal-block">
           <p>
-            Are you sure you want to delete the system
+            Are you sure you want to delete the group
             {{ selected.definition.name }}?
           </p>
-          <button class="confirm-deletion" @click="deleteSystem">Yes</button>
+          <button class="confirm-deletion" @click="deleteGroup">Yes</button>
           <button class="cancel-deletion" @click="showDeleteDialog = false">
             Cancel
           </button>
@@ -92,236 +90,22 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { StoredPVSystem, StoredPVSystemGroup } from "@/models";
+import { StoredPVSystemGroup } from "@/models";
 
-import * as SystemsAPI from "@/api/systems";
+import * as GroupsAPI from "@/api/systemGroups";
 import SystemMap from "@/components/Map.vue";
 
 Vue.component("system-map", SystemMap);
 
-let some_systems = [
-  {
-    object_id: "92688f97-9bee-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T19:09:10+00:00",
-    modified_at: "2022-03-04T19:09:10+00:00",
-    definition: {
-      name: "New System",
-      boundary: {
-        nw_corner: {
-          latitude: 33.47725534446616,
-          longitude: -112.10808312274808,
-        },
-        se_corner: {
-          latitude: 33.47569940977952,
-          longitude: -112.10621776166168,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-  {
-    object_id: "1524579a-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:50:18+00:00",
-    modified_at: "2022-03-04T21:50:18+00:00",
-    definition: {
-      name: "New System 1",
-      boundary: {
-        nw_corner: {
-          latitude: 33.47614197858108,
-          longitude: -112.16302036131157,
-        },
-        se_corner: {
-          latitude: 33.47458604389473,
-          longitude: -112.16115502419449,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-  {
-    object_id: "17bdf125-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:50:22+00:00",
-    modified_at: "2022-03-04T21:50:22+00:00",
-    definition: {
-      name: "New System 2",
-      boundary: {
-        nw_corner: {
-          latitude: 33.447604570515075,
-          longitude: -111.93297031768007,
-        },
-        se_corner: {
-          latitude: 33.446048635836284,
-          longitude: -111.9311055944852,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-];
-
-let some_more_systems = [
-  {
-    object_id: "1c444276-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:50:30+00:00",
-    modified_at: "2022-03-04T21:50:30+00:00",
-    definition: {
-      name: "New System 3",
-      boundary: {
-        nw_corner: {
-          latitude: 33.56002104168809,
-          longitude: -112.0283285405074,
-        },
-        se_corner: {
-          latitude: 33.5584651069795,
-          longitude: -112.0264613938828,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-  {
-    object_id: "1f27b96a-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:50:35+00:00",
-    modified_at: "2022-03-04T21:50:35+00:00",
-    definition: {
-      name: "New System 4",
-      boundary: {
-        nw_corner: {
-          latitude: 33.49369608811077,
-          longitude: -112.02832487957924,
-        },
-        se_corner: {
-          latitude: 33.49214015341977,
-          longitude: -112.0264591643916,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-  {
-    object_id: "23108cc5-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:50:41+00:00",
-    modified_at: "2022-03-04T21:50:41+00:00",
-    definition: {
-      name: "New System 5",
-      boundary: {
-        nw_corner: {
-          latitude: 33.17229979504934,
-          longitude: -111.93479395902408,
-        },
-        se_corner: {
-          latitude: 33.170743860443224,
-          longitude: -111.9329351141132,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-  {
-    object_id: "26ddb97d-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:50:48+00:00",
-    modified_at: "2022-03-04T21:50:48+00:00",
-    definition: {
-      name: "New System 6",
-      boundary: {
-        nw_corner: {
-          latitude: 33.42468531239764,
-          longitude: -111.72325569978534,
-        },
-        se_corner: {
-          latitude: 33.42312937772493,
-          longitude: -111.72139146902272,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-  {
-    object_id: "2d6c30d5-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:50:59+00:00",
-    modified_at: "2022-03-04T21:50:59+00:00",
-    definition: {
-      name: "New System 7",
-      boundary: {
-        nw_corner: {
-          latitude: 33.41769571762809,
-          longitude: -112.36881572254464,
-        },
-        se_corner: {
-          latitude: 33.41613978295722,
-          longitude: -112.36695164184606,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-  {
-    object_id: "322d1035-9c05-11ec-8c79-0242ac110002",
-    object_type: "system",
-    created_at: "2022-03-04T21:51:07+00:00",
-    modified_at: "2022-03-04T21:51:07+00:00",
-    definition: {
-      name: "New System 8",
-      boundary: {
-        nw_corner: {
-          latitude: 33.55497978499569,
-          longitude: -112.16002058692186,
-        },
-        se_corner: {
-          latitude: 33.55342385028843,
-          longitude: -112.15815354926356,
-        },
-      },
-      ac_capacity: 1,
-      dc_ac_ratio: 1.2,
-      albedo: 0.2,
-      tracking: { tilt: 0, azimuth: 180 },
-    },
-  },
-];
-
 @Component
 export default class Groups extends Vue {
-  //systems!: Array<StoredPVSystem>;
   groups!: Array<StoredPVSystemGroup>;
   selected!: Record<string, any>;
   showDeleteDialog!: boolean;
 
   created(): void {
     // When the component is created, load the systems list.
-    this.getSystems();
+    this.getSystemGroups();
     console.log("groups view created");
   }
 
@@ -333,32 +117,10 @@ export default class Groups extends Vue {
     };
   }
 
-  async getSystems(): Promise<void> {
+  async getSystemGroups(): Promise<void> {
     // Load the the list of systems from the api
-    // const token = await this.$auth.getTokenSilently();
-    // this.systems = await SystemsAPI.listSystems(token);
-    this.groups = [
-      {
-        created_at: "now",
-        modified_at: "then",
-        object_id: "shvifty-five",
-        object_type: "system_group",
-        definition: {
-          name: "Group 1",
-          systems: some_systems,
-        },
-      },
-      {
-        created_at: "now",
-        modified_at: "then",
-        object_id: "shvifty-six",
-        object_type: "system_group",
-        definition: {
-          name: "Group 2",
-          systems: some_more_systems,
-        },
-      },
-    ];
+    const token = await this.$auth.getTokenSilently();
+    this.groups = await GroupsAPI.listSystemGroups(token);
     if (this.groups.length) {
       this.setSelected(this.groups[0]);
     }
@@ -366,22 +128,26 @@ export default class Groups extends Vue {
   async deleteGroup(): Promise<void> {
     if (this.selected != null) {
       const token = await this.$auth.getTokenSilently();
-      //SystemsAPI.deleteSystem(token, this.selected.object_id)
-      //  .then(() => {
-      //    this.getSystems();
-      //    this.showDeleteDialog = false;
-      //  })
-      //  .catch((error: any) => {
-      //    // TODO: display errors to user
-      //    console.error(error);
-      //    this.showDeleteDialog = false;
-      //  });
+      GroupsAPI.deleteSystemGroup(token, this.selected.object_id)
+        .then(() => {
+          this.getSystemGroups();
+          this.showDeleteDialog = false;
+        })
+        .catch((error: any) => {
+          // TODO: display errors to user
+          console.error(error);
+          this.showDeleteDialog = false;
+        });
     }
   }
-  setSelected(selectedSystem: Record<string, any>): void {
-    this.selected = selectedSystem;
+  async setSelected(selectedSystemGroup: Record<string, any>): Promise<void> {
+    const token = await this.$auth.getTokenSilently();
+    this.selected = await GroupsAPI.getSystemGroup(
+      token,
+      selectedSystemGroup.object_id
+    );
   }
-  get notSelectedSystems(): Array<StoredPVSystemGroup> {
+  get notSelectedSystemGroups(): Array<StoredPVSystemGroup> {
     return this.groups.filter((group: StoredPVSystemGroup) => {
       return group.object_id != this.selected.object_id;
     });
