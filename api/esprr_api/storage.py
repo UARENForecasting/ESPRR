@@ -215,11 +215,14 @@ class StorageInterface:
     ) -> dict:
         """Wrapper handling try/except logic when a single value is expected"""
         # adapted from the SolarForecastArbiter API under the above MIT license
-        result: dict = self._call_procedure(
-            procedure_name,
-            *args,
-            with_current_user=with_current_user,
-        )[0]
+        try:
+            result: dict = self._call_procedure(
+                procedure_name,
+                *args,
+                with_current_user=with_current_user,
+            )[0]
+        except IndexError:
+            raise HTTPException(status_code=404)
         return result
 
     def create_user_if_not_exists(self) -> str:
