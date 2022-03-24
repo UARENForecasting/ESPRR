@@ -26,6 +26,18 @@
         @transformed="handleTransformation"
         @scaleend="handleTransformation"
       />
+      <template v-if="systems">
+        <l-rectangle
+          v-for="(system, i) in systems"
+          :key="system.object_id"
+          :name="system.definition.name"
+          :bounds="createRectangle(system.definition.boundary)"
+          :color="getColor(i)"
+          :fillColor="getColor(i)"
+          @click="emitSelection(system)"
+        >
+        </l-rectangle>
+      </template>
       <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
         <l-rectangle
           v-for="system of all_systems"
@@ -100,6 +112,8 @@ import { BoundingBox } from "@/models";
 
 import { PVSystem, StoredPVSystem } from "@/models";
 
+import GetColor from "@/utils/Colors";
+
 interface TransformationEvent {
   target: L.Polyline;
 }
@@ -116,6 +130,7 @@ Vue.component("static-area-rectangle", StaticAreaRectangle);
 @Component
 export default class SystemMap extends Vue {
   @Prop() system!: PVSystem;
+  @Prop({ default: () => [] }) systems!: Array<StoredPVSystem>;
   @Prop({ default: false }) editable!: boolean;
   @Prop() dc_capacity!: number;
   @Prop() all_systems!: Array<StoredPVSystem>;
@@ -147,9 +162,14 @@ export default class SystemMap extends Vue {
       this.draggable = false;
       this.scaling = false;
     }
-    if (this.system.boundary) {
-      this.updateFromBoundingBox();
+    if (typeof this.system !== "undefined") {
+      if (this.system.boundary) {
+        this.updateFromBoundingBox();
+      }
+    } else if (this.systems) {
+        this.centerMap();
     }
+
     this.initialized = true;
   }
 
@@ -215,6 +235,7 @@ export default class SystemMap extends Vue {
   }
 
   @Watch("system")
+  @Watch("systems", {deep: true})
   updateFromBoundingBox(): void {
     if (this.editable) {
       this.initAspectRatio();
@@ -253,7 +274,23 @@ export default class SystemMap extends Vue {
     }
     return null;
   }
-
+  getGroupBounds() {
+    let all_bounds = [];
+    for (let system of this.systems) {
+        let bounds = this.boundingBoxToLeafletBounds(
+            system.definition.boundary
+        );
+        all_bounds.push(bounds);
+    }
+    let north = Math.max(...all_bounds.map((b) => b.getNorth()));
+    let east = Math.min(...all_bounds.map((b) => b.getEast()));
+    let west = Math.max(...all_bounds.map((b) => b.getWest()));
+    let south = Math.min(...all_bounds.map((b) => b.getSouth()));
+    return L.latLngBounds(
+        L.latLng(north, west),
+        L.latLng(south, east)
+    );
+  }
   @Watch("dc_capacity")
   adjustForCapacity(): void {
     if (this.bounds) {
@@ -334,7 +371,11 @@ export default class SystemMap extends Vue {
   }
 
   centerMap(): void {
-    this.center = this.centerCoords();
+    if (this.system) {
+      this.center = this.centerCoords();
+    } else if (this.systems) {
+      this.map.fitBounds(this.getGroupBounds());
+    }
   }
 
   emitSelection(system: StoredPVSystem): void {
@@ -381,6 +422,9 @@ export default class SystemMap extends Vue {
       this.aspectInputY >= 1 &&
       this.aspectInputY <= 100
     );
+  }
+  getColor(index: number): string {
+    return GetColor(index);
   }
 }
 </script>

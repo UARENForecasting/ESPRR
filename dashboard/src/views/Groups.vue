@@ -54,18 +54,18 @@
           </button>
           <p><b>Name: </b>{{ selected.definition.name }}</p>
           <b>Systems:</b>
-          <ul class="details-list">
+          <ul class="details-list" style="list-style: square;">
             <li
-              v-for="system of selected.definition.systems"
+              v-for="(system, i) of selected.definition.systems"
               :key="system.object_id"
+              :style="{ color: getColor(i), fontSize: '20pt' }"
             >
-              {{ system.definition.name }}
+              <span style="color: #000;font-size: 12pt;">{{ system.definition.name }}</span>
             </li>
             <!-- TODO: put the group overview stuff here -->
           </ul>
           <system-map
-            :system="selected.definition"
-            :all_systems="selected.definition.systems"
+            :systems="selected.definition.systems"
             @new-selection="setSelected"
           />
         </template>
@@ -94,6 +94,7 @@ import { StoredPVSystemGroup } from "@/models";
 
 import * as GroupsAPI from "@/api/systemGroups";
 import SystemMap from "@/components/Map.vue";
+import GetColor from "@/utils/Colors";
 
 Vue.component("system-map", SystemMap);
 
@@ -151,6 +152,9 @@ export default class Groups extends Vue {
     return this.groups.filter((group: StoredPVSystemGroup) => {
       return group.object_id != this.selected.object_id;
     });
+  }
+  getColor(seed: number): string {
+    return GetColor(seed);
   }
 }
 </script>
