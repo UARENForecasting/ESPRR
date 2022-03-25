@@ -373,7 +373,7 @@ export default class SystemMap extends Vue {
   centerMap(): void {
     if (this.system) {
       this.center = this.centerCoords();
-    } else if (this.systems) {
+    } else if (this.systems.length > 0) {
       this.map.fitBounds(this.getGroupBounds());
     }
   }

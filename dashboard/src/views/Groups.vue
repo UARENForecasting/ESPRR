@@ -52,18 +52,45 @@
           <button class="delete-group" @click="showDeleteDialog = true">
             Delete Group
           </button>
-          <p><b>Name: </b>{{ selected.definition.name }}</p>
+          <p>
+            <b>Name: </b>{{ selected.definition.name }}<br/>
+            <template v-if="totalCapacity">
+              <b>Total Capacity: </b>{{ totalCapacity }}<br/>
+            </template>
+          </p>
           <b>Systems:</b>
-          <ul class="details-list" style="list-style: square;">
-            <li
-              v-for="(system, i) of selected.definition.systems"
-              :key="system.object_id"
-              :style="{ color: getColor(i), fontSize: '20pt' }"
-            >
-              <span style="color: #000;font-size: 12pt;">{{ system.definition.name }}</span>
-            </li>
-            <!-- TODO: put the group overview stuff here -->
-          </ul>
+          <div class="group systems-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Plotted Color</th>
+                  <th>Name</th>
+                  <th>AC Capacity</th>
+                  <th>Tracking</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="selected.definition.systems.length == 0">No systems added to group</tr>
+                <tr v-for="(system, i) of selected.definition.systems" :key="system.object_id">
+                  <td>
+                    <span :style="{ width: '100%', height: '100%', backgroundColor: getColor(i), fontSize: '20pt' }"></span>
+                  </td>
+                  <td>
+                    {{ system.definition.name }}
+                  </td>
+                  <td>
+                    {{ system.definition.ac_capacity }}
+                  </td>
+                  <td>
+                    <template v-if="'backtracking' in system.definition.tracking">
+                      {{ system.definition.name }}
+                    </template>
+                    <template v-else> Fixed Tilt</template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
           <system-map
             :systems="selected.definition.systems"
             @new-selection="setSelected"
@@ -90,7 +117,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { StoredPVSystemGroup } from "@/models";
+import { StoredPVSystemGroup, StoredPVSystem } from "@/models";
 
 import * as GroupsAPI from "@/api/systemGroups";
 import SystemMap from "@/components/Map.vue";
@@ -153,6 +180,15 @@ export default class Groups extends Vue {
       return group.object_id != this.selected.object_id;
     });
   }
+  get totalCapacity(): number| null {
+    if (this.selected) {
+      return this.selected.definition.systems.map(
+        (sys: StoredPVSystem) => sys.definition.ac_capacity
+      ).reduce((acc: number, cap: number) => acc + cap, 0);
+    } else {
+      return null
+    }
+  }
   getColor(seed: number): string {
     return GetColor(seed);
   }
@@ -186,12 +222,21 @@ tbody tr:hover {
   cursor: pointer;
   background: #eee;
 }
-
 tr {
   display: grid;
   padding: 0.5em;
   grid-template-columns: 2fr 2fr 1fr;
   border-bottom: 1px solid #ccc;
+}
+.group.systems-table tr {
+  display: grid;
+  padding: 0.5em;
+  grid-template-columns: 1fr 3fr 1fr 1fr;
+  border-bottom: 1px solid #ccc;
+}
+.group.systems-table tr:hover{
+  cursor: auto;
+  background: #fff;
 }
 
 th {

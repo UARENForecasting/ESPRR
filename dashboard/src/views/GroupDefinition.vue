@@ -16,7 +16,7 @@
           @submit="submitSystemGroup"
         >
           <label
-            title="A name for this system. Most special characters beyond space, comma, hyphen, and parentheses are not allowed."
+            title="A name for this system group. Most special characters beyond space, comma, hyphen, and parentheses are not allowed."
             >Name:
             <input
               type="text"
@@ -27,17 +27,42 @@
               v-model="definition.name"
           /></label>
           <h2>Systems:</h2>
-          <ul v-if="this.systems">
-            <li v-if="this.systems.length == 0">No systems defined</li>
-            <li v-for="system of this.systems" :key="system.object_id">
-              <input
-                type="checkbox"
-                :value="system.object_id"
-                v-model="selectedSystems"
-              />
-              {{ system.definition.name }}
-            </li>
-          </ul>
+          <div class="systems-table">
+            <table v-if="this.systems">
+              <thead>
+                <tr>
+                  <th>Included in group</th>
+                  <th>Name</th>
+                  <th>AC Capacity</th>
+                  <th>Tracking</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="this.systems.length == 0">No systems defined</tr>
+                <tr v-for="system of this.systems" :key="system.object_id">
+                  <td>
+                    <input
+                      type="checkbox"
+                      :value="system.object_id"
+                      v-model="selectedSystems"
+                    />
+                  </td>
+                  <td>
+                    {{ system.definition.name }}
+                  </td>
+                  <td>
+                    {{ system.definition.ac_capacity }}
+                  </td>
+                  <td>
+                    <template v-if="'backtracking' in system.definition.tracking">
+                      {{ system.definition.name }}
+                    </template>
+                    <template v-else> Fixed Tilt</template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
           <button type="submit">
             <template v-if="groupId">Update</template
             ><template v-else>Create</template> System Group
@@ -234,4 +259,54 @@ input[type="number"] {
 .tracking {
   margin: 0.5em 3em 1em 0;
 }
+div.grid {
+  display: grid;
+  grid-template-columns: 4fr;
+}
+
+.details,
+.systems-table {
+  display: grid-item;
+}
+
+.details {
+  padding: 0 1em;
+}
+
+table {
+  width: 100%;
+}
+
+thead tr {
+  border-bottom: 1px solid black;
+  background-color: white;
+}
+
+tbody tr:hover {
+  cursor: pointer;
+  background: #eee;
+}
+
+tr {
+  display: grid;
+  padding: 0.5em;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  border-bottom: 1px solid #ccc;
+}
+
+th, tr {
+  text-align: left;
+}
+
+td:first-child,
+th:first-child {
+  padding-left: 0;
+}
+
+td,
+th {
+  display: grid;
+  padding: 0 1em;
+}
+
 </style>
