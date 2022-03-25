@@ -358,3 +358,8 @@ class StoredSystemGroup(StoredObject):
                 },
             }
         }
+
+
+class SystemGroupDataMeta(StoredObject):
+    object_type: str ="system_group"
+    system_data_status: Dict[UUID, SystemDataMeta] = {}
