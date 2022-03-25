@@ -167,7 +167,7 @@ export default class SystemMap extends Vue {
         this.updateFromBoundingBox();
       }
     } else if (this.systems) {
-        this.centerMap();
+      this.centerMap();
     }
 
     this.initialized = true;
@@ -235,7 +235,7 @@ export default class SystemMap extends Vue {
   }
 
   @Watch("system")
-  @Watch("systems", {deep: true})
+  @Watch("systems", { deep: true })
   updateFromBoundingBox(): void {
     if (this.editable) {
       this.initAspectRatio();
@@ -274,22 +274,17 @@ export default class SystemMap extends Vue {
     }
     return null;
   }
-  getGroupBounds() {
+  getGroupBounds(): L.LatLngBounds {
     let all_bounds = [];
     for (let system of this.systems) {
-        let bounds = this.boundingBoxToLeafletBounds(
-            system.definition.boundary
-        );
-        all_bounds.push(bounds);
+      let bounds = this.boundingBoxToLeafletBounds(system.definition.boundary);
+      all_bounds.push(bounds);
     }
     let north = Math.max(...all_bounds.map((b) => b.getNorth()));
     let east = Math.min(...all_bounds.map((b) => b.getEast()));
     let west = Math.max(...all_bounds.map((b) => b.getWest()));
     let south = Math.min(...all_bounds.map((b) => b.getSouth()));
-    return L.latLngBounds(
-        L.latLng(north, west),
-        L.latLng(south, east)
-    );
+    return L.latLngBounds(L.latLng(north, west), L.latLng(south, east));
   }
   @Watch("dc_capacity")
   adjustForCapacity(): void {

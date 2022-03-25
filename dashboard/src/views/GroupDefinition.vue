@@ -38,7 +38,9 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="this.systems.length == 0">No systems defined</tr>
+                <tr v-if="this.systems.length == 0">
+                  No systems defined
+                </tr>
                 <tr v-for="system of this.systems" :key="system.object_id">
                   <td>
                     <input
@@ -54,7 +56,9 @@
                     {{ system.definition.ac_capacity }}
                   </td>
                   <td>
-                    <template v-if="'backtracking' in system.definition.tracking">
+                    <template
+                      v-if="'backtracking' in system.definition.tracking"
+                    >
                       {{ system.definition.name }}
                     </template>
                     <template v-else> Fixed Tilt</template>
@@ -62,7 +66,7 @@
                 </tr>
               </tbody>
             </table>
-            </div>
+          </div>
           <button type="submit">
             <template v-if="groupId">Update</template
             ><template v-else>Create</template> System Group
@@ -294,7 +298,8 @@ tr {
   border-bottom: 1px solid #ccc;
 }
 
-th, tr {
+th,
+tr {
   text-align: left;
 }
 
@@ -308,5 +313,4 @@ th {
   display: grid;
   padding: 0 1em;
 }
-
 </style>
