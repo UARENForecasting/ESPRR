@@ -191,10 +191,10 @@ export async function startProcessing(
 }
 export async function getResult(
   token: string,
-  systemId: string,
+  groupId: string,
   dataset: string
 ): Promise<Record<string, any>> {
-  const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
+  const response = await fetch(`/api/system_groups/${groupId}/data/${dataset}`, {
     headers: new Headers({
       Authorization: `Bearer ${token}`,
     }),

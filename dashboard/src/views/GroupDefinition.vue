@@ -99,6 +99,7 @@ export default class SystemDefinition extends Vue {
   selectedSystems!: Array<string>;
   errors!: Record<string, string> | null;
   surfaceTypes: Record<string, number> = SurfaceTypes;
+  results!: Record<any, any>;
 
   data(): Record<string, any> {
     return {
@@ -130,6 +131,9 @@ export default class SystemDefinition extends Vue {
       .then((group: StoredPVSystemGroup) => {
         this.definition = group.definition;
         this.setSelectedSystems();
+        GroupsAPI.getResult(token, this.groupId, "NSRDB_2019").then(
+            (result: any) => this.results = result
+        );
       })
       .catch(() => {
         // 404 case, don't set definition

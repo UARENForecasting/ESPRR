@@ -9,6 +9,7 @@ from fastapi import (
     Request,
     Depends,
     Path,
+    HTTPException
 )
 import pandas as pd
 from pydantic.types import UUID
@@ -219,7 +220,10 @@ async def get_group_model_status(
     for system in group.definition.systems:
         system_id = system.object_id
         with storage.start_transaction() as st:
-            out: models.SystemDataMeta = st.get_system_model_meta(system_id, dataset)
+            try:
+                out: models.SystemDataMeta = st.get_system_model_meta(system_id, dataset)
+            except HTTPException as e:
+                continue
         if out.status == "queued":
             # if queued/prepared and job started by q, "running"
             if qm.job_is_running(system_id, dataset):

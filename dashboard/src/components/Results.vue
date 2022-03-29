@@ -144,7 +144,7 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import { StoredPVSystem } from "@/models";
+import { StoredPVSystem, validDatasets } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
 import QuickTable from "@/components/data/QuickTable.vue";
@@ -171,10 +171,8 @@ export default class DataSetResults extends Vue {
   active!: boolean;
   asRampRate!: number;
 
-  validDatasets = ["NSRDB_2018", "NSRDB_2019", "NSRDB_2020"];
-
   isValidDataset(): boolean {
-    return this.validDatasets.indexOf(this.dataset) > -1;
+    return validDatasets.indexOf(this.dataset) > -1;
   }
   created(): void {
     if (this.isValidDataset()) {
@@ -328,6 +326,9 @@ export default class DataSetResults extends Vue {
       .catch(() => {
         this.status = "broken";
       });
+  }
+  get validDatasets() {
+    return validDatasets;
   }
 }
 </script>

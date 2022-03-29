@@ -42,6 +42,16 @@
           <router-link
             tag="button"
             :to="{
+              name: 'Group Details',
+              params: { groupId: selected.object_id },
+              query: { returnTo: 'groups' },
+            }"
+          >
+            Results
+          </router-link>
+          <router-link
+            tag="button"
+            :to="{
               name: 'Update Group',
               params: { groupId: selected.object_id },
               query: { returnTo: 'groups' },
