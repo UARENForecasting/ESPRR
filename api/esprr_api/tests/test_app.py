@@ -12,7 +12,7 @@ from esprr_api.main import app
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
 schemathesis.fixups.install()
-schema = schemathesis.from_asgi("/openapi.json", app)
+schema = schemathesis.from_asgi("/openapi.json", app, base_url="/")
 
 
 @pytest.fixture(params=[True, False])
