@@ -1,13 +1,24 @@
+[tool.setuptools_scm]
+write_to = "api/esprr_api/_version.py"
+root = "api/../.."
+
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "esprr-api"
+dynamic = ["version"]
 description = "REST API to for the Expected Solar Performance and Ramp Rate tool"
 authors = [
-    "Tony Lorenzo <atlorenzo@arizona.edu>",
-    "Will Holmgren <holmgren@arizona.edu>",
-    "Leland Boeman <lboeman@arizona.edu>"
+    { name = "Tony Lorenzo", email = "atlorenzo@arizona.edu"},
+    { name = "Will Holmgren", email = "holmgren@arizona.edu"},
+    { name = "Leland Boeman", email = "lboeman@arizona.edu"}
 ]
 readme = "README.md"
-python = "^3.9"
+requires-python = ">=3.9"
+
+[project.urls]
 homepage = "https://esprr.x.energy.arizona.edu"
 repository = "https://github.com/uarenforecasting/esprr"
 
@@ -16,14 +27,6 @@ repository = "https://github.com/uarenforecasting/esprr"
 [dev-dependencies]
 black = { version = "^20.8.b1", python = "^3.9" }
 pre-commit = { version = "^2.11.1"}
-
-[build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools_scm]
-write_to = "api/esprr_api/_version.py"
-root = "api/../.."
 
 [tool.black]
 line-length = 88
