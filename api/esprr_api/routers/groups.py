@@ -1,5 +1,7 @@
 import logging
+from tkinter import W
 from typing import List, Optional, Union
+import weakref
 
 
 from fastapi import (
@@ -273,7 +275,11 @@ def get_group_model_timeseries(
         system_id = system.object_id
         with storage.start_transaction() as st:
             data = st.get_system_model_timeseries(system_id, dataset)
-            data = pd.read_arrow(data)
+            data = utils.read_arrow(data)
+            data = data.set_index("time")
+            csv_safe_name = system.definition.name.replace(",", "").replace(" ", "_")
+            data = data.rename(
+                columns={col: f"{csv_safe_name}_{col}" for col in data.columns})
             group_data.append(data)
     group_df = pd.concat(group_data, axis=1)
 
@@ -281,11 +287,18 @@ def get_group_model_timeseries(
         resp_data = utils.convert_to_arrow(group_df)
         return resp(resp_data)
     else:
-        if "time" in group_df.columns:
-            group_df["time"] = group_df["time"].dt.tz_convert(
-                "Etc/GMT+7"
-            )  # type: ignore
-        csv = group_df.to_csv(None, index=False)
+        clearsky = [col for col in group_df.columns if "_clearsky_ac_power" in col]
+        ac_power = [col for col in group_df.columns if col not in clearsky]
+
+        group_df["ac_power"] = ac_power.sum(axis=1)
+        group_df["clearsky_ac_power"] = clearsky.sum(axis=1)
+
+        data_cols = group_df.columns.tolist()
+
+        group_df["time"] = group_df.index.tz_convert(
+            "Etc/GMT+7"
+        )  # type: ignore
+        csv = group_df[["time"] + data_cols].to_csv(None, index=False)
         return resp(csv)
 
 
@@ -319,7 +332,7 @@ def get_group_model_statistics(
         with storage.start_transaction() as st:
             system_id = system.object_id
             data = st.get_system_model_statistics(system_id, dataset)
-            data = pd.read_arrow(data)
+            data = utils.read_arrow(data)
             group_data.append(data)
     group_df = pd.concat(group_data, axis=1)
 
