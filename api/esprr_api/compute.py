@@ -101,8 +101,26 @@ def compute_total_system_power(
             out = part
         else:
             out += part  # type: ignore
+
     # hack to make output more consistent with actuals in not-clear conditions
     clear = out["ac_power"] > 0.99 * out["clearsky_ac_power"]
+
+    multiplier = calculate_variable_multiplier(out, clear)
+
+    # apply multiplier to ac_power 
+    out["ac_power_mod"] = out["ac_power"].where(
+            clear, other=out["ac_power"] * multiplier.loc[clear.index.date].values)
+
+    return out
+
+
+def calculate_variable_multiplier(out, clear):
+    """
+    Calculate a multiplier that varies given daily standard deviation of
+    irradiance.
+
+    Multiplier is  not applied to low irradiance days
+    """
     # find clear days
     clear_days = (out["ac_power"].resample('1D').mean() >
                   0.99 * out["clearsky_ac_power"].resample('1D').mean())
@@ -117,13 +135,10 @@ def compute_total_system_power(
     # compute a multiplication factor for non-clear times
     #         fixed_max  -  normalized daily standard deviation for non-clear
     #                       days gives variability for remainder of multiplier
-    multiplier = 1.0 - 0.5*(stds - stds.min()) / (stds.max() - stds.min())
+    m = 1.0 - 0.5*(stds - stds.min()) / (stds.max() - stds.min())
     # turn off mulitplier on low irradiance days
-    multiplier[low_irrad_days.tz_localize(None)] = 1.0
-    # apply to ac_power as multiplier
-    out["ac_power_mod"] = out["ac_power"].where(
-            clear, other=out["ac_power"] * multiplier.loc[clear.index.date].values)
-    return out
+    m[low_irrad_days.tz_localize(None)] = 1.0
+    return m
 
 
 def _daytime_limits(period: int, zenith: pd.Series) -> pd.Series:
