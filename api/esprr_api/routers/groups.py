@@ -283,22 +283,19 @@ def get_group_model_timeseries(
             group_data.append(data)
     group_df = pd.concat(group_data, axis=1)
 
-    if meta_type == "application/vnd.apacke.arrow.file":
-        resp_data = utils.convert_to_arrow(group_df)
+    clearsky_cols = [col for col in group_df.columns if "_clearsky_ac_power" in col]
+    ac_power_cols = [col for col in group_df.columns if col not in clearsky_cols]
+
+    group_df["ac_power"] = group_df[ac_power_cols].sum(axis=1)
+    group_df["clearsky_ac_power"] = group_df[clearsky_cols].sum(axis=1)
+    group_df["time"] = group_df.index.tz_convert(
+        "Etc/GMT+7"
+    )  # type: ignore
+    if meta_type == "application/vnd.apache.arrow.file":
+        resp_data = utils.dump_arrow_bytes(utils.convert_to_arrow(group_df))
         return resp(resp_data)
     else:
-        clearsky = [col for col in group_df.columns if "_clearsky_ac_power" in col]
-        ac_power = [col for col in group_df.columns if col not in clearsky]
-
-        group_df["ac_power"] = ac_power.sum(axis=1)
-        group_df["clearsky_ac_power"] = clearsky.sum(axis=1)
-
-        data_cols = group_df.columns.tolist()
-
-        group_df["time"] = group_df.index.tz_convert(
-            "Etc/GMT+7"
-        )  # type: ignore
-        csv = group_df[["time"] + data_cols].to_csv(None, index=False)
+        csv = group_df.to_csv(None, index=False)
         return resp(csv)
 
 

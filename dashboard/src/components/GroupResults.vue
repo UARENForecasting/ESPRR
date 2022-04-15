@@ -131,7 +131,7 @@
       <timeseries-plot
         v-if="timeseries"
         :timeseriesData="timeseries"
-        :system="system"
+        :system="group"
         :dataset="dataset"
       />
       <statistics-table
@@ -144,11 +144,12 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import { StoredPVSystem, validDatasets } from "@/models";
+import { StoredPVSystemGroup, validDatasets } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
 import QuickTable from "@/components/data/QuickTable.vue";
 
+import * as GroupsAPI from "@/api/systemGroups";
 import * as SystemsAPI from "@/api/systems";
 import { Table } from "apache-arrow";
 import downloadFile from "@/utils/downloadFile";
@@ -161,7 +162,7 @@ Vue.component("quick-table", QuickTable);
 @Component
 export default class DataSetResults extends Vue {
   @Prop({ default: "NSRDB_2019" }) dataset!: string;
-  @Prop() system!: StoredPVSystem;
+  @Prop() group!: StoredPVSystemGroup;
 
   status!: string | null;
   statistics!: Table | string | null;
@@ -213,11 +214,9 @@ export default class DataSetResults extends Vue {
   async initialize(): Promise<void> {
     if (this.status == "complete") {
       this.loadTimeseries();
-      this.loadStatistics();
-    } else if (this.status == "timeseries missing") {
-      this.loadStatistics();
-    } else if (this.status == "statistics missing") {
-      this.loadTimeseries();
+      //this.loadStatistics();
+    } else if (this.status == "missing data") {
+      return;
     } else if (this.status == "error") {
       return;
     } else {
@@ -231,27 +230,57 @@ export default class DataSetResults extends Vue {
       this.timeout = setTimeout(this.updateStatus, 1000);
     }
   }
+  async parseResultStatus(statusResponse: any): Promise<string> {
+    console.log(statusResponse);
+    let complete = true;
+    for (const sysId in statusResponse.system_data_status) {
+      const systemStatus = statusResponse.system_data_status[sysId];
+      complete = complete && (systemStatus.status == "complete");
+    }
+    if (complete) {
+      return "complete";
+    }
+    let pending = true;
+    for (const sysId in statusResponse.system_data_status) {
+      const systemStatus = statusResponse.system_data_status[sysId];
+      pending = pending && (systemStatus.status == "pending");
+    }
+    if (pending) {
+      return "pending";
+    }
+    let error = true;
+    for (const sysId in statusResponse.system_data_status) {
+      const systemStatus = statusResponse.system_data_status[sysId];
+      error = error && (systemStatus.status == "error");
+    }
+    if (error) {
+      return "error";
+    }
+    return "missing data";
+  }
 
   async updateStatus(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    SystemsAPI.getResult(token, this.system.object_id, this.dataset)
+    GroupsAPI.getResult(token, this.group.object_id, this.dataset)
       .then((statusResponse: any) => {
-        this.status = statusResponse.status;
-        if (this.status == "error") {
-          this.errors = statusResponse.error;
-        }
-        this.initialize();
+        this.parseResultStatus(statusResponse).then((status: string) => {
+          this.status = status;
+          if (this.status == "error") {
+            this.errors = statusResponse.error;
+          }
+          this.initialize();
+        })
       })
       .catch(() => {
-        console.error("could not get Results")
+        this.recompute();
       });
   }
 
   async loadTimeseries(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    SystemsAPI.getResultTimeseries(
+    GroupsAPI.getResultTimeseries(
       token,
-      this.system.object_id,
+      this.group.object_id,
       this.dataset
     ).then((timeseriesTable: Table | string) => {
       this.timeseries = timeseriesTable;
@@ -260,9 +289,9 @@ export default class DataSetResults extends Vue {
 
   async loadStatistics(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    SystemsAPI.getResultStatistics(
+    GroupsAPI.getResultStatistics(
       token,
-      this.system.object_id,
+      this.group.object_id,
       this.dataset
       // @ts-expect-error Is Table
     ).then((statisticsTable: Table) => {
@@ -276,13 +305,13 @@ export default class DataSetResults extends Vue {
       return;
     }
     const token = await this.$auth.getTokenSilently();
-    const contents: Blob = await SystemsAPI.fetchResultTimeseries(
+    const contents: Blob = await GroupsAPI.fetchResultTimeseries(
       token,
-      this.system.object_id,
+      this.group.object_id,
       this.dataset,
       contentType
     ).then((response: Response): Promise<Blob> => response.blob());
-    let filename = `${this.system.definition.name.replace(/ /g, "_")}_${
+    let filename = `${this.group.definition.name.replace(/ /g, "_")}_${
       this.dataset
     }_timeseries`;
     if (contentType == "text/csv") {
@@ -299,13 +328,13 @@ export default class DataSetResults extends Vue {
       return;
     }
     const token = await this.$auth.getTokenSilently();
-    const contents: Blob = await SystemsAPI.fetchResultStatistics(
+    const contents: Blob = await GroupsAPI.fetchResultStatistics(
       token,
-      this.system.object_id,
+      this.group.object_id,
       this.dataset,
       contentType
     ).then((response: Response): Promise<Blob> => response.blob());
-    let filename = `${this.system.definition.name.replace(/ /g, "_")}_${
+    let filename = `${this.group.definition.name.replace(/ /g, "_")}_${
       this.dataset
     }_statistics`;
     if (contentType == "text/csv") {
@@ -319,7 +348,7 @@ export default class DataSetResults extends Vue {
   /* istanbul ignore next */
   async recompute(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    await SystemsAPI.startProcessing(token, this.system.object_id, this.dataset)
+    await GroupsAPI.startProcessing(token, this.group.object_id, this.dataset)
       .then(() => {
         this.updateStatus();
       })

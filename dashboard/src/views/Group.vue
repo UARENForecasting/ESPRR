@@ -131,14 +131,12 @@
                   {{ resultStatuses['NSRDB_2020'][system.object_id].status }}
                 </template>
               </td>
-
-
             </tr>
           </tbody>
         </table>
       </div>
       <div>
-        <!--<results v-if="system" :system="system" :dataset="dataset" />-->
+      <group-results v-if="group && dataset" :group="group" :dataset="dataset" />
       </div>
       <transition name="fade">
         <div v-if="showDeleteDialog" id="delete-dialog">
@@ -166,11 +164,11 @@ import { StoredPVSystem, StoredPVSystemGroup, validDatasets } from "@/models";
 import * as SystemsAPI from "@/api/systems";
 import * as GroupsAPI from "@/api/systemGroups";
 import SystemMap from "@/components/Map.vue";
-import Results from "@/components/Results.vue";
+import Results from "@/components/GroupResults.vue";
 import GetColor from "@/utils/Colors";
 
 Vue.component("system-map", SystemMap);
-Vue.component("results", Results);
+Vue.component("group-results", Results);
 
 @Component
 export default class GroupDetails extends Vue {

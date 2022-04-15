@@ -215,7 +215,7 @@ export async function fetchResultTimeseries(
   accept = "application/vnd.apache.arrow.file"
 ): Promise<Response> {
   const response = await fetch(
-    `/api/systems/${systemId}/data/${dataset}/timeseries`,
+    `/api/system_groups/${systemId}/data/${dataset}/timeseries`,
     {
       headers: new Headers({
         Authorization: `Bearer ${token}`,
@@ -240,7 +240,9 @@ export async function getResultTimeseries(
   );
   if (response.ok) {
     if (accept == "application/vnd.apache.arrow.file") {
+      console.log('got arrow');
       const data = await response.arrayBuffer();
+      console.log('makin a big ol table');
       return Table.from([new Uint8Array(data)]);
     } else {
       return await response.text();
