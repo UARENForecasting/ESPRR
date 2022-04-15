@@ -105,16 +105,16 @@ def compute_total_system_power(
     # hack to make output more consistent with actuals in not-clear conditions
     clear = out["ac_power"] > 0.99 * out["clearsky_ac_power"]
 
-    multiplier = calculate_variable_multiplier(out, clear)
+    multiplier = calculate_variable_multiplier(out)
 
-    # apply multiplier to ac_power 
-    out["ac_power_mod"] = out["ac_power"].where(
-            clear, other=out["ac_power"] * multiplier.loc[clear.index.date].values)
+    # apply multiplier to ac_power
+    out["ac_power"] = out["ac_power"].where(
+            clear, other=out["ac_power"] * multiplier.reindex(clear.index).ffill())
 
     return out
 
 
-def calculate_variable_multiplier(out, clear):
+def calculate_variable_multiplier(out):
     """
     Calculate a multiplier that varies given daily standard deviation of
     irradiance.
@@ -129,15 +129,15 @@ def calculate_variable_multiplier(out, clear):
                       0.5 * out["clearsky_ac_power"].resample('1D').mean())
     # find daily std devs
     stds = (out["ac_power"]).groupby(out.index.date).std()
-    stds.index = pd.to_datetime(stds.index)
+    stds.index = pd.to_datetime(stds.index).tz_localize('utc')
     # take std dev from non-clearsky days only for normalization
-    stds = stds.where(~clear_days.tz_localize(None), other=np.nan)
+    stds = stds.where(~clear_days, other=np.nan)
     # compute a multiplication factor for non-clear times
     #         fixed_max  -  normalized daily standard deviation for non-clear
     #                       days gives variability for remainder of multiplier
     m = 1.0 - 0.5*(stds - stds.min()) / (stds.max() - stds.min())
     # turn off mulitplier on low irradiance days
-    m[low_irrad_days.tz_localize(None)] = 1.0
+    m[low_irrad_days] = 1.0
     return m
 
 
