@@ -10,7 +10,7 @@ from pvlib.pvsystem import PVSystem  # type: ignore
 from pvlib.tracking import SingleAxisTracker  # type: ignore
 from pvlib.modelchain import ModelChain  # type: ignore
 from pvlib.solarposition import get_solarposition  # type: ignore
-
+import numpy as np
 
 from . import models, storage, utils
 from .data.nsrdb import NSRDBDataset, find_dataset_path
@@ -103,9 +103,26 @@ def compute_total_system_power(
             out += part  # type: ignore
     # hack to make output more consistent with actuals in not-clear conditions
     clear = out["ac_power"] > 0.99 * out["clearsky_ac_power"]
-    out["ac_power"] = out["ac_power"].where(
-        clear, other=out["ac_power"] * 0.75
-    )  # type: ignore
+    # find clear days
+    clear_days = (out["ac_power"].resample('1D').mean() >
+                  0.99 * out["clearsky_ac_power"].resample('1D').mean())
+    # find low irradiance days, predicited power is < 50% of clearsky power
+    low_irrad_days = (out["ac_power"].resample('1D').mean() <
+                      0.5 * out["clearsky_ac_power"].resample('1D').mean())
+    # find daily std devs
+    stds = (out["ac_power"]).groupby(out.index.date).std()
+    stds.index = pd.to_datetime(stds.index)
+    # take std dev from non-clearsky days only for normalization
+    stds = stds.where(~clear_days.tz_localize(None), other=np.nan)
+    # compute a multiplication factor for non-clear times
+    #         fixed_max  -  normalized daily standard deviation for non-clear
+    #                       days gives variability for remainder of multiplier
+    multiplier = 1.0 - 0.5*(stds - stds.min()) / (stds.max() - stds.min())
+    # turn off mulitplier on low irradiance days
+    multiplier[low_irrad_days.tz_localize(None)] = 1.0
+    # apply to ac_power as multiplier
+    out["ac_power_mod"] = out["ac_power"].where(
+            clear, other=out["ac_power"] * multiplier.loc[clear.index.date].values)
     return out
 
 
