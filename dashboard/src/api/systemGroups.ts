@@ -194,12 +194,15 @@ export async function getResult(
   groupId: string,
   dataset: string
 ): Promise<Record<string, any>> {
-  const response = await fetch(`/api/system_groups/${groupId}/data/${dataset}`, {
-    headers: new Headers({
-      Authorization: `Bearer ${token}`,
-    }),
-    method: "get",
-  });
+  const response = await fetch(
+    `/api/system_groups/${groupId}/data/${dataset}`,
+    {
+      headers: new Headers({
+        Authorization: `Bearer ${token}`,
+      }),
+      method: "get",
+    }
+  );
   if (response.ok) {
     return await response.json();
   } else {
@@ -240,9 +243,7 @@ export async function getResultTimeseries(
   );
   if (response.ok) {
     if (accept == "application/vnd.apache.arrow.file") {
-      console.log('got arrow');
       const data = await response.arrayBuffer();
-      console.log('makin a big ol table');
       return Table.from([new Uint8Array(data)]);
     } else {
       return await response.text();

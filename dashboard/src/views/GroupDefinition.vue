@@ -132,7 +132,7 @@ export default class SystemDefinition extends Vue {
         this.definition = group.definition;
         this.setSelectedSystems();
         GroupsAPI.getResult(token, this.groupId, "NSRDB_2019").then(
-            (result: any) => this.results = result
+          (result: any) => (this.results = result)
         );
       })
       .catch(() => {

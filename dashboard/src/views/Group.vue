@@ -28,48 +28,6 @@
           <system-map :systems="systems" />
         </div>
       </div>
-      <ul class="result-nav">
-        <li><router-link
-              :to="{
-                name: 'Group Details',
-                params: {
-                  groupId: group.object_id,
-                },
-                query: { returnTo: 'details' },
-              }"
-              ><button>Overview</button></router-link
-            ></li>
-        <li><router-link
-              :to="{
-                name: 'Group Dataset Details',
-                params: {
-                  groupId: group.object_id,
-                  dataset: 'NSRDB_2018'
-                },
-              }"
-              ><button>2018</button></router-link
-            ></li>
-        <li><router-link
-              :to="{
-                name: 'Group Dataset Details',
-                params: {
-                  groupId: group.object_id,
-                  dataset: 'NSRDB_2019'
-                },
-              }"
-              ><button>2019</button></router-link
-            ></li>
-        <li><router-link
-              :to="{
-                name: 'Group Dataset Details',
-                params: {
-                  groupId: group.object_id,
-                  dataset: 'NSRDB_2020'
-                },
-              }"
-              ><button>2020</button></router-link
-            ></li>
-      </ul>
       <h2>Systems</h2>
       <div class="group systems-table">
         <table v-if="tableReady">
@@ -109,34 +67,132 @@
                 {{ system.definition.ac_capacity }}
               </td>
               <td>
-                <template
-                  v-if="'backtracking' in system.definition.tracking"
-                >
+                <template v-if="'backtracking' in system.definition.tracking">
                   {{ system.definition.name }}
                 </template>
                 <template v-else> Fixed Tilt</template>
               </td>
+              <template v-for="ds in datasets">
+                <td :key="ds">
+                  <template v-if="ds in resultStatuses">
+                    <router-link
+                      v-if="
+                        resultStatuses[ds][system.object_id].status ==
+                        'complete'
+                      "
+                      :to="{
+                        name: 'System Details',
+                        params: {
+                          systemId: system.object_id,
+                          dataset: ds,
+                        },
+                      }"
+                    >
+                      <button class="result-link success">
+                        {{ resultStatuses[ds][system.object_id].status }}
+                      </button>
+                    </router-link>
+                    <template
+                      v-else-if="
+                        resultStatuses[ds][system.object_id].status ==
+                        'not started'
+                      "
+                    >
+                      <button
+                        class="result-link compute"
+                        @click="recompute(system.object_id, ds)"
+                      >
+                        compute
+                      </button>
+                    </template>
+                    <template v-else>
+                      {{ resultStatuses[ds][system.object_id].status }}
+                    </template>
+                  </template>
+                </td>
+              </template>
+            </tr>
+            <tr>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
               <td>
-                <template v-if="'NSRDB_2018' in resultStatuses">
-                  {{ resultStatuses['NSRDB_2018'][system.object_id].status }}
-                </template>
+                <router-link
+                  :to="{
+                    name: 'Group Dataset Details',
+                    params: {
+                      groupId: group.object_id,
+                      dataset: 'NSRDB_2018',
+                    },
+                  }"
+                >
+                  <button
+                    :disabled="
+                      !(
+                        ('NSRDB_2018' in groupResultStatus) &
+                        groupResultStatus['NSRDB_2018']
+                      )
+                    "
+                  >
+                    2018 Results
+                  </button>
+                </router-link>
               </td>
               <td>
-                <template v-if="'NSRDB_2019' in resultStatuses">
-                  {{ resultStatuses['NSRDB_2019'][system.object_id].status }}
-                </template>
+                <router-link
+                  :to="{
+                    name: 'Group Dataset Details',
+                    params: {
+                      groupId: group.object_id,
+                      dataset: 'NSRDB_2019',
+                    },
+                  }"
+                >
+                  <button
+                    :disabled="
+                      !(
+                        ('NSRDB_2019' in groupResultStatus) &
+                        groupResultStatus['NSRDB_2019']
+                      )
+                    "
+                  >
+                    2019 Results
+                  </button>
+                </router-link>
               </td>
               <td>
-                <template v-if="'NSRDB_2020' in resultStatuses">
-                  {{ resultStatuses['NSRDB_2020'][system.object_id].status }}
-                </template>
+                <router-link
+                  :to="{
+                    name: 'Group Dataset Details',
+                    params: {
+                      groupId: group.object_id,
+                      dataset: 'NSRDB_2020',
+                    },
+                  }"
+                >
+                  <button
+                    :disabled="
+                      !(
+                        ('NSRDB_2020' in groupResultStatus) &
+                        groupResultStatus['NSRDB_2020']
+                      )
+                    "
+                  >
+                    2020 Results
+                  </button>
+                </router-link>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <div>
-      <group-results v-if="group && dataset" :group="group" :dataset="dataset" />
+        <group-results
+          v-if="group && dataset"
+          :group="group"
+          :dataset="dataset"
+        />
       </div>
       <transition name="fade">
         <div v-if="showDeleteDialog" id="delete-dialog">
@@ -180,14 +236,11 @@ export default class GroupDetails extends Vue {
   resultStatuses!: Record<string, any>;
   tableReady!: boolean;
   datasets!: Array<string>;
+  timeout!: any;
 
   created(): void {
     // When the component is created, load the systems list.
-    if (this.dataset) {
-      this.datasets = [this.dataset];
-    } else {
-      this.datasets = validDatasets;
-    }
+    this.datasets = validDatasets;
     this.loadGroup();
   }
 
@@ -197,29 +250,29 @@ export default class GroupDetails extends Vue {
       showDeleteDialog: false,
       resultStatuses: {},
       tableReady: false,
-      datasets: []
+      datasets: [],
+      timeout: null,
     };
   }
 
+  destroyed(): void {
+    this.active = false;
+    this.stopPolling();
+  }
   async loadGroup(): Promise<void> {
     // fetch system group from api and set definition
     const token = await this.$auth.getTokenSilently();
     GroupsAPI.getSystemGroup(token, this.groupId)
       .then((group: StoredPVSystemGroup) => {
         this.group = group;
-        console.log("got group");
-        if (typeof this.dataset === "undefined") {
-          this.getResultStatuses(token).then(
-            ()=> this.tableReady=true
-          );
-        }
+        this.getResultStatuses().then(() => (this.tableReady = true));
       })
       .catch(() => {
         // 404 case, don't set definition
         return;
       });
   }
-  async getSingleResultStatus(token: string, dataset: string): Promise<void>{
+  async getSingleResultStatus(token: string, dataset: string): Promise<void> {
     let response: Record<string, any> = {};
     try {
       response = await GroupsAPI.getResult(token, this.groupId, dataset);
@@ -228,24 +281,27 @@ export default class GroupDetails extends Vue {
     }
     return response.system_data_status;
   }
-  async getResultStatuses(token: string): Promise<void> {
+  async getResultStatuses(): Promise<void> {
     console.log("Inside getResultStatuses");
+    const token = await this.$auth.getTokenSilently();
     let statuses: Record<string, any> = {};
     for (let dataset of this.datasets) {
       statuses[dataset] = await this.getSingleResultStatus(token, dataset);
       for (let system of this.systems) {
         let systemId = system.object_id;
-        if (!(systemId in statuses[dataset])){
-           statuses[dataset][systemId] = {
-             system_modified: false,
-             status: "not started"
-           }
+        if (!(systemId in statuses[dataset])) {
+          statuses[dataset][systemId] = {
+            system_modified: false,
+            status: "not started",
+          };
         }
       }
       this.$set(this.resultStatuses, dataset, statuses[dataset]);
+      this.stopPolling();
+      this.awaitResults();
     }
   }
-  getColor(seed:number): string {
+  getColor(seed: number): string {
     return GetColor(seed);
   }
   get systems(): Array<StoredPVSystem> {
@@ -259,7 +315,9 @@ export default class GroupDetails extends Vue {
       let resultsReady = true;
       if (dataset in this.resultStatuses) {
         for (const system in this.resultStatuses[dataset]) {
-          resultsReady = resultsReady && this.resultStatuses[dataset][system].status == 'complete';
+          resultsReady =
+            resultsReady &&
+            this.resultStatuses[dataset][system].status == "complete";
         }
       } else {
         resultsReady = false;
@@ -268,15 +326,51 @@ export default class GroupDetails extends Vue {
     }
     return grs;
   }
+  get anyPending(): Record<string, boolean> {
+    // result Statuses update asyncronously, check if the dataset has been procesed
+    // before accessing the system id
+    let isPending = false;
+    for (let dataset of this.datasets) {
+      if (dataset in this.resultStatuses) {
+        for (const system in this.resultStatuses[dataset]) {
+          let sysStatus = this.resultStatuses[dataset][system].status;
+          isPending =
+            isPending || sysStatus == "running" || sysStatus == "queued";
+        }
+      } else {
+        isPending = isPending || false;
+      }
+    }
+    return isPending;
+  }
   get totalCapacity() {
     if (this.group) {
-        return this.group.definition.systems.reduce(
-            (acc: number, sys: StoredPVSystem) => acc + sys.definition.ac_capacity,
-            0
-        );
+      return this.group.definition.systems.reduce(
+        (acc: number, sys: StoredPVSystem) => acc + sys.definition.ac_capacity,
+        0
+      );
     } else {
-        return null;
+      return null;
     }
+  }
+  async stopPolling(): Promise<void> {
+    clearTimeout(this.timeout);
+    this.timeout = null;
+  }
+  async awaitResults(): Promise<void> {
+    if (this.anyPending) {
+      if (this.timeout == null) {
+        this.timeout = setTimeout(this.getResultStatuses, 2000);
+      }
+    } else {
+      this.stopPolling();
+    }
+  }
+  async recompute(system_id: string, dataset: string): Promise<void> {
+    const token = await this.$auth.getTokenSilently();
+    SystemsAPI.startProcessing(token, system_id, dataset).then(() => {
+      this.getResultStatuses();
+    });
   }
 }
 </script>
@@ -377,7 +471,29 @@ ul.result-nav {
   width: 100%;
 }
 ul.result-nav li {
-  padding: .5em;
+  padding: 0.5em;
   background: gray;
+}
+button.result-link {
+  padding: 0.1em 1em;
+}
+button.result-link:hover {
+  cursor: pointer;
+}
+button.result-link.success:hover {
+  background-color: #3eb63e;
+}
+button.result-link.success {
+  color: #fff;
+  background-color: #2ea62e;
+  border: none;
+}
+button.result-link.compute:hover {
+  background-color: #d44444;
+}
+button.result-link.compute {
+  color: #fff;
+  background-color: #c43434;
+  border: none;
 }
 </style>

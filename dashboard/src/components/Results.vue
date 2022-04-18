@@ -243,7 +243,7 @@ export default class DataSetResults extends Vue {
         this.initialize();
       })
       .catch(() => {
-        console.error("could not get Results")
+        console.error("could not get Results");
       });
   }
 

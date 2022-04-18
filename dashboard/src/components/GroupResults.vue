@@ -8,7 +8,6 @@
         </li>
       </ul>
       <br />
-      <button @click="recompute">Recalculate</button>
     </div>
     <div class="no-dataset-warning" v-if="status == 'nonexistent'">
       You are trying to access an invalid dataset. Valid datasets are
@@ -24,24 +23,14 @@
     <div v-if="status == 'running'">
       Performance calculation is running and will be ready soon.
     </div>
-    <div
-      class="results"
-      v-if="
-        (status == 'complete') |
-          (status == 'statistics missing') |
-          (status == 'timeseries missing')
-      "
-    >
+    <div class="alert" v-if="status == 'data missing'">
+      Results could not be computed for this group of systems for this dataset.
+      Some sites in this group may have missing data. Please see the overview
+      table.
+    </div>
+    <div class="results" v-if="status == 'complete'">
       <h2>Performance Results</h2>
       <hr />
-      <div class="alert" v-if="status == 'timeseries missing'">
-        Result timeseries are missing.
-        <button @click="recompute">Recalculate</button>
-      </div>
-      <div class="alert" v-if="status == 'statistics missing'">
-        Result statistics are missing.
-        <button @click="recompute">Recalculate</button>
-      </div>
       <div class="flex-container">
         <div class="description-flex">
           <h3>Data Processing</h3>
@@ -97,7 +86,6 @@
               </label>
             </label>
           </div>
-          <button @click="recompute">Recalculate</button>
         </div>
         <div class="download-flex">
           <h3>Downloads</h3>
@@ -134,16 +122,18 @@
         :system="group"
         :dataset="dataset"
       />
+      <p v-else>Loading Timeseries...</p>
       <statistics-table
         v-if="statistics"
         :tableData="statistics"
         :asRampRate="asRampRate"
       />
+      <p v-else>Loading Statistics...</p>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { StoredPVSystemGroup, validDatasets } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
@@ -210,6 +200,17 @@ export default class DataSetResults extends Vue {
   get prettyDataset(): string {
     return getDisplayName(this.dataset);
   }
+  @Watch("dataset")
+  async reloadDataset(): Promise<void> {
+    this.timeseries = null;
+    this.statistics = null;
+    this.status = null;
+    this.errors = null;
+    this.active = true;
+    this.timeout = null;
+    this.asRampRate = 0;
+    this.initialize();
+  }
 
   async initialize(): Promise<void> {
     if (this.status == "complete") {
@@ -235,7 +236,7 @@ export default class DataSetResults extends Vue {
     let complete = true;
     for (const sysId in statusResponse.system_data_status) {
       const systemStatus = statusResponse.system_data_status[sysId];
-      complete = complete && (systemStatus.status == "complete");
+      complete = complete && systemStatus.status == "complete";
     }
     if (complete) {
       return "complete";
@@ -243,7 +244,7 @@ export default class DataSetResults extends Vue {
     let pending = true;
     for (const sysId in statusResponse.system_data_status) {
       const systemStatus = statusResponse.system_data_status[sysId];
-      pending = pending && (systemStatus.status == "pending");
+      pending = pending && systemStatus.status == "pending";
     }
     if (pending) {
       return "pending";
@@ -251,7 +252,7 @@ export default class DataSetResults extends Vue {
     let error = true;
     for (const sysId in statusResponse.system_data_status) {
       const systemStatus = statusResponse.system_data_status[sysId];
-      error = error && (systemStatus.status == "error");
+      error = error && systemStatus.status == "error";
     }
     if (error) {
       return "error";
@@ -269,22 +270,22 @@ export default class DataSetResults extends Vue {
             this.errors = statusResponse.error;
           }
           this.initialize();
-        })
+        });
       })
       .catch(() => {
-        this.recompute();
+        this.status = "results missing";
       });
   }
 
   async loadTimeseries(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    GroupsAPI.getResultTimeseries(
-      token,
-      this.group.object_id,
-      this.dataset
-    ).then((timeseriesTable: Table | string) => {
-      this.timeseries = timeseriesTable;
-    });
+    GroupsAPI.getResultTimeseries(token, this.group.object_id, this.dataset)
+      .then((timeseriesTable: Table | string) => {
+        this.timeseries = timeseriesTable;
+      })
+      .catch((response: any) => {
+        this.status = "data missing";
+      });
   }
 
   async loadStatistics(): Promise<void> {
@@ -294,9 +295,13 @@ export default class DataSetResults extends Vue {
       this.group.object_id,
       this.dataset
       // @ts-expect-error Is Table
-    ).then((statisticsTable: Table) => {
-      this.statistics = statisticsTable;
-    });
+    )
+      .then((statisticsTable: Table) => {
+        this.statistics = statisticsTable;
+      })
+      .catch(() => {
+        this.status = "data missing";
+      });
   }
 
   /* istanbul ignore next */
@@ -345,17 +350,6 @@ export default class DataSetResults extends Vue {
     downloadFile(filename, contents);
   }
 
-  /* istanbul ignore next */
-  async recompute(): Promise<void> {
-    const token = await this.$auth.getTokenSilently();
-    await GroupsAPI.startProcessing(token, this.group.object_id, this.dataset)
-      .then(() => {
-        this.updateStatus();
-      })
-      .catch(() => {
-        this.status = "broken";
-      });
-  }
   get validDatasets() {
     return validDatasets;
   }
