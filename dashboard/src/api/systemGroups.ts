@@ -260,7 +260,7 @@ export async function fetchResultStatistics(
   accept = "application/vnd.apache.arrow.file"
 ): Promise<Response> {
   const response = await fetch(
-    `/api/systems/${systemId}/data/${dataset}/statistics`,
+    `/api/system_groups/${systemId}/data/${dataset}/statistics`,
     {
       headers: new Headers({
         Authorization: `Bearer ${token}`,

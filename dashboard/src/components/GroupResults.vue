@@ -214,7 +214,7 @@ export default class DataSetResults extends Vue {
   async initialize(): Promise<void> {
     if (this.status == "complete") {
       this.loadTimeseries();
-      //this.loadStatistics();
+      this.loadStatistics();
     } else if (this.status == "missing data") {
       return;
     } else if (this.status == "error") {
