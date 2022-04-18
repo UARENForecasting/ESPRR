@@ -2,15 +2,7 @@ import logging
 from typing import List, Optional, Union
 
 
-from fastapi import (
-    APIRouter,
-    Header,
-    Response,
-    Request,
-    Depends,
-    Path,
-    HTTPException
-)
+from fastapi import APIRouter, Header, Response, Request, Depends, Path, HTTPException
 import pandas as pd
 from pydantic.types import UUID
 
@@ -233,18 +225,16 @@ async def get_group_model_status(
                 out.status = models.DataStatusEnum("running")
         data_status[system_id] = out.dict()
     group_data_meta = models.SystemGroupDataMeta(
-      modified_at=group.modified_at,
-      created_at=group.created_at,
-      object_id=group.object_id,
-      system_data_status=data_status,
+        modified_at=group.modified_at,
+        created_at=group.created_at,
+        object_id=group.object_id,
+        system_data_status=data_status,
     )
     return group_data_meta
 
 
 def _get_group_timeseries_from_systems(
-        storage: StorageInterface,
-        systems,
-        dataset: models.DatasetEnum = datasetpath
+    storage: StorageInterface, systems, dataset: models.DatasetEnum = datasetpath
 ):
     """Get a dataframe of dataset timeseries results given the systems of
     a System Group.
@@ -264,7 +254,8 @@ def _get_group_timeseries_from_systems(
             data = data.set_index("time")
             csv_safe_name = system.definition.name.replace(",", "").replace(" ", "_")
             data = data.rename(
-                columns={col: f"{csv_safe_name}_{col}" for col in data.columns})
+                columns={col: f"{csv_safe_name}_{col}" for col in data.columns}
+            )
             group_data.append(data)
     group_df = pd.concat(group_data, axis=1)
 
@@ -273,9 +264,7 @@ def _get_group_timeseries_from_systems(
 
     group_df["ac_power"] = group_df[ac_power_cols].sum(axis=1)
     group_df["clearsky_ac_power"] = group_df[clearsky_cols].sum(axis=1)
-    group_df["time"] = group_df.index.tz_convert(
-        "Etc/GMT+7"
-    )  # type: ignore
+    group_df["time"] = group_df.index.tz_convert("Etc/GMT+7")  # type: ignore
     return group_df
 
 

@@ -160,11 +160,11 @@ def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFr
 
 
 def compute_group_statistics(
-        group: models.StoredSystemGroup,
-        data: pd.DataFrame
+    group: models.StoredSystemGroup, data: pd.DataFrame
 ) -> pd.DataFrame:
-    group_system_centers = [sys.definition.boundary._rect.centroid
-                            for sys in group.definition.systems]
+    group_system_centers = [
+        sys.definition.boundary._rect.centroid for sys in group.definition.systems
+    ]
     group_center_polygon = geometry.Polygon(
         [[center.x, center.y] for center in group_system_centers]
     )
@@ -173,8 +173,7 @@ def compute_group_statistics(
 
 
 def _compute_statistics(
-        system_center: geometry.point.Point,
-        data: pd.DataFrame
+    system_center: geometry.point.Point, data: pd.DataFrame
 ) -> pd.DataFrame:
     data = data.tz_convert("Etc/GMT+7")  # type: ignore
     zenith = get_solarposition(data.index, system_center.y, system_center.x)["zenith"]
