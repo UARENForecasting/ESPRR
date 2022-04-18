@@ -110,7 +110,7 @@ def compute_total_system_power(
     # apply multiplier to ac_power
     out["ac_power"] = out["ac_power"].where(
         clear, other=out["ac_power"] * multiplier.reindex(clear.index).ffill()
-    )
+    ) # type: ignore
 
     return out
 
