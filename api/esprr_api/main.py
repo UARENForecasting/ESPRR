@@ -123,7 +123,7 @@ library that can automatically refresh the tokens is
         },
         {"name": "User", "description": "Interact with User metadata"},
     ]
-    openapi_schema["servers"] = [{"url": "/api"}]  # for the docs 'try it out' to work
+    openapi_schema["servers"] = [{"url": "/"}]  # for the docs 'try it out' to work
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

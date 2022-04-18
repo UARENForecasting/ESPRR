@@ -1,7 +1,5 @@
 import logging
-from tkinter import W
 from typing import List, Optional, Union
-import weakref
 
 
 from fastapi import (
@@ -21,6 +19,7 @@ from . import default_get_responses
 from .. import models, utils
 from ..storage import StorageInterface
 from ..queuing import QueueManager
+from ..compute import compute_group_statistics
 
 
 router = APIRouter()
@@ -223,8 +222,10 @@ async def get_group_model_status(
         system_id = system.object_id
         with storage.start_transaction() as st:
             try:
-                out: models.SystemDataMeta = st.get_system_model_meta(system_id, dataset)
-            except HTTPException as e:
+                out: models.SystemDataMeta = st.get_system_model_meta(
+                    system_id, dataset
+                )
+            except HTTPException:
                 continue
         if out.status == "queued":
             # if queued/prepared and job started by q, "running"
@@ -238,6 +239,44 @@ async def get_group_model_status(
       system_data_status=data_status,
     )
     return group_data_meta
+
+
+def _get_group_timeseries_from_systems(
+        storage: StorageInterface,
+        systems,
+        dataset: models.DatasetEnum = datasetpath
+):
+    """Get a dataframe of dataset timeseries results given the systems of
+    a System Group.
+
+    Parameters
+    ----------
+    st
+    systems
+    dataset
+    """
+    group_data = []
+    for system in systems:
+        system_id = system.object_id
+        with storage.start_transaction() as st:
+            data = st.get_system_model_timeseries(system_id, dataset)
+            data = utils.read_arrow(data)
+            data = data.set_index("time")
+            csv_safe_name = system.definition.name.replace(",", "").replace(" ", "_")
+            data = data.rename(
+                columns={col: f"{csv_safe_name}_{col}" for col in data.columns})
+            group_data.append(data)
+    group_df = pd.concat(group_data, axis=1)
+
+    clearsky_cols = [col for col in group_df.columns if "_clearsky_ac_power" in col]
+    ac_power_cols = [col for col in group_df.columns if col not in clearsky_cols]
+
+    group_df["ac_power"] = group_df[ac_power_cols].sum(axis=1)
+    group_df["clearsky_ac_power"] = group_df[clearsky_cols].sum(axis=1)
+    group_df["time"] = group_df.index.tz_convert(
+        "Etc/GMT+7"
+    )  # type: ignore
+    return group_df
 
 
 @router.get(
@@ -270,27 +309,10 @@ def get_group_model_timeseries(
     resp, meta_type = utils._get_return_type(accept)
     with storage.start_transaction() as st:
         group: models.StoredSystemGroup = st.get_system_group(group_id)
-    group_data = []
-    for system in group.definition.systems:
-        system_id = system.object_id
-        with storage.start_transaction() as st:
-            data = st.get_system_model_timeseries(system_id, dataset)
-            data = utils.read_arrow(data)
-            data = data.set_index("time")
-            csv_safe_name = system.definition.name.replace(",", "").replace(" ", "_")
-            data = data.rename(
-                columns={col: f"{csv_safe_name}_{col}" for col in data.columns})
-            group_data.append(data)
-    group_df = pd.concat(group_data, axis=1)
+    group_df = _get_group_timeseries_from_systems(
+        storage, group.definition.systems, dataset
+    )
 
-    clearsky_cols = [col for col in group_df.columns if "_clearsky_ac_power" in col]
-    ac_power_cols = [col for col in group_df.columns if col not in clearsky_cols]
-
-    group_df["ac_power"] = group_df[ac_power_cols].sum(axis=1)
-    group_df["clearsky_ac_power"] = group_df[clearsky_cols].sum(axis=1)
-    group_df["time"] = group_df.index.tz_convert(
-        "Etc/GMT+7"
-    )  # type: ignore
     if meta_type == "application/vnd.apache.arrow.file":
         resp_data = utils.dump_arrow_bytes(utils.convert_to_arrow(group_df))
         return resp(resp_data)
@@ -324,22 +346,14 @@ def get_group_model_statistics(
     resp, meta_type = utils._get_return_type(accept)
     with storage.start_transaction() as st:
         group: models.StoredSystemGroup = st.get_system_group(group_id)
-    group_data = []
-    for system in group.definition.systems:
-        with storage.start_transaction() as st:
-            system_id = system.object_id
-            data = st.get_system_model_statistics(system_id, dataset)
-            data = utils.read_arrow(data)
-            group_data.append(data)
-    group_df = pd.concat(group_data, axis=1)
+    group_df = _get_group_timeseries_from_systems(
+        storage, group.definition.systems, dataset
+    )
+    stats = compute_group_statistics(group, group_df)
 
-    if meta_type == "application/vnd.apacke.arrow.file":
-        resp_data = utils.convert_to_arrow(group_df)
+    if meta_type == "application/vnd.apache.arrow.file":
+        resp_data = utils.dump_arrow_bytes(utils.convert_to_arrow(stats))
         return resp(resp_data)
     else:
-        if "time" in group_df.columns:
-            group_df["time"] = group_df["time"].dt.tz_convert(
-                "Etc/GMT+7"
-            )  # type: ignore
-        csv = group_df.to_csv(None, index=False)
+        csv = stats.to_csv(None, index=False)
         return resp(csv)

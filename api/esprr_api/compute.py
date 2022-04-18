@@ -10,6 +10,7 @@ from pvlib.pvsystem import PVSystem  # type: ignore
 from pvlib.tracking import SingleAxisTracker  # type: ignore
 from pvlib.modelchain import ModelChain  # type: ignore
 from pvlib.solarposition import get_solarposition  # type: ignore
+from shapely import geometry  # type: ignore
 
 
 from . import models, storage, utils
@@ -155,6 +156,26 @@ def _typical_ss_ramps(
 
 def compute_statistics(system: models.PVSystem, data: pd.DataFrame) -> pd.DataFrame:
     system_center = system.boundary._rect.centroid
+    return _compute_statistics(system_center, data)
+
+
+def compute_group_statistics(
+        group: models.StoredSystemGroup,
+        data: pd.DataFrame
+) -> pd.DataFrame:
+    group_system_centers = [sys.definition.boundary._rect.centroid
+                            for sys in group.definition.systems]
+    group_center_polygon = geometry.Polygon(
+        [[center.x, center.y] for center in group_system_centers]
+    )
+    group_center = group_center_polygon.centroid
+    return _compute_statistics(group_center, data)
+
+
+def _compute_statistics(
+        system_center: geometry.point.Point,
+        data: pd.DataFrame
+) -> pd.DataFrame:
     data = data.tz_convert("Etc/GMT+7")  # type: ignore
     zenith = get_solarposition(data.index, system_center.y, system_center.x)["zenith"]
     # remove most of nighttime but keep some to get the diff for morning/evening ramps
