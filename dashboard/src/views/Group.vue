@@ -256,7 +256,6 @@ export default class GroupDetails extends Vue {
   }
 
   destroyed(): void {
-    this.active = false;
     this.stopPolling();
   }
   async loadGroup(): Promise<void> {
@@ -326,7 +325,7 @@ export default class GroupDetails extends Vue {
     }
     return grs;
   }
-  get anyPending(): Record<string, boolean> {
+  get anyPending(): boolean {
     // result Statuses update asyncronously, check if the dataset has been procesed
     // before accessing the system id
     let isPending = false;
@@ -343,8 +342,9 @@ export default class GroupDetails extends Vue {
     }
     return isPending;
   }
-  get totalCapacity() {
+  get totalCapacity(): number | null {
     if (this.group) {
+      // @ts-expect-error not actually possibly undefined
       return this.group.definition.systems.reduce(
         (acc: number, sys: StoredPVSystem) => acc + sys.definition.ac_capacity,
         0

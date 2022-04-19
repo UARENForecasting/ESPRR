@@ -140,7 +140,6 @@ import StatisticsTable from "@/components/data/StatisticsTable.vue";
 import QuickTable from "@/components/data/QuickTable.vue";
 
 import * as GroupsAPI from "@/api/systemGroups";
-import * as SystemsAPI from "@/api/systems";
 import { Table } from "apache-arrow";
 import downloadFile from "@/utils/downloadFile";
 import { getDisplayName } from "@/utils/DisplayNames";
@@ -231,7 +230,9 @@ export default class DataSetResults extends Vue {
       this.timeout = setTimeout(this.updateStatus, 1000);
     }
   }
-  async parseResultStatus(statusResponse: any): Promise<string> {
+  async parseResultStatus(
+    statusResponse: Record<string, any>
+  ): Promise<string> {
     console.log(statusResponse);
     let complete = true;
     for (const sysId in statusResponse.system_data_status) {
@@ -283,20 +284,15 @@ export default class DataSetResults extends Vue {
       .then((timeseriesTable: Table | string) => {
         this.timeseries = timeseriesTable;
       })
-      .catch((response: any) => {
+      .catch(() => {
         this.status = "data missing";
       });
   }
 
   async loadStatistics(): Promise<void> {
     const token = await this.$auth.getTokenSilently();
-    GroupsAPI.getResultStatistics(
-      token,
-      this.group.object_id,
-      this.dataset
-      // @ts-expect-error Is Table
-    )
-      .then((statisticsTable: Table) => {
+    GroupsAPI.getResultStatistics(token, this.group.object_id, this.dataset)
+      .then((statisticsTable: Table | string) => {
         this.statistics = statisticsTable;
       })
       .catch(() => {
@@ -350,7 +346,7 @@ export default class DataSetResults extends Vue {
     downloadFile(filename, contents);
   }
 
-  get validDatasets() {
+  get validDatasets(): Array<string> {
     return validDatasets;
   }
 }

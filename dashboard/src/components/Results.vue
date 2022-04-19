@@ -327,7 +327,7 @@ export default class DataSetResults extends Vue {
         this.status = "broken";
       });
   }
-  get validDatasets() {
+  get validDatasets(): Array<string> {
     return validDatasets;
   }
 }
