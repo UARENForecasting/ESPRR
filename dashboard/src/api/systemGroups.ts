@@ -166,29 +166,10 @@ export async function removeSystemFromSystemGroup(
   } else if (response.status == 422) {
     throw await response.json();
   } else {
-    throw "Could not add system ${systemId} to group";
+    throw "Could not add system ${groupId} to group";
   }
 }
 
-// TODO: BELOW
-export async function startProcessing(
-  token: string,
-  systemId: string,
-  dataset: string
-): Promise<Record<string, any>> {
-  const response = await fetch(`/api/systems/${systemId}/data/${dataset}`, {
-    headers: new Headers({
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    }),
-    method: "post",
-  });
-  if (response.ok) {
-    return await response.json();
-  } else {
-    throw await response.json();
-  }
-}
 export async function getResult(
   token: string,
   groupId: string,

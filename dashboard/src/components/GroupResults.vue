@@ -1,13 +1,7 @@
 <template>
   <div>
-    <div v-if="errors" class="errors">
-      Errors occurred during processing:
-      <ul>
-        <li v-for="error of errors" :key="error">
-          {{ error }}
-        </li>
-      </ul>
-      <br />
+    <div v-if="status == 'error'" class="errors">
+      Errors occurred during processing of a system. Please see overview table.
     </div>
     <div class="no-dataset-warning" v-if="status == 'nonexistent'">
       You are trying to access an invalid dataset. Valid datasets are
@@ -215,7 +209,7 @@ export default class DataSetResults extends Vue {
     if (this.status == "complete") {
       this.loadTimeseries();
       this.loadStatistics();
-    } else if (this.status == "missing data") {
+    } else if (this.status == "data missing") {
       return;
     } else if (this.status == "error") {
       return;
@@ -233,7 +227,6 @@ export default class DataSetResults extends Vue {
   async parseResultStatus(
     statusResponse: Record<string, any>
   ): Promise<string> {
-    console.log(statusResponse);
     let complete = true;
     for (const sysId in statusResponse.system_data_status) {
       const systemStatus = statusResponse.system_data_status[sysId];
@@ -242,13 +235,21 @@ export default class DataSetResults extends Vue {
     if (complete) {
       return "complete";
     }
-    let pending = true;
+    let running = true;
     for (const sysId in statusResponse.system_data_status) {
       const systemStatus = statusResponse.system_data_status[sysId];
-      pending = pending && systemStatus.status == "pending";
+      running = running && systemStatus.status == "running";
     }
-    if (pending) {
-      return "pending";
+    if (running) {
+      return "running";
+    }
+    let queued = true;
+    for (const sysId in statusResponse.system_data_status) {
+      const systemStatus = statusResponse.system_data_status[sysId];
+      queued = queued && systemStatus.status == "queued";
+    }
+    if (queued) {
+      return "queued";
     }
     let error = true;
     for (const sysId in statusResponse.system_data_status) {
@@ -258,7 +259,7 @@ export default class DataSetResults extends Vue {
     if (error) {
       return "error";
     }
-    return "missing data";
+    return "data missing";
   }
 
   async updateStatus(): Promise<void> {
@@ -274,7 +275,7 @@ export default class DataSetResults extends Vue {
         });
       })
       .catch(() => {
-        this.status = "results missing";
+        this.status = "data missing";
       });
   }
 

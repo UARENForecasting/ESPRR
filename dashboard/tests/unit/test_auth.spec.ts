@@ -42,6 +42,8 @@ const mocks = {
   $auth,
 };
 
+const stubs = { "system-map": true };
+
 localVue.use(VueRouter);
 
 describe("Tests authenticated routes", () => {
@@ -58,6 +60,7 @@ describe("Tests authenticated routes", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     await flushPromises();
     expect(home.find("main").text()).toContain(
@@ -86,6 +89,7 @@ describe("Tests authenticated routes", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     await flushPromises();
     expect(home.find("Table").text()).toBe(
@@ -115,6 +119,7 @@ describe("Test authguard", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     expect(view.find("main").text()).toMatch(/Please log in to access ESPRR./);
     expect($auth.loginWithRedirect).not.toHaveBeenCalled();
@@ -131,6 +136,7 @@ describe("Test authguard", () => {
       localVue,
       router,
       mocks,
+      stubs,
     });
     await flushPromises();
     expect(view.find("Table").text()).toMatch(
