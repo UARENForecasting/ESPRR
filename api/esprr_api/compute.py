@@ -163,7 +163,8 @@ def compute_group_statistics(
     group: models.StoredSystemGroup, data: pd.DataFrame
 ) -> pd.DataFrame:
     group_system_centers = [
-        sys.definition.boundary._rect.centroid for sys in group.definition.systems
+        sys.definition.boundary._rect.centroid
+        for sys in group.definition.systems  # type: ignore
     ]
     group_center_polygon = geometry.Polygon(
         [[center.x, center.y] for center in group_system_centers]

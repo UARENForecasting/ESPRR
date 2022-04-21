@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 )
 async def list_system_groups(
     storage: StorageInterface = Depends(StorageInterface),
-) -> List[models.StoredPVSystem]:
+) -> List[models.StoredSystemGroup]:
     """List available system groups"""
     with storage.start_transaction() as st:
         out: List[models.StoredSystemGroup] = st.list_system_groups()
@@ -210,7 +210,7 @@ async def get_group_model_status(
     with storage.start_transaction() as st:
         group: models.StoredSystemGroup = st.get_system_group(group_id)
     data_status = {}
-    for system in group.definition.systems:
+    for system in group.definition.systems:  # type: ignore
         system_id = system.object_id
         with storage.start_transaction() as st:
             try:
@@ -299,7 +299,9 @@ def get_group_model_timeseries(
     with storage.start_transaction() as st:
         group: models.StoredSystemGroup = st.get_system_group(group_id)
     group_df = _get_group_timeseries_from_systems(
-        storage, group.definition.systems, dataset
+        storage,
+        group.definition.systems,  # type: ignore
+        dataset
     )
 
     if meta_type == "application/vnd.apache.arrow.file":
@@ -336,7 +338,9 @@ def get_group_model_statistics(
     with storage.start_transaction() as st:
         group: models.StoredSystemGroup = st.get_system_group(group_id)
     group_df = _get_group_timeseries_from_systems(
-        storage, group.definition.systems, dataset
+        storage,
+        group.definition.systems,  # type: ignore
+        dataset
     )
     stats = compute_group_statistics(group, group_df)
 
