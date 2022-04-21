@@ -299,9 +299,7 @@ def get_group_model_timeseries(
     with storage.start_transaction() as st:
         group: models.StoredSystemGroup = st.get_system_group(group_id)
     group_df = _get_group_timeseries_from_systems(
-        storage,
-        group.definition.systems,  # type: ignore
-        dataset
+        storage, group.definition.systems, dataset  # type: ignore
     )
 
     if meta_type == "application/vnd.apache.arrow.file":
@@ -338,9 +336,7 @@ def get_group_model_statistics(
     with storage.start_transaction() as st:
         group: models.StoredSystemGroup = st.get_system_group(group_id)
     group_df = _get_group_timeseries_from_systems(
-        storage,
-        group.definition.systems,  # type: ignore
-        dataset
+        storage, group.definition.systems, dataset  # type: ignore
     )
     stats = compute_group_statistics(group, group_df)
 
