@@ -13,7 +13,7 @@ export const displayNames: Record<string, any> = {
   "p95 daytime ramp": "Stress-case up (p95)",
   "p05 daytime ramp": "Stress-case down (p05)",
   "worst case ramp up": "Worst-case ramp up (p99.99)",
-  "worst case ramp down": "Worst-case ramp down (p0.001)",
+  "worst case ramp down": "Worst-case ramp down (p0.01)",
   "typical sunrise ramp": "Typical Sunrise",
   "typical sunset ramp": "Typical Sunset",
   NSRDB_2019: "NSRDB 2019",
