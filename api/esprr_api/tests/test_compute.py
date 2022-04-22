@@ -193,32 +193,62 @@ def test_run_job_error(
     assert cargs[5] == {"message": "test err"}
 
 
-variable_mult_df = pd.DataFrame({
-        "ac_power": ([0]*(12*6)+[5]*(12*6)+[6]*(12*6)+[0]*(12*6) +
-                     [0]*(12*6)+[12]*(12*6)+[13]*(12*6)+[0]*(12*6) +
-                     [0]*(12*6)+[8]*(12*3)+[4]*(12*3)+[10]*(12*3)+[11]*(12*3)+[0]*(12*6) +
-                     [0]*(12*6)+[8]*(12*3)+[4]*(12*3)+[13]*(12*3)+[13]*(12*3)+[0]*(12*6) +
-                     [0]
-                     ),
-        "clearsky_ac_power": ([0]*(12*6)+[12]*(12*6)+[13]*(12*6)+[0]*(12*6) +
-                              [0]*(12*6)+[12]*(12*6)+[13]*(12*6)+[0]*(12*6) +
-                              [0]*(12*6)+[12]*(12*6)+[13]*(12*6)+[0]*(12*6) +
-                              [0]*(12*6)+[12]*(12*6)+[13]*(12*6)+[0]*(12*6) +
-                              [0]
-                              ),
-        },
-        index=pd.date_range('2019-01-01', '2019-01-05', freq='5T', tz='utc')
-    )
+variable_mult_df = pd.DataFrame(
+    {
+        "ac_power": (
+            [0] * (12 * 6)
+            + [5] * (12 * 6)
+            + [6] * (12 * 6)
+            + [0] * (12 * 6)
+            + [0] * (12 * 6)
+            + [12] * (12 * 6)
+            + [13] * (12 * 6)
+            + [0] * (12 * 6)
+            + [0] * (12 * 6)
+            + [8] * (12 * 3)
+            + [4] * (12 * 3)
+            + [10] * (12 * 3)
+            + [11] * (12 * 3)
+            + [0] * (12 * 6)
+            + [0] * (12 * 6)
+            + [8] * (12 * 3)
+            + [4] * (12 * 3)
+            + [13] * (12 * 3)
+            + [13] * (12 * 3)
+            + [0] * (12 * 6)
+            + [0]
+        ),
+        "clearsky_ac_power": (
+            [0] * (12 * 6)
+            + [12] * (12 * 6)
+            + [13] * (12 * 6)
+            + [0] * (12 * 6)
+            + [0] * (12 * 6)
+            + [12] * (12 * 6)
+            + [13] * (12 * 6)
+            + [0] * (12 * 6)
+            + [0] * (12 * 6)
+            + [12] * (12 * 6)
+            + [13] * (12 * 6)
+            + [0] * (12 * 6)
+            + [0] * (12 * 6)
+            + [12] * (12 * 6)
+            + [13] * (12 * 6)
+            + [0] * (12 * 6)
+            + [0]
+        ),
+    },
+    index=pd.date_range("2019-01-01", "2019-01-05", freq="5T", tz="utc"),
+)
 
 
-@pytest.mark.parametrize('data', [variable_mult_df])
+@pytest.mark.parametrize("data", [variable_mult_df])
 def test_calculate_variable_multiplier(data):
     m = compute.calculate_variable_multiplier(data)
     expected_result = pd.DataFrame(
-       {'ac_power': [1., np.nan, 0.66981919, 0.5, np.nan]},
-        index=m.index
-        )
+        {"ac_power": [1.0, np.nan, 0.66981919, 0.5, np.nan]}, index=m.index
+    )
     assert isinstance(m, pd.Series)
-    assert len(m) == (len(data)-1)/(12*24)+1
+    assert len(m) == (len(data) - 1) / (12 * 24) + 1
     assert m.between(0.5, 1).any()
-    pd.testing.assert_series_equal(m, expected_result['ac_power'])
+    pd.testing.assert_series_equal(m, expected_result["ac_power"])
