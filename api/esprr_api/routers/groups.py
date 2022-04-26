@@ -257,14 +257,21 @@ def _get_group_timeseries_from_systems(
                 columns={col: f"{csv_safe_name}_{col}" for col in data.columns}
             )
             group_data.append(data)
-    group_df = pd.concat(group_data, axis=1)
+    if len(group_data) > 0:
+        group_df = pd.concat(group_data, axis=1)
 
-    clearsky_cols = [col for col in group_df.columns if "_clearsky_ac_power" in col]
-    ac_power_cols = [col for col in group_df.columns if col not in clearsky_cols]
+        clearsky_cols = [col for col in group_df.columns if "_clearsky_ac_power" in col]
+        ac_power_cols = [col for col in group_df.columns if col not in clearsky_cols]
 
-    group_df["ac_power"] = group_df[ac_power_cols].sum(axis=1)
-    group_df["clearsky_ac_power"] = group_df[clearsky_cols].sum(axis=1)
-    group_df["time"] = group_df.index.tz_convert("Etc/GMT+7")  # type: ignore
+        group_df["ac_power"] = group_df[ac_power_cols].sum(axis=1)
+        group_df["clearsky_ac_power"] = group_df[clearsky_cols].sum(axis=1)
+        group_df["time"] = group_df.index.tz_convert("Etc/GMT+7")  # type: ignore
+    else:
+        # No data, return an empty dataframe with the correct attributes
+        group_df = pd.DataFrame(
+            columns=["time", "ac_power", "clearsky_ac_power"],
+            index=pd.DatetimeIndex([], tz="America/Phoenix"),
+        )
     return group_df
 
 
@@ -301,7 +308,8 @@ def get_group_model_timeseries(
     group_df = _get_group_timeseries_from_systems(
         storage, group.definition.systems, dataset  # type: ignore
     )
-
+    # put time first for easier testing and csv display
+    group_df = group_df[["time"] + [col for col in group_df.columns if col != "time"]]
     if meta_type == "application/vnd.apache.arrow.file":
         resp_data = utils.dump_arrow_bytes(utils.convert_to_arrow(group_df))
         return resp(resp_data)

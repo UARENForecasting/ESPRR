@@ -166,10 +166,17 @@ def compute_group_statistics(
         sys.definition.boundary._rect.centroid
         for sys in group.definition.systems  # type: ignore
     ]
-    group_center_polygon = geometry.Polygon(
-        [[center.x, center.y] for center in group_system_centers]
-    )
-    group_center = group_center_polygon.centroid
+    if len(group_system_centers) == 1:
+        group_center = group_system_centers[0]
+    elif len(group_system_centers) == 2:
+        x_center = sum([center.x for center in group_system_centers])
+        y_center = sum([center.y for center in group_system_centers])
+        group_center = geometry.Point(x_center, y_center)
+    else:
+        group_center_polygon = geometry.Polygon(
+            [[center.x, center.y] for center in group_system_centers]
+        )
+        group_center = group_center_polygon.centroid
     return _compute_statistics(group_center, data)
 
 
