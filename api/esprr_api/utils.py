@@ -85,29 +85,3 @@ def _get_return_type(
             status_code=406,
             detail="Only 'text/csv' or 'application/vnd.apache.arrow.file' acceptable",
         )
-
-
-def _convert_data(
-    data: bytes,
-    requested_mimetype: str,
-    response_class: Union[Type[ArrowResponse], Type[CSVResponse]],
-) -> Union[ArrowResponse, CSVResponse]:
-    if requested_mimetype == "application/vnd.apache.arrow.file":
-        return response_class(data)
-    else:
-        try:
-            df = read_arrow(data)  # type: ignore
-        except HTTPException:
-            logger.exception("Read arrow failed")
-            raise HTTPException(
-                status_code=500,
-                detail=(
-                    "Unable to convert data saved as Apache Arrow format, "
-                    "try retrieving as application/vnd.apache.arrow.file and converting"
-                ),
-            )
-        if "time" in df.columns:
-            df["time"] = df["time"].dt.tz_convert("Etc/GMT+7")  # type: ignore
-        csv = df.to_csv(None, index=False)
-
-        return response_class(csv)
