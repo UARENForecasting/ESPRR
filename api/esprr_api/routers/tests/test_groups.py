@@ -9,7 +9,6 @@ import pytest
 
 
 from esprr_api import models
-from esprr_api import utils
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")

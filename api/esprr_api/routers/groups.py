@@ -270,7 +270,7 @@ def _get_group_timeseries_from_systems(
         # No data, return an empty dataframe with the correct attributes
         group_df = pd.DataFrame(
             columns=["time", "ac_power", "clearsky_ac_power"],
-            index=pd.DatetimeIndex([], tz="America/Phoenix"),
+            index=pd.DatetimeIndex([], tz="America/Phoenix"),  # type: ignore
         )
     return group_df
 
