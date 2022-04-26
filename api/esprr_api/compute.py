@@ -171,7 +171,7 @@ def compute_group_statistics(
     elif len(group_system_centers) == 2:
         x_center = sum([center.x for center in group_system_centers])
         y_center = sum([center.y for center in group_system_centers])
-        group_center = geometry.Point(x_center, y_center)
+        group_center = geometry.Point(x_center / 2, y_center / 2)
     else:
         group_center_polygon = geometry.Polygon(
             [[center.x, center.y] for center in group_system_centers]
