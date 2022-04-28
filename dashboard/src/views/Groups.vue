@@ -16,7 +16,7 @@
           <tbody>
             <tr
               v-bind:class="{
-                'selected-site':
+                'selected-group':
                   selected && group.object_id == selected.object_id,
               }"
               v-for="group of groups"
@@ -152,7 +152,7 @@ Vue.component("system-map", SystemMap);
 @Component
 export default class Groups extends Vue {
   groups!: Array<StoredPVSystemGroup>;
-  selected!: Record<string, any>;
+  selected!: Record<string, any> | null;
   showDeleteDialog!: boolean;
 
   created(): void {
@@ -175,6 +175,8 @@ export default class Groups extends Vue {
     this.groups = await GroupsAPI.listSystemGroups(token);
     if (this.groups.length) {
       this.setSelected(this.groups[0]);
+    } else {
+      this.selected = null;
     }
   }
   async deleteGroup(): Promise<void> {
@@ -198,11 +200,6 @@ export default class Groups extends Vue {
       token,
       selectedSystemGroup.object_id
     );
-  }
-  get notSelectedSystemGroups(): Array<StoredPVSystemGroup> {
-    return this.groups.filter((group: StoredPVSystemGroup) => {
-      return group.object_id != this.selected.object_id;
-    });
   }
   get totalCapacity(): number | null {
     if (this.selected) {

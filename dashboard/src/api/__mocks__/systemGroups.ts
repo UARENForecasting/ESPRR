@@ -91,7 +91,7 @@ const groups: Array<StoredPVSystemGroup> = [
   },
 ];
 
-const listSystemGroups = jest.fn().mockResolvedValue(systems);
+const listSystemGroups = jest.fn().mockResolvedValue(groups);
 
 const getSystemGroup = jest.fn(async function (
   token: string,
@@ -109,7 +109,7 @@ const deleteSystemGroup = jest.fn(async function (
   token: string,
   groupId: string
 ): Promise<void> {
-  for (let i = 0; i < group.length; i++) {
+  for (let i = 0; i < groups.length; i++) {
     if (groups[i].object_id == groupId) {
       groups.splice(i, 1);
       return;
@@ -130,10 +130,10 @@ const createSystemGroup = jest.fn(async function (
   }
   groups.push({
     object_id: String(groupIndex),
-    object_type: "system)_group",
+    object_type: "system_group",
     created_at: new Date().toISOString(),
     modified_at: new Date().toISOString(),
-    definition: definition,
+    definition: { systems: [], ...definition},
   });
   const response = {
     object_id: String(groupIndex),
@@ -165,11 +165,12 @@ const addSystemToSystemGroup = jest.fn(async function (
 ): Promise<void> {
   for (let i = 0; i < groups.length; i++) {
      let group = groups[i];
-     if (group.object_id == groupID) {
-       for (let j = 0; j < systems; j++){
+     if (group.object_id == groupId) {
+       for (let j = 0; j < systems.length; j++){
          let sys = systems[j];
+         console.log("comparing ids: \n", sys.object_id, "\n",systemId,"\n");
          if (sys.object_id == systemId) {
-           group.definition.systems.push(system);
+           group.definition.systems.push(sys);
            return;
          }
        }

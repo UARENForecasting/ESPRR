@@ -26,7 +26,7 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard,
   },
   {
-    path: "/system_groups/new",
+    path: "/system_group/new",
     name: "New Group",
     component: GroupDefinition,
     beforeEnter: authGuard,
@@ -53,7 +53,7 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard,
   },
   {
-    path: "/system_groups/:groupId/:dataset",
+    path: "/system_group/:groupId/:dataset",
     name: "Group Dataset Details",
     component: GroupDetails,
     props: true,

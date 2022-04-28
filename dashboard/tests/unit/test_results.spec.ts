@@ -249,7 +249,7 @@ describe("Test Results component", () => {
     appTarget.id = "app";
     document.body.appendChild(appTarget);
 
-    const wrapper = mount(Results, {
+    mount(Results, {
       attachTo: "#app",
       localVue,
       mocks,

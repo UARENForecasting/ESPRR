@@ -10,7 +10,7 @@
               :to="{
                 name: 'Update Group',
                 params: {
-                  groupId: group.object_id,
+                  groupId: groupId,
                 },
                 query: { returnTo: 'details' },
               }"
@@ -21,7 +21,7 @@
             </button>
           </template>
           <ul>
-            <li>Total Capacity: {{ totalCapacity }}</li>
+            <li class="group-capacity">Total Capacity: {{ totalCapacity }}</li>
           </ul>
         </div>
         <div>
@@ -122,12 +122,13 @@
                   :to="{
                     name: 'Group Dataset Details',
                     params: {
-                      groupId: group.object_id,
+                      groupId: groupId,
                       dataset: 'NSRDB_2018',
                     },
                   }"
                 >
                   <button
+                    class="group-2018-results"
                     :disabled="
                       !(
                         ('NSRDB_2018' in groupResultStatus) &
@@ -144,12 +145,13 @@
                   :to="{
                     name: 'Group Dataset Details',
                     params: {
-                      groupId: group.object_id,
+                      groupId: groupId,
                       dataset: 'NSRDB_2019',
                     },
                   }"
                 >
                   <button
+                    class="group-2019-results"
                     :disabled="
                       !(
                         ('NSRDB_2019' in groupResultStatus) &
@@ -172,6 +174,7 @@
                   }"
                 >
                   <button
+                    class="group-2020-results"
                     :disabled="
                       !(
                         ('NSRDB_2020' in groupResultStatus) &
@@ -271,17 +274,16 @@ export default class GroupDetails extends Vue {
         return;
       });
   }
-  async getSingleResultStatus(token: string, dataset: string): Promise<void> {
+  async getSingleResultStatus(token: string, dataset: string): Promise<any> {
     let response: Record<string, any> = {};
     try {
       response = await GroupsAPI.getResult(token, this.groupId, dataset);
     } catch (error: any) {
-      return;
+      return {};
     }
     return response.system_data_status;
   }
   async getResultStatuses(): Promise<void> {
-    console.log("Inside getResultStatuses");
     const token = await this.$auth.getTokenSilently();
     let statuses: Record<string, any> = {};
     for (let dataset of this.datasets) {
@@ -371,6 +373,17 @@ export default class GroupDetails extends Vue {
     SystemsAPI.startProcessing(token, system_id, dataset).then(() => {
       this.getResultStatuses();
     });
+  }
+  async deleteGroup(): Promise<void> {
+    const token = await this.$auth.getTokenSilently();
+    GroupsAPI.deleteSystemGroup(token, this.groupId)
+      .then(() => {
+        this.$router.push({ name: "Groups" });
+      })
+      .catch((error: any) => {
+        console.error(error);
+        this.showDeleteDialog = false;
+      });
   }
 }
 </script>

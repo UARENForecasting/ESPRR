@@ -12,7 +12,7 @@
         </ul>
         <form
           v-if="definition"
-          id="system-definition"
+          id="group-definition"
           @submit="submitSystemGroup"
         >
           <label

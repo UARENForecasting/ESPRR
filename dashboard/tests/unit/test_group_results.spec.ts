@@ -4,7 +4,11 @@ import StatisticsTable from "@/components/data/StatisticsTable.vue";
 import QuickTable from "@/components/data/QuickTable.vue";
 import { $auth } from "./mockauth";
 import { groups, tsTable, statisticsTable } from "@/api/__mocks__/systemGroups";
-import { getResult } from "@/api/systemGroups";
+import {
+  getResult,
+  getResultTimeseries,
+  getResultStatistics,
+} from "@/api/systemGroups";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import flushPromises from "flush-promises";
@@ -20,7 +24,7 @@ const stubs = {
   "system-map": true,
 };
 
-describe("Test Results component", () => {
+describe("Test Group Results component", () => {
   beforeEach(() => {
     jest.resetModules();
     jest.useFakeTimers();
@@ -286,5 +290,75 @@ describe("Test Results component", () => {
     await flushPromises();
     const warning = wrapper.find("div.alert");
     expect(warning.text()).toContain("Results could not be computed");
+  });
+  it("Test results", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        group: groups[0],
+      },
+    });
+    await flushPromises();
+
+    wrapper.setProps({
+      dataset: "NSRDB_2018",
+      group: Object.assign({}, groups[0]),
+    });
+    // @ts-expect-error manually calling watch function
+    await wrapper.vm.reloadDataset();
+    jest.runAllTimers();
+    await flushPromises();
+
+    // @ts-expect-error mocked function has .mock property
+    expect(getResult.mock.calls[1][2]).toBe("NSRDB_2018");
+  });
+  it("Test data missing", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    // @ts-expect-error typescript doesn't know this is mocked
+    getResultTimeseries.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        group: groups[0],
+      },
+    });
+    await flushPromises();
+    expect(wrapper.find("div.alert").text()).toContain("Results could not");
+  });
+  it("Test stats missing", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    // @ts-expect-error typescript doesn't know this is mocked
+    getResultStatistics.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        group: groups[0],
+      },
+    });
+    await flushPromises();
+    expect(wrapper.find("div.alert").text()).toContain("Results could not");
   });
 });
