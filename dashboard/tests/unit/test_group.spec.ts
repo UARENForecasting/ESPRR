@@ -1,4 +1,5 @@
 import SystemGroup from "@/views/Group.vue";
+import { groups } from "@/api/__mocks__/systemGroups";
 
 import { $auth } from "./mockauth";
 import {
@@ -154,6 +155,8 @@ describe("Test System Group Details/Results page", () => {
 
     await flushPromises();
     expect(wrapper.text()).toBe("The Group could not be found");
+    // @ts-expect-error accessing vm direct
+    expect(wrapper.vm.totalCapacity).toBe(null);
     appTarget.remove();
   });
   it("Test select year results", async () => {
@@ -238,5 +241,44 @@ describe("Test System Group Details/Results page", () => {
     });
     await flushPromises();
     expect(wrapper.find(".group-capacity").text()).toBe("Total Capacity: 0");
+  });
+  it("Test processing status", async () => {
+    // @ts-expect-error mocky mock mock
+    getResult.mockImplementation(async (token, gid, dataset) => {
+      const data_status = {};
+      // @ts-expect-error systems is iterable
+      for (const system of groups[0].definition.systems) {
+        // @ts-expect-error shoosh you ts
+        data_status[system.object_id] = {
+          system_id: system.object_id,
+          status: "queued",
+          dataset,
+        };
+      }
+      return {
+        object_type: "system_group",
+        system_data_status: data_status,
+      };
+    });
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(SystemGroup, {
+      attachTo: "#app",
+      localVue,
+      router,
+      mocks,
+      stubs,
+      propsData: {
+        groupId: "04558a7c-c028-11ec-9d64-0242ac120002",
+      },
+    });
+
+    await flushPromises();
+    // @ts-expect-error getter
+    expect(wrapper.vm.anyPending).toBe(true);
+    jest.runAllTimers();
+    appTarget.remove();
   });
 });

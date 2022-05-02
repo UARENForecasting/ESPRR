@@ -86,7 +86,9 @@ describe("Test SystemGroups list", () => {
     // @ts-expect-error ts does not recognize mocked fn
     listSystemGroups.mockResolvedValueOnce([]);
     // @ts-expect-error more mocking
-    deleteSystemGroup.mockImplementationOnce(async () => {});
+    deleteSystemGroup.mockImplementationOnce(async () => {
+      return;
+    });
     const wrapper = mount(SystemGroups, {
       localVue,
       router,
@@ -120,7 +122,7 @@ describe("Test SystemGroups list", () => {
     wrapper.vm.deleteGroup();
 
     await flushPromises();
-    jest.runAllTimers()
+    jest.runAllTimers();
     // getSystemGroups is called after successful deletion to refresh
     // the systems list
     // @ts-expect-error accessing mock properties
