@@ -133,7 +133,10 @@ const createSystemGroup = jest.fn(async function (
     object_type: "system_group",
     created_at: new Date().toISOString(),
     modified_at: new Date().toISOString(),
-    definition: { systems: [], ...definition},
+    definition: {
+        systems: [],
+        name: definition.name
+    },
   });
   const response = {
     object_id: String(groupIndex),
@@ -150,7 +153,7 @@ const updateSystemGroup = jest.fn(async function (
   for (let i = 0; i < groups.length; i++) {
     if (groups[i].object_id == groupId) {
       gId = groups[i].object_id;
-      groups[i].definition = definition;
+      groups[i].definition.name = definition.name;
       return {
         object_id: gId,
       };
@@ -168,7 +171,6 @@ const addSystemToSystemGroup = jest.fn(async function (
      if (group.object_id == groupId) {
        for (let j = 0; j < systems.length; j++){
          let sys = systems[j];
-         console.log("comparing ids: \n", sys.object_id, "\n",systemId,"\n");
          if (sys.object_id == systemId) {
            group.definition.systems.push(sys);
            return;
@@ -185,7 +187,7 @@ const removeSystemFromSystemGroup = jest.fn(async function (
 ): Promise<void> {
   for (let i = 0; i < groups.length; i++) {
      let group = groups[i];
-     if (group.object_id == groupID) {
+     if (group.object_id == groupId) {
        let groupSystems = group.definition.systems;
        for (let j = 0; j < groupSystems.length; j++){
          let sys = groupSystems[j];
@@ -206,6 +208,7 @@ const getResult = jest.fn(async function (
   for (let i = 0; i < groups.length; i++) {
     if (groups[i].object_id == groupId) {
         let data_status = {};
+        // @ts-expect-error systems is iterable
         for (let system of groups[i].definition.systems) {
           data_status[system.object_id] = {
             system_id: system.object_id,
