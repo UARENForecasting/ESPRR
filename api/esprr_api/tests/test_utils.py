@@ -221,11 +221,10 @@ def test_dump_arrow_bytes(df):
     pd.testing.assert_frame_equal(df, new)
 
 
-@pytest.mark.parametrize("accepts", [
-    "text/csv",
-    "application/vnd.apache.arrow.file",
-    httpfail("smock/quarterly")
-])
+@pytest.mark.parametrize(
+    "accepts",
+    ["text/csv", "application/vnd.apache.arrow.file", httpfail("smock/quarterly")],
+)
 def test__get_return_type(accepts):
     res, acc = utils._get_return_type(accepts)
     assert acc == accepts
