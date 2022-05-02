@@ -20,6 +20,7 @@ const stubs = { "system-map": true };
 describe("Test SystemGroups list", () => {
   beforeEach(() => {
     jest.resetModules();
+    jest.useFakeTimers();
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -84,6 +85,8 @@ describe("Test SystemGroups list", () => {
   it("test delete without selection", async () => {
     // @ts-expect-error ts does not recognize mocked fn
     listSystemGroups.mockResolvedValueOnce([]);
+    // @ts-expect-error more mocking
+    deleteSystemGroup.mockImplementationOnce(async () => {});
     const wrapper = mount(SystemGroups, {
       localVue,
       router,
@@ -117,9 +120,25 @@ describe("Test SystemGroups list", () => {
     wrapper.vm.deleteGroup();
 
     await flushPromises();
+    jest.runAllTimers()
     // getSystemGroups is called after successful deletion to refresh
     // the systems list
     // @ts-expect-error accessing mock properties
-    expect(listSystemGroups.mock.calls.length).toBe(1);
+    expect(listSystemGroups.mock.calls.length).toBe(2);
+  });
+  it("Test null cap", async () => {
+    // @ts-expect-error mocking
+    listSystemGroups.mockResolvedValueOnce([]);
+    const wrapper = mount(SystemGroups, {
+      localVue,
+      router,
+      mocks,
+      stubs,
+    });
+
+    await flushPromises();
+    jest.runAllTimers();
+    // @ts-expect-error check getter
+    expect(wrapper.vm.totalCapacity).toBe(null);
   });
 });
