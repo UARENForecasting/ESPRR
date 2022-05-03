@@ -107,7 +107,7 @@
                     <template
                       v-if="'backtracking' in system.definition.tracking"
                     >
-                      {{ system.definition.name }}
+                      Single Axis
                     </template>
                     <template v-else> Fixed Tilt</template>
                   </td>
