@@ -1,16 +1,21 @@
-import Results from "@/components/Results.vue";
+import Results from "@/components/GroupResults.vue";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
 import QuickTable from "@/components/data/QuickTable.vue";
 import { $auth } from "./mockauth";
-import { systems, tsTable, statisticsTable } from "@/api/__mocks__/systems";
-import { getResult, startProcessing } from "@/api/systems";
+import { groups, tsTable, statisticsTable } from "@/api/__mocks__/systemGroups";
+import {
+  getResult,
+  getResultTimeseries,
+  getResultStatistics,
+} from "@/api/systemGroups";
 
 import { createLocalVue, mount } from "@vue/test-utils";
 import flushPromises from "flush-promises";
 
 // use systems mock module
 jest.mock("@/api/systems");
+jest.mock("@/api/systemGroups");
 
 const localVue = createLocalVue();
 
@@ -19,7 +24,7 @@ const stubs = {
   "system-map": true,
 };
 
-describe("Test Results component", () => {
+describe("Test Group Results component", () => {
   beforeEach(() => {
     jest.resetModules();
     jest.useFakeTimers();
@@ -38,7 +43,7 @@ describe("Test Results component", () => {
       mocks,
       stubs,
       propsData: {
-        system: systems[0],
+        group: groups[0],
       },
     });
 
@@ -64,7 +69,7 @@ describe("Test Results component", () => {
       mocks,
       stubs,
       propsData: {
-        system: systems[0],
+        group: groups[0],
       },
     });
 
@@ -83,10 +88,20 @@ describe("Test Results component", () => {
   });
   it("Test result status error", async () => {
     // @ts-expect-error mocked fn
-    getResult.mockImplementationOnce(async () => {
+    getResult.mockImplementationOnce(async (token, gid, dataset) => {
+      const data_status = {};
+      // @ts-expect-error typescript is silly
+      for (const system of groups[0].definition.systems) {
+        // @ts-expect-error expression of type string is totally fine here
+        data_status[system.object_id] = {
+          system_id: system.object_id,
+          status: "error",
+          error: ["it's bad"],
+          dataset: dataset,
+        };
+      }
       return {
-        status: "error",
-        error: ["it's bad"],
+        system_data_status: data_status,
       };
     });
     const appTarget = document.createElement("div");
@@ -99,20 +114,31 @@ describe("Test Results component", () => {
       mocks,
       stubs,
       propsData: {
-        system: systems[0],
+        group: groups[0],
+        dataset: "NSRDB_2019",
       },
     });
 
     await flushPromises();
     expect(wrapper.find(".errors").text()).toBe(
-      "Errors occurred during processing:\n    \n        it's bad\n        Recalculate"
+      "Errors occurred during processing of a system. Please see overview table."
     );
   });
   it("Test result status messages", async () => {
     // @ts-expect-error mocked fn
-    getResult.mockImplementationOnce(async () => {
+    getResult.mockImplementationOnce(async (token, gid, dataset) => {
+      const data_status = {};
+      // @ts-expect-error typescript is silly
+      for (const system of groups[0].definition.systems) {
+        // @ts-expect-error expression of type string is totally fine here
+        data_status[system.object_id] = {
+          system_id: system.object_id,
+          status: "queued",
+          dataset: dataset,
+        };
+      }
       return {
-        status: "queued",
+        system_data_status: data_status,
       };
     });
     const appTarget = document.createElement("div");
@@ -125,19 +151,29 @@ describe("Test Results component", () => {
       mocks,
       stubs,
       propsData: {
-        system: systems[0],
+        group: groups[0],
+        dataset: "NSRDB_2019",
       },
     });
-
     await flushPromises();
     expect(wrapper.text()).toBe(
       "Performance calculation is queued and will be processed shortly."
     );
 
     // @ts-expect-error mocked fn
-    getResult.mockImplementationOnce(async () => {
+    getResult.mockImplementationOnce(async (token, gid, dataset) => {
+      const data_status = {};
+      // @ts-expect-error typescript is silly
+      for (const system of groups[0].definition.systems) {
+        // @ts-expect-error expression of type string is totally fine here
+        data_status[system.object_id] = {
+          system_id: system.object_id,
+          status: "running",
+          dataset: dataset,
+        };
+      }
       return {
-        status: "running",
+        system_data_status: data_status,
       };
     });
     jest.runAllTimers();
@@ -147,29 +183,26 @@ describe("Test Results component", () => {
     );
 
     // @ts-expect-error mocked fn
-    getResult.mockImplementationOnce(async () => {
+    getResult.mockImplementationOnce(async (token, gid, dataset) => {
+      const data_status = {};
+      // @ts-expect-error typescript is silly
+      for (const system of groups[0].definition.systems) {
+        // @ts-expect-error expression of type string is totally fine here
+        data_status[system.object_id] = {
+          system_id: system.object_id,
+          status: "timeseries missing",
+          dataset: dataset,
+        };
+      }
       return {
-        status: "statistics missing",
+        system_data_status: data_status,
       };
     });
     jest.runAllTimers();
     await flushPromises();
-    expect(wrapper.find(".alert").text()).toBe(
-      "Result statistics are missing.\n      Recalculate"
-    );
 
-    // @ts-expect-error mocked fn
-    getResult.mockImplementationOnce(async () => {
-      return {
-        status: "timeseries missing",
-      };
-    });
-    // @ts-expect-error instance method
-    wrapper.vm.awaitResults();
-    jest.runAllTimers();
-    await flushPromises();
-    expect(wrapper.find(".alert").text()).toBe(
-      "Result timeseries are missing.\n      Recalculate"
+    expect(wrapper.text()).toContain(
+      "Results could not be computed for this group"
     );
   });
   it("Test results destroyed method", async () => {
@@ -189,12 +222,11 @@ describe("Test Results component", () => {
       mocks,
       stubs,
       propsData: {
-        system: systems[0],
+        group: groups[0],
       },
     });
 
     await flushPromises();
-    expect(wrapper.vm.$data.timeout).toBeTruthy();
     wrapper.destroy();
 
     // @ts-expect-error mock fn
@@ -224,7 +256,7 @@ describe("Test Results component", () => {
       mocks,
       stubs,
       propsData: {
-        system: systems[0],
+        group: groups[0],
         dataset: "NSRDB_2017",
       },
     });
@@ -236,30 +268,97 @@ describe("Test Results component", () => {
         "    NSRDB_2018, NSRDB_2019, NSRDB_2020."
     );
   });
-  it("Test result dne", async () => {
+  it("Test results dne", async () => {
     // @ts-expect-error mocked fn
     getResult.mockImplementationOnce(async () => {
       throw "error";
-    });
-    // @ts-expect-error mocked fn
-    startProcessing.mockImplementationOnce(async () => {
-      return;
     });
     const appTarget = document.createElement("div");
     appTarget.id = "app";
     document.body.appendChild(appTarget);
 
-    mount(Results, {
+    const wrapper = mount(Results, {
       attachTo: "#app",
       localVue,
       mocks,
       stubs,
       propsData: {
-        system: systems[0],
+        group: groups[0],
       },
     });
 
     await flushPromises();
-    expect(startProcessing).toHaveBeenCalled();
+    const warning = wrapper.find("div.alert");
+    expect(warning.text()).toContain("Results could not be computed");
+  });
+  it("Test results", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        group: groups[0],
+      },
+    });
+    await flushPromises();
+
+    wrapper.setProps({
+      dataset: "NSRDB_2018",
+      group: Object.assign({}, groups[0]),
+    });
+    // @ts-expect-error manually calling watch function
+    await wrapper.vm.reloadDataset();
+    jest.runAllTimers();
+    await flushPromises();
+
+    // @ts-expect-error mocked function has .mock property
+    expect(getResult.mock.calls[1][2]).toBe("NSRDB_2018");
+  });
+  it("Test data missing", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    // @ts-expect-error typescript doesn't know this is mocked
+    getResultTimeseries.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        group: groups[0],
+      },
+    });
+    await flushPromises();
+    expect(wrapper.find("div.alert").text()).toContain("Results could not");
+  });
+  it("Test stats missing", async () => {
+    const appTarget = document.createElement("div");
+    appTarget.id = "app";
+    document.body.appendChild(appTarget);
+
+    // @ts-expect-error typescript doesn't know this is mocked
+    getResultStatistics.mockImplementationOnce(async () => {
+      throw "error";
+    });
+    const wrapper = mount(Results, {
+      attachTo: "#app",
+      localVue,
+      mocks,
+      stubs,
+      propsData: {
+        group: groups[0],
+      },
+    });
+    await flushPromises();
+    expect(wrapper.find("div.alert").text()).toContain("Results could not");
   });
 });

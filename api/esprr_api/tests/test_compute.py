@@ -189,3 +189,19 @@ def test_run_job_error(
     assert cargs[3] is None
     assert cargs[4] is None
     assert cargs[5] == {"message": "test err"}
+
+
+@pytest.mark.parametrize("num_systems", [1, 2, 3])
+def test_compute_group_statistics_geometry_handling(
+    mocker, num_systems, stored_system_group
+):
+    group = stored_system_group.copy()
+    system = group.definition.systems[0]
+    new_systems = [system for i in range(0, num_systems + 1)]
+    group.definition.systems = new_systems
+    mocked_compute = mocker.patch("esprr_api.compute._compute_statistics")
+    compute.compute_group_statistics(group, pd.DataFrame())
+    system_center = system.definition.boundary._rect.centroid
+    center_arg = mocked_compute.call_args[0][0]
+    assert system_center.x == center_arg.x
+    assert system_center.y == center_arg.y

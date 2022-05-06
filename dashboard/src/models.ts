@@ -36,3 +36,18 @@ export interface StoredPVSystem {
   object_type: string;
   definition: PVSystem;
 }
+
+export interface PVSystemGroup {
+  name: string;
+  systems?: Array<StoredPVSystem>;
+}
+
+export interface StoredPVSystemGroup {
+  created_at: string;
+  modified_at: string;
+  object_id: string;
+  object_type: string;
+  definition: PVSystemGroup;
+}
+
+export const validDatasets = ["NSRDB_2018", "NSRDB_2019", "NSRDB_2020"];

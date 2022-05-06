@@ -14,7 +14,7 @@ from sentry_sdk.integrations.rq import RqIntegration
 
 
 from . import auth, __version__, settings, storage, queuing
-from .routers import systems, user
+from .routers import systems, user, groups
 
 
 app = FastAPI(title="Expected Solar Performance and Ramp Rate Tool")
@@ -133,6 +133,12 @@ app.include_router(
     systems.router,
     prefix="/systems",
     tags=["PV Systems"],
+    dependencies=[Depends(auth.get_user_id)],
+)
+app.include_router(
+    groups.router,
+    prefix="/system_groups",
+    tags=["System Groups"],
     dependencies=[Depends(auth.get_user_id)],
 )
 app.include_router(

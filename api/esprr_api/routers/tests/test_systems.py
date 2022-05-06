@@ -211,7 +211,7 @@ def test_get_system_model_timeseries_arrow(
     iob = BytesIO(resp.content)
     iob.seek(0)
     df = pd.read_feather(iob)
-    pd.testing.assert_frame_equal(df, timeseries_df)
+    pd.testing.assert_frame_equal(df, timeseries_df, check_dtype=False)
 
 
 @pytest.mark.parametrize("accept", ["*/*", "text/csv"])
