@@ -14,7 +14,7 @@
         </ul>
         <form v-if="definition" id="distributed-group-definition" @submit="submit">
           <label
-            title="A name for this system. Most special characters beyond space, comma, hyphen, and parentheses are not allowed."
+            title="A name for this space, comma, hyphen, and parentheses are not allowed."
             >Name:
             <input
               type="text"
@@ -213,12 +213,14 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import * as SystemsApi from "@/api/systems";
+import * as GroupsAPI from "@/api/systemGroups";
 import flattenErrors from "@/api/errors";
 import DistributedGroupMap from "@/components/DistributedMap.vue";
 import SurfaceTypes from "@/constants/surface_albedo.json";
 
 import {
   StoredPVSystem,
+  StoredPVSystemGroup,
   PVSystem,
   FixedTracking,
   SingleAxisTracking,
@@ -241,9 +243,11 @@ export default class DistributedGroupDefinition extends Vue {
   systems!: Array<StoredPVSystem>;
   errors!: Record<string, string> | null;
   surfaceTypes: Record<string, number> = SurfaceTypes;
+
   totalAcCapacity!: number;
   numberOfSystems!: number;
   distanceBetweenSystems!: number;
+  systemBounds!: Array<BoundingBox>;
 
   data(): Record<string, any> {
     return {
@@ -254,7 +258,8 @@ export default class DistributedGroupDefinition extends Vue {
       errors: null,
       numberOfSystems: 2,
       distanceBetweenSystems: 1,
-      totalAcCapacity: 1
+      totalAcCapacity: 1,
+      systemBounds: []
     };
   }
 
@@ -296,31 +301,69 @@ export default class DistributedGroupDefinition extends Vue {
     const token = await this.$auth.getTokenSilently();
     // TODO: join definition into actual system definition.
     //   and name with name + number
+    let newSystemIds = [];
+    // look in systems for names, warn user.
     // TODO: create all systems - Sanity check that systems don't exist first
-    let systemIds = [];
-    for (let i = 0; i < 0; i++) {
-      SystemsApi.createSystem(token, this.definition)
-        .then((response: any) => {
-          SystemsApi.startProcessing(
-            token,
-            response.object_id,
-            "NSRDB_2019"
-          ).then(() => {
-            this.navigateToPrevious();
-            this.errors = null;
-          });
-        })
-        .catch((errors: any) => {
-          this.errors = flattenErrors(errors);
-        });
+    let newSystemDefinitions = this.systemBounds.map(
+      (bounds:BoundingBox, i: number) => {
+        return {
+          ...this.definition,
+          name: `${this.definition.name} System ${i}`,
+          boundary: bounds,
+          ac_capacity: this.totalAcCapacity / this.numberOfSystems
+        }
+      }
+    );
+    console.log(newSystemDefinitions);
+    let existingSystems = this.systems.map((sys: StoredPVSystem) => sys.definition.name);
+    if (newSystemDefinitions.some((sys: PVSystem) => existingSystems.includes(sys.name))) {
+      console.error("ahh. panic");
+    }
+    let systemPromises = [];
+    for (const sys of newSystemDefinitions) {
+      systemPromises.push(SystemsApi.createSystem(token, sys));
+      // TODO some error handling here?
+      //  .then((response: any) => {
+      //    SystemsApi.startProcessing(
+      //      token,
+      //      response.object_id,
+      //      "NSRDB_2019"
+      //    ).then(() => {
+      //      this.navigateToPrevious();
+      //      this.errors = null;
+      //    });
+      //  })
+      //  .catch((errors: any) => {
+      //    this.errors = flattenErrors(errors);
+      //  });
     }
     // TODO: create system group and add all systems to said group
     // 1 - create group
     // 2 - for system in systemIds add to group
-
+    let systemIds = await Promise.all(systemPromises).then(
+        (responses:any) => responses.map((response:any) =>response.object_id)
+    );
     // TODO: send the user to the group page
+    console.log("Made all these systems: ", systemIds);
+    let groupDef = { name: this.definition.name };
+    let groupId = await GroupsAPI.createSystemGroup(token, groupDef)
+      .then((groupResponse: StoredPVSystemGroup) => groupResponse.object_id);
+    let sysAdditionPromises = []
+    for (const systemId of systemIds) {
+      sysAdditionPromises.push(GroupsAPI.addSystemToSystemGroup(
+        token,
+        groupId,
+        systemId
+      ))
+    }
+    let allAdded = await Promise.all(sysAdditionPromises);
+    this.$router.push({
+      name: "Group Details",
+      params: {
+        groupId
+      }
+    });
   }
-
   changeAlbedo(e: HTMLInputEvent): void {
     this.definition.albedo = this.surfaceTypes[e.target.value];
   }
@@ -352,8 +395,8 @@ export default class DistributedGroupDefinition extends Vue {
     this.definition.tracking = newParameters;
   }
 
-  updateBounds(newBounds: BoundingBox): void {
-    this.$set(this.definition, "boundary", newBounds);
+  updateBounds(newBounds: Array<BoundingBox>): void {
+    this.systemBounds =  newBounds;
   }
   get dcCapacity(): number | null {
     if (this.totalAcCapacity && this.definition.dc_ac_ratio) {
@@ -375,7 +418,7 @@ export default class DistributedGroupDefinition extends Vue {
     return otherSystems;
   }
   get boundarySelected(): boolean {
-    return "boundary" in this.definition;
+    return this.systemBounds.length > 0;
   }
 }
 </script>

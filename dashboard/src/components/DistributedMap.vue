@@ -34,7 +34,6 @@
           v-for="system of all_systems"
           :key="system.object_id"
           :bounds="createRectangle(system.definition.boundary)"
-          @click="emitSelection(system)"
         >
         </l-rectangle>
       </l-layer-group>
@@ -53,6 +52,7 @@
             type="radio"
             value="line"
             v-model="strategy"
+            @change="adjustForCapacity"
           />
         </label>
         <label>
@@ -62,6 +62,7 @@
             type="radio"
             value="grid"
             v-model="strategy"
+            @change="adjustForCapacity"
           /> </label
         ><br />
         <fieldset v-if="strategy == 'line'">
@@ -73,6 +74,7 @@
               type="radio"
               value="EW"
               v-model="lineOrientation"
+              @change="adjustForCapacity"
             />
           </label>
           <label>
@@ -82,6 +84,7 @@
               type="radio"
               value="NS"
               v-model="lineOrientation"
+              @change="adjustForCapacity"
             />
           </label>
         </fieldset>
@@ -220,7 +223,7 @@ export default class DistributedGroupMap extends Vue {
     // enforce area and emit parameters
     this.$emit(
       "bounds-updated",
-      this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
+      this.groupSystems.map((bounds:L.LatLng) => this.leafletBoundsToBoundingBox(bounds))
     );
   }
 
@@ -239,7 +242,6 @@ export default class DistributedGroupMap extends Vue {
   @Watch("dc_capacity")
   @Watch("numSystems")
   @Watch("distanceBetween")
-  @Watch("lineOrientation")
   adjustForCapacity(): void {
     if (this.bounds) {
       // increase the size of the system at the current center
@@ -274,7 +276,7 @@ export default class DistributedGroupMap extends Vue {
         oneCenter = GeoUtil.destination(
           this.center,
           initialAngle + 90 * Math.pow(-1, i), // alternate placement right to left
-          this.distanceBetween * 1000 * Math.floor(i+1/2) // km to m
+          this.distanceBetween * 1000 * Math.ceil(i/2) // km to m
         );
       }
       const boundsOfArea = oneCenter.toBounds(squareSideLength * 1000);
@@ -365,7 +367,6 @@ export default class DistributedGroupMap extends Vue {
       const center = event.latlng;
       this.initializePolygons();
     }
-    this.$emit("bounds-updated", this.leafletBoundsToBoundingBox(this.bounds!));
   }
 
   boundingBoxToLeafletBounds(bb: BoundingBox): L.LatLngBounds {
