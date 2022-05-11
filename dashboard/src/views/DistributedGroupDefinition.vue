@@ -444,7 +444,7 @@ export default class DistributedGroupDefinition extends Vue {
   get boundarySelected(): boolean {
     return this.systemBounds.length > 0;
   }
-  get distanceInKM() {
+  get distanceInKM(): number {
     if (this.units == "km") {
       return this.distanceBetweenSystems;
     } else {
