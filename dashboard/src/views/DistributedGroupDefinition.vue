@@ -52,14 +52,16 @@
               v-model.number="numberOfSystems"
           /></label>
           <label title="Distance between systems"
-            >Distance between systems (km):
+            >Distance between systems:
             <input
               type="number"
               step="any"
               min="0"
               required
               v-model.number="distanceBetweenSystems"
-          /></label>
+            /><input type="radio" value="km" v-model="units" />km
+            <input type="radio" value="mi" v-model="units" />mi
+          </label>
           <fieldset>
             <legend>System Parameters</legend>
             <label
@@ -215,7 +217,7 @@
           :all_systems="otherSystems"
           :dc_capacity="dcCapacity"
           :numSystems="numberOfSystems"
-          :distanceBetween="distanceBetweenSystems"
+          :distanceBetween="distanceInKM"
           @bounds-updated="updateBounds"
         />
       </div>
@@ -260,6 +262,7 @@ export default class DistributedGroupDefinition extends Vue {
   numberOfSystems!: number;
   distanceBetweenSystems!: number;
   systemBounds!: Array<BoundingBox>;
+  units!: string;
 
   data(): Record<string, any> {
     return {
@@ -273,6 +276,7 @@ export default class DistributedGroupDefinition extends Vue {
       distanceBetweenSystems: 1,
       totalAcCapacity: 1,
       systemBounds: [],
+      units: "km",
     };
   }
 
@@ -439,6 +443,13 @@ export default class DistributedGroupDefinition extends Vue {
   }
   get boundarySelected(): boolean {
     return this.systemBounds.length > 0;
+  }
+  get distanceInKM() {
+    if (this.units == "km") {
+      return this.distanceBetweenSystems;
+    } else {
+      return this.distanceBetweenSystems * 1.60934;
+    }
   }
 }
 </script>
