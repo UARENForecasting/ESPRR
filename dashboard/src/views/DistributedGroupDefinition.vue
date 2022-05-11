@@ -1,9 +1,13 @@
 <template>
   <div class="system-definition-form">
-    <h2 >Create New Distributed System Group</h2>
-    <p>Creates multiple systems given total desired AC capacity, number of
+    <h2>Create New Distributed System Group</h2>
+    <p>
+      Creates multiple systems given total desired AC capacity, number of
       systems, and distance between sites. Systems created this way will be
-      identical other than location, but may be edited after creation.
+      identical other than location, but may be edited after creation. Plants
+      will be named after the group and suffixed with a number.
+    </p>
+
     <hr />
     <div v-if="definition" class="definition-container">
       <div id="definition-inputs">
@@ -12,7 +16,11 @@
             <b>{{ error }}:</b> {{ errors[error] }}
           </li>
         </ul>
-        <form v-if="definition" id="distributed-group-definition" @submit="submit">
+        <form
+          v-if="definition"
+          id="distributed-group-definition"
+          @submit="submit"
+        >
           <label
             title="A name for this space, comma, hyphen, and parentheses are not allowed."
             >Name:
@@ -23,7 +31,8 @@
               required
               pattern="^(?!\W+$)(?![_ ',\-\(\)]+$)[\w ',\-\(\)]*$"
               v-model="definition.name"
-          /></label>
+            /><span v-if="checkName" class="error">{{ checkName }}</span></label
+          >
           <label title="Cumulative AC Capacity of desired systems in MW"
             >Total AC Capacity (MW):
             <input
@@ -52,143 +61,146 @@
               v-model.number="distanceBetweenSystems"
           /></label>
           <fieldset>
-          <legend>System Parameters</legend>
-          <label>AC Capacity (MW): {{ (totalAcCapacity / numberOfSystems).toFixed(2) }}</label>
-          <label title="Ratio of installed DC capacity to AC capacity"
-            >DC/AC Ratio:
-            <input
-              type="number"
-              step="any"
-              min="0"
-              required
-              v-model.number="definition.dc_ac_ratio"
-          /></label>
-          <label title="Sets Albedo for common surface types"
-            >Surface Type:
-            <select
-              id="albedoSelect"
-              name="albedoSelect"
-              @change="changeAlbedo"
-            >
-              <option value="" disable selected>manually set albedo</option>
-              <option
-                v-for="k in Object.keys(surfaceTypes)"
-                :key="k"
-                :name="k"
-                :value="k"
-              >
-                {{ k }}
-              </option>
-            </select>
-          </label>
-          <label title="Albedo of the ground where system is installed"
-            >Albedo:
-            <input
-              type="number"
-              step="any"
-              min="0"
-              max="1"
-              required
-              v-model.number="definition.albedo"
-          /></label>
-
-          <fieldset class="tracking">
-            <legend>Panel Orientation/Tracking</legend>
+            <legend>System Parameters</legend>
             <label
-              title="Choose between PV panels that are mounted at a fixed orientation or on a single-axis tracking system"
+              >AC Capacity (MW):
+              {{ (totalAcCapacity / numberOfSystems).toFixed(2) }}</label
             >
-              Tracking Type:
-              <input type="radio" v-model="trackingType" value="fixed" />Fixed
-              Tilt
+            <label title="Ratio of installed DC capacity to AC capacity"
+              >DC/AC Ratio:
               <input
-                type="radio"
-                v-model="trackingType"
-                value="singleAxis"
-              />Single Axis
+                type="number"
+                step="any"
+                min="0"
+                required
+                v-model.number="definition.dc_ac_ratio"
+            /></label>
+            <label title="Sets Albedo for common surface types"
+              >Surface Type:
+              <select
+                id="albedoSelect"
+                name="albedoSelect"
+                @change="changeAlbedo"
+              >
+                <option value="" disable selected>manually set albedo</option>
+                <option
+                  v-for="k in Object.keys(surfaceTypes)"
+                  :key="k"
+                  :name="k"
+                  :value="k"
+                >
+                  {{ k }}
+                </option>
+              </select>
             </label>
-            <fieldset class="fixed" v-if="trackingType == 'fixed'">
-              <label title="Tilt of the panels in degrees from horizontal">
-                Tilt:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="90"
-                  required
-                  v-model.number="definition.tracking.tilt"
-                />
-              </label>
+            <label title="Albedo of the ground where system is installed"
+              >Albedo:
+              <input
+                type="number"
+                step="any"
+                min="0"
+                max="1"
+                required
+                v-model.number="definition.albedo"
+            /></label>
+
+            <fieldset class="tracking">
+              <legend>Panel Orientation/Tracking</legend>
               <label
-                title="Azimuth of the panels in degrees from North. 180 == South"
+                title="Choose between PV panels that are mounted at a fixed orientation or on a single-axis tracking system"
               >
-                Azimuth:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="360"
-                  required
-                  v-model.number="definition.tracking.azimuth"
-                />
-              </label>
-            </fieldset>
-            <fieldset class="fixed" v-else>
-              <label
-                title="Tilt (in degrees) of the axis of rotation with respect to horizontal. Typically 0."
-              >
-                Axis Tilt:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="90"
-                  required
-                  v-model.number="definition.tracking.axis_tilt"
-                />
-              </label>
-              <label
-                title="The compass direction along which the axis of rotation lies. Measured in decimal degrees east of north. Typically 0."
-              >
-                Axis Azimuth:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="360"
-                  required
-                  v-model.number="definition.tracking.axis_azimuth"
-                />
-              </label>
-              <label>
-                Ground Coverage Ratio:
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  max="1"
-                  required
-                  v-model.number="definition.tracking.gcr"
-                />
-              </label>
-              <label
-                title='Controls whether the tracker has the capability to "backtrack" to avoid row-to-row shading. False denotes no backtrack capability. True denotes backtrack capability.'
-              >
-                Backtracking:
+                Tracking Type:
+                <input type="radio" v-model="trackingType" value="fixed" />Fixed
+                Tilt
                 <input
                   type="radio"
-                  v-model="definition.tracking.backtracking"
-                  :value="true"
-                />True
-                <input
-                  type="radio"
-                  v-model="definition.tracking.backtracking"
-                  :value="false"
-                />False
+                  v-model="trackingType"
+                  value="singleAxis"
+                />Single Axis
               </label>
+              <fieldset class="fixed" v-if="trackingType == 'fixed'">
+                <label title="Tilt of the panels in degrees from horizontal">
+                  Tilt:
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    max="90"
+                    required
+                    v-model.number="definition.tracking.tilt"
+                  />
+                </label>
+                <label
+                  title="Azimuth of the panels in degrees from North. 180 == South"
+                >
+                  Azimuth:
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    max="360"
+                    required
+                    v-model.number="definition.tracking.azimuth"
+                  />
+                </label>
+              </fieldset>
+              <fieldset class="fixed" v-else>
+                <label
+                  title="Tilt (in degrees) of the axis of rotation with respect to horizontal. Typically 0."
+                >
+                  Axis Tilt:
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    max="90"
+                    required
+                    v-model.number="definition.tracking.axis_tilt"
+                  />
+                </label>
+                <label
+                  title="The compass direction along which the axis of rotation lies. Measured in decimal degrees east of north. Typically 0."
+                >
+                  Axis Azimuth:
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    max="360"
+                    required
+                    v-model.number="definition.tracking.axis_azimuth"
+                  />
+                </label>
+                <label>
+                  Ground Coverage Ratio:
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    max="1"
+                    required
+                    v-model.number="definition.tracking.gcr"
+                  />
+                </label>
+                <label
+                  title='Controls whether the tracker has the capability to "backtrack" to avoid row-to-row shading. False denotes no backtrack capability. True denotes backtrack capability.'
+                >
+                  Backtracking:
+                  <input
+                    type="radio"
+                    v-model="definition.tracking.backtracking"
+                    :value="true"
+                  />True
+                  <input
+                    type="radio"
+                    v-model="definition.tracking.backtracking"
+                    :value="false"
+                  />False
+                </label>
               </fieldset>
             </fieldset>
           </fieldset>
-          <button type="submit" :disabled="!boundarySelected">
+          <button type="submit" :disabled="checkName || !boundarySelected">
             Create Distributed Group</button
           ><span v-if="!boundarySelected"
             >You must place the systems on the map to the left before
@@ -214,7 +226,6 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import * as SystemsApi from "@/api/systems";
 import * as GroupsAPI from "@/api/systemGroups";
-import flattenErrors from "@/api/errors";
 import DistributedGroupMap from "@/components/DistributedMap.vue";
 import SurfaceTypes from "@/constants/surface_albedo.json";
 
@@ -241,6 +252,7 @@ export default class DistributedGroupDefinition extends Vue {
   definition!: PVSystem;
   trackingType!: string;
   systems!: Array<StoredPVSystem>;
+  groups!: Array<StoredPVSystemGroup>;
   errors!: Record<string, string> | null;
   surfaceTypes: Record<string, number> = SurfaceTypes;
 
@@ -254,12 +266,13 @@ export default class DistributedGroupDefinition extends Vue {
       definition: this.definition,
       trackingType: this.trackingType,
       seedPoint: null,
-      systems: null,
+      systems: [],
+      groups: [],
       errors: null,
       numberOfSystems: 2,
       distanceBetweenSystems: 1,
       totalAcCapacity: 1,
-      systemBounds: []
+      systemBounds: [],
     };
   }
 
@@ -276,6 +289,7 @@ export default class DistributedGroupDefinition extends Vue {
     };
     this.trackingType = "fixed";
     this.loadSystems();
+    this.loadGroups();
   }
 
   async loadSystems(): Promise<void> {
@@ -295,73 +309,79 @@ export default class DistributedGroupDefinition extends Vue {
       });
   }
 
+  async loadGroups(): Promise<void> {
+    // Load the the list of systems from the api
+    const token = await this.$auth.getTokenSilently();
+    this.groups = await GroupsAPI.listSystemGroups(token);
+  }
+
+  get checkName(): string {
+    let existingGroups = this.groups.map(
+      (grp: StoredPVSystemGroup) => grp.definition.name
+    );
+    if (existingGroups.some((name: string) => name == this.definition.name)) {
+      return "Group with this name already exists.";
+    }
+
+    let existingSystems = this.systems.map(
+      (sys: StoredPVSystem) => sys.definition.name
+    );
+    let systemCollisions = [];
+    for (let i = 1; i <= this.numberOfSystems; i++) {
+      const generatedSystemName = `${this.definition.name} System ${i}`;
+      for (let sys of existingSystems) {
+        if (sys == generatedSystemName) {
+          systemCollisions.push(sys);
+        }
+      }
+    }
+    if (systemCollisions.length > 0) {
+      let badNames = systemCollisions.join(",");
+      return `The systems to be generated, ${badNames} already exist.`;
+    }
+    return "";
+  }
+
   async submit(e: Event): Promise<void> {
     e.preventDefault();
     // validate and post system
     const token = await this.$auth.getTokenSilently();
-    // TODO: join definition into actual system definition.
-    //   and name with name + number
-    let newSystemIds = [];
-    // look in systems for names, warn user.
-    // TODO: create all systems - Sanity check that systems don't exist first
     let newSystemDefinitions = this.systemBounds.map(
-      (bounds:BoundingBox, i: number) => {
+      (bounds: BoundingBox, i: number) => {
         return {
           ...this.definition,
-          name: `${this.definition.name} System ${i}`,
+          name: `${this.definition.name} System ${i + 1}`,
           boundary: bounds,
-          ac_capacity: this.totalAcCapacity / this.numberOfSystems
-        }
+          ac_capacity: this.totalAcCapacity / this.numberOfSystems,
+        };
       }
     );
-    console.log(newSystemDefinitions);
-    let existingSystems = this.systems.map((sys: StoredPVSystem) => sys.definition.name);
-    if (newSystemDefinitions.some((sys: PVSystem) => existingSystems.includes(sys.name))) {
-      console.error("ahh. panic");
-    }
+
     let systemPromises = [];
     for (const sys of newSystemDefinitions) {
       systemPromises.push(SystemsApi.createSystem(token, sys));
-      // TODO some error handling here?
-      //  .then((response: any) => {
-      //    SystemsApi.startProcessing(
-      //      token,
-      //      response.object_id,
-      //      "NSRDB_2019"
-      //    ).then(() => {
-      //      this.navigateToPrevious();
-      //      this.errors = null;
-      //    });
-      //  })
-      //  .catch((errors: any) => {
-      //    this.errors = flattenErrors(errors);
-      //  });
     }
-    // TODO: create system group and add all systems to said group
     // 1 - create group
     // 2 - for system in systemIds add to group
-    let systemIds = await Promise.all(systemPromises).then(
-        (responses:any) => responses.map((response:any) =>response.object_id)
+    let systemIds = await Promise.all(systemPromises).then((responses: any) =>
+      responses.map((response: any) => response.object_id)
     );
-    // TODO: send the user to the group page
-    console.log("Made all these systems: ", systemIds);
     let groupDef = { name: this.definition.name };
-    let groupId = await GroupsAPI.createSystemGroup(token, groupDef)
-      .then((groupResponse: StoredPVSystemGroup) => groupResponse.object_id);
-    let sysAdditionPromises = []
+    let groupId = await GroupsAPI.createSystemGroup(token, groupDef).then(
+      (groupResponse: StoredPVSystemGroup) => groupResponse.object_id
+    );
+    let sysAdditionPromises = [];
     for (const systemId of systemIds) {
-      sysAdditionPromises.push(GroupsAPI.addSystemToSystemGroup(
-        token,
-        groupId,
-        systemId
-      ))
+      sysAdditionPromises.push(
+        GroupsAPI.addSystemToSystemGroup(token, groupId, systemId)
+      );
     }
-    let allAdded = await Promise.all(sysAdditionPromises);
+    await Promise.all(sysAdditionPromises);
     this.$router.push({
       name: "Group Details",
       params: {
-        groupId
-      }
+        groupId,
+      },
     });
   }
   changeAlbedo(e: HTMLInputEvent): void {
@@ -396,7 +416,7 @@ export default class DistributedGroupDefinition extends Vue {
   }
 
   updateBounds(newBounds: Array<BoundingBox>): void {
-    this.systemBounds =  newBounds;
+    this.systemBounds = newBounds;
   }
   get dcCapacity(): number | null {
     if (this.totalAcCapacity && this.definition.dc_ac_ratio) {
@@ -464,5 +484,8 @@ input[type="number"] {
 
 .tracking {
   margin: 0.5em 3em 1em 0;
+}
+span.error {
+  color: #a00;
 }
 </style>

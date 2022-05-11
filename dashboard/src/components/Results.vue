@@ -32,7 +32,7 @@
           (status == 'timeseries missing')
       "
     >
-      <h2>Performance Results {{dataset.replace('_', ' ')}}</h2>
+      <h2>Performance Results {{ dataset.replace("_", " ") }}</h2>
       <hr />
       <div class="alert" v-if="status == 'timeseries missing'">
         Result timeseries are missing.

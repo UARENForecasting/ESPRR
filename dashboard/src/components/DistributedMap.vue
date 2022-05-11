@@ -41,9 +41,11 @@
     <div class="map-prompt">
       <fieldset>
         <legend>Placement Strategy</legend>
-        <p>Select a placement strategy for the distributed plants. The
-         <i>Line</i> strategy places plants on a North/South or East/West line.
-         The <i>grid</i> strategy will arrange the plants in an approximate square.
+        <p>
+          Select a placement strategy for the distributed plants. The
+          <i>Line</i> strategy places plants on a North/South or East/West line.
+          The <i>grid</i> strategy will arrange the plants in an approximate
+          square.
         </p>
         <label>
           Line
@@ -115,10 +117,6 @@ import { PVSystem, StoredPVSystem } from "@/models";
 
 import GetColor from "@/utils/Colors";
 
-interface TransformationEvent {
-  target: L.Polyline;
-}
-
 Vue.component("l-map", LMap);
 Vue.component("l-tile-layer", LTileLayer);
 Vue.component("l-marker", LMarker);
@@ -151,7 +149,7 @@ export default class DistributedGroupMap extends Vue {
   aspectY!: number;
   initialized!: boolean;
   strategy!: string;
-  groupSystems!: Array<L.LatLng>;
+  groupSystems!: Array<L.LatLngBounds>;
   lineOrientation!: string;
 
   mapReady(): void {
@@ -186,7 +184,7 @@ export default class DistributedGroupMap extends Vue {
       initialized: false,
       strategy: "line",
       lineOrientation: "EW",
-      groupSystems: []
+      groupSystems: [],
     };
   }
 
@@ -219,15 +217,7 @@ export default class DistributedGroupMap extends Vue {
     ];
   }
 
-  handleTransformation(transformEvent: TransformationEvent): void {
-    // enforce area and emit parameters
-    this.$emit(
-      "bounds-updated",
-      this.groupSystems.map((bounds:L.LatLng) => this.leafletBoundsToBoundingBox(bounds))
-    );
-  }
-
-  getGroupBounds(): L.LatLngBounds {
+  getGroupBounds(): L.LatLngBounds | null {
     let all_bounds = this.groupSystems;
     if (all_bounds.length > 0) {
       let north = Math.max(...all_bounds.map((b) => b.getNorth()));
@@ -262,7 +252,7 @@ export default class DistributedGroupMap extends Vue {
     }
   }
 
-  placeLineStrategy(squareSideLength: number): Array<L.LatLng> {
+  placeLineStrategy(squareSideLength: number): Array<L.LatLngBounds> {
     const sitePolygons = [];
     for (let i = 0; i < this.numSystems; i++) {
       let oneCenter = this.center;
@@ -276,13 +266,13 @@ export default class DistributedGroupMap extends Vue {
         oneCenter = GeoUtil.destination(
           this.center,
           initialAngle + 90 * Math.pow(-1, i), // alternate placement right to left
-          this.distanceBetween * 1000 * Math.ceil(i/2) // km to m
+          this.distanceBetween * 1000 * Math.ceil(i / 2) // km to m
         );
       }
       const boundsOfArea = oneCenter.toBounds(squareSideLength * 1000);
       sitePolygons.push(boundsOfArea);
     }
-    return sitePolygons
+    return sitePolygons;
   }
   /* Places systems in a box pattern by determining a direction from the last
    * placed system. Uses a concept of "stages" to maintain shape. The example
@@ -293,19 +283,19 @@ export default class DistributedGroupMap extends Vue {
    *       3 1 1 2 4
    *       3 3 3 3 4
    */
-  placeGridStrategy(squareSideLength: number): Array<L.LatLng> {
+  placeGridStrategy(squareSideLength: number): Array<L.LatLngBounds> {
     const sitePolygons = [];
     let last = this.center;
     let oneCenter = this.center;
-    
-    let direction: number;
+
+    let direction = 0;
     for (let i = 0; i < this.numSystems; i++) {
       if (i > 0) {
         let stage = Math.floor(Math.sqrt(i));
         let step = i - Math.pow(stage, 2);
         if (stage == 1) {
           // step 1-3 go left, down, right
-          direction = 0 -  90 * i;
+          direction = 0 - 90 * i;
         } else if (stage % 2 == 0) {
           // stage even go up, then left
           if (step > 0 && step <= stage) {
@@ -313,7 +303,7 @@ export default class DistributedGroupMap extends Vue {
             direction = 0.0;
           } else if (step > stage) {
             // go left until the next stage
-            direction =  270.0;
+            direction = 270.0;
           }
         } else {
           // stage = odd go down, then right
@@ -322,7 +312,7 @@ export default class DistributedGroupMap extends Vue {
             direction = 180.0;
           } else if (step > stage) {
             // go right until the next stage
-            direction =  90.0;
+            direction = 90.0;
           }
         }
         // If step was 0, continue the same direction as before. This
@@ -342,29 +332,31 @@ export default class DistributedGroupMap extends Vue {
     return sitePolygons;
   }
 
-  getSitePolygons(): Array<L.LatLng> {
+  getSitePolygons(): Array<L.LatLngBounds> {
     // create a square based on provided area
     const area = this.areaFromCapacity();
     // determine length of one side of square from area
     const squareSideLength = Math.sqrt(area);
     //for (let i = 0; i < this.numSystems; i++) {
     if (this.strategy == "line") {
-       return this.placeLineStrategy(squareSideLength);
+      return this.placeLineStrategy(squareSideLength);
     } else {
-       return this.placeGridStrategy(squareSideLength);
+      return this.placeGridStrategy(squareSideLength);
     }
   }
 
   initializePolygons(): void {
     this.groupSystems = this.getSitePolygons();
     this.$emit(
-        "bounds-updated",
-        this.groupSystems.map((bounds:L.LatLng) => this.leafletBoundsToBoundingBox(bounds)));
+      "bounds-updated",
+      this.groupSystems.map((bounds: L.LatLngBounds) =>
+        this.leafletBoundsToBoundingBox(bounds)
+      )
+    );
   }
   placeSystem(event: L.LeafletMouseEvent): void {
     if (this.bounds == null) {
       this.center = event.latlng;
-      const center = event.latlng;
       this.initializePolygons();
     }
   }
@@ -399,8 +391,8 @@ export default class DistributedGroupMap extends Vue {
     }
   }
 
-  @Watch("bounds", {deep:true})
-  fitMapBounds() {
+  @Watch("bounds", { deep: true })
+  fitMapBounds(): void {
     this.map.fitBounds(this.bounds!, { animate: true });
   }
   getColor(index: number): string {

@@ -40,7 +40,9 @@
         <!-- update with link to system form -->
         <p v-else>
           No Systems yet.
-          <router-link :to="{ name: 'New System' }" class="new-system-link btn-spc"
+          <router-link
+            :to="{ name: 'New System' }"
+            class="new-system-link btn-spc"
             ><button>Create a new System</button></router-link
           >
         </p>
@@ -65,7 +67,10 @@
             }"
             ><button>Update System</button></router-link
           >
-          <button class="delete-system button-spc" @click="showDeleteDialog = true">
+          <button
+            class="delete-system button-spc"
+            @click="showDeleteDialog = true"
+          >
             Delete System
           </button>
           <ul ckass="details-list" v-if="selected">
@@ -278,5 +283,4 @@ table {
 #delete-dialog button {
   display: inline-block;
 }
-
 </style>

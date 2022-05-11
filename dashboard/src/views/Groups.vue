@@ -4,7 +4,9 @@
     <router-link :to="{ name: 'New Group' }" class="new-group-link btn-spc"
       ><button>Create New Group</button></router-link
     >
-    <router-link :to="{ name: 'New DistributedGroup' }" class="new-group-link btn-spc"
+    <router-link
+      :to="{ name: 'New DistributedGroup' }"
+      class="new-group-link btn-spc"
       ><button>Create New Distributed Group</button></router-link
     >
     <hr />
@@ -34,7 +36,9 @@
         <!-- update with link to system form -->
         <p v-else>
           No System Groups yet.
-          <router-link :to="{ name: 'New Group' }" class="new-system-link btn-spc"
+          <router-link
+            :to="{ name: 'New Group' }"
+            class="new-system-link btn-spc"
             >Create a new Group</router-link
           >
         </p>
@@ -308,6 +312,6 @@ table {
   display: inline-block;
 }
 .new-group-link {
-  padding-right: .5em;
+  padding-right: 0.5em;
 }
 </style>

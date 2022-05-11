@@ -41,7 +41,10 @@
               }"
               ><button>Update System</button></router-link
             >
-            <button class="delete-system btn-spc" @click="showDeleteDialog = true">
+            <button
+              class="delete-system btn-spc"
+              @click="showDeleteDialog = true"
+            >
               Delete System
             </button>
             <ul class="details-list" v-if="system">
