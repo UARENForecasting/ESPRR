@@ -1,8 +1,11 @@
 <template>
   <div class="groups" v-if="$auth.isAuthenticated">
     <h2>Groups</h2>
-    <router-link :to="{ name: 'New Group' }" class="new-group-link"
-      >Create New Group</router-link
+    <router-link :to="{ name: 'New Group' }" class="new-group-link btn-spc"
+      ><button>Create New Group</button></router-link
+    >
+    <router-link :to="{ name: 'New DistributedGroup' }" class="new-group-link btn-spc"
+      ><button>Create New Distributed Group</button></router-link
     >
     <hr />
     <div class="grid">
@@ -31,7 +34,7 @@
         <!-- update with link to system form -->
         <p v-else>
           No System Groups yet.
-          <router-link :to="{ name: 'New Group' }" class="new-system-link"
+          <router-link :to="{ name: 'New Group' }" class="new-system-link btn-spc"
             >Create a new Group</router-link
           >
         </p>
@@ -40,24 +43,24 @@
         <template v-if="selected">
           <h3>Group Details</h3>
           <router-link
-            tag="button"
+            class="btn-spc"
             :to="{
               name: 'Group Details',
               params: { groupId: selected.object_id },
               query: { returnTo: 'groups' },
             }"
           >
-            Results
+            <button>Results</button>
           </router-link>
           <router-link
-            tag="button"
+            class="btn-spc"
             :to="{
               name: 'Update Group',
               params: { groupId: selected.object_id },
               query: { returnTo: 'groups' },
             }"
           >
-            Update Group
+            <button>Update Group</button>
           </router-link>
           <button class="delete-group" @click="showDeleteDialog = true">
             Delete Group
@@ -303,5 +306,8 @@ table {
 }
 #delete-dialog button {
   display: inline-block;
+}
+.new-group-link {
+  padding-right: .5em;
 }
 </style>

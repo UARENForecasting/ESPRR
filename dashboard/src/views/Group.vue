@@ -7,6 +7,7 @@
         <div class="details">
           <template v-if="group">
             <router-link
+              class="btn-spc"
               :to="{
                 name: 'Update Group',
                 params: {
@@ -76,6 +77,7 @@
                 <td :key="ds">
                   <template v-if="ds in resultStatuses">
                     <router-link
+                      class="btn-spc"
                       v-if="
                         resultStatuses[ds][system.object_id].status ==
                         'complete'
@@ -119,6 +121,7 @@
               <td></td>
               <td>
                 <router-link
+                  class="btn-spc"
                   :to="{
                     name: 'Group Dataset Details',
                     params: {
@@ -142,6 +145,7 @@
               </td>
               <td>
                 <router-link
+                  class="btn-spc"
                   :to="{
                     name: 'Group Dataset Details',
                     params: {
@@ -165,6 +169,7 @@
               </td>
               <td>
                 <router-link
+                  class="btn-spc"
                   :to="{
                     name: 'Group Dataset Details',
                     params: {
