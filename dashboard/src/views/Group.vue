@@ -76,24 +76,36 @@
               <template v-for="ds in datasets">
                 <td :key="ds">
                   <template v-if="ds in resultStatuses">
-                    <router-link
-                      class="btn-spc"
+                    <template
                       v-if="
                         resultStatuses[ds][system.object_id].status ==
                         'complete'
                       "
-                      :to="{
-                        name: 'System Details',
-                        params: {
-                          systemId: system.object_id,
-                          dataset: ds,
-                        },
-                      }"
                     >
-                      <button class="result-link success">
-                        {{ resultStatuses[ds][system.object_id].status }}
+                      <button
+                        v-if="
+                          resultStatuses[ds][system.object_id].system_modified
+                        "
+                        class="result-link recompute"
+                        @click="recompute(system.object_id, ds)"
+                      >
+                        recompute
                       </button>
-                    </router-link>
+                      <router-link
+                        v-else
+                        :to="{
+                          name: 'System Details',
+                          params: {
+                            systemId: system.object_id,
+                            dataset: ds,
+                          },
+                        }"
+                      >
+                        <button class="result-link success">
+                          {{ resultStatuses[ds][system.object_id].status }}
+                        </button>
+                      </router-link>
+                    </template>
                     <template
                       v-else-if="
                         resultStatuses[ds][system.object_id].status ==
@@ -120,7 +132,16 @@
               <td></td>
               <td></td>
               <td>
+                <button
+                  v-if="(
+                        !('NSRDB_2018' in groupResultStatus) ||
+                        groupResultStatus['NSRDB_2018'] == 'not started'
+                      )"
+                  @click="queueAll('NSRDB_2018')">
+                  Compute 2018
+                </button>
                 <router-link
+                  v-else
                   class="btn-spc"
                   :to="{
                     name: 'Group Dataset Details',
@@ -133,9 +154,9 @@
                   <button
                     class="group-2018-results"
                     :disabled="
-                      !(
-                        ('NSRDB_2018' in groupResultStatus) &
-                        groupResultStatus['NSRDB_2018']
+                      (
+                        !('NSRDB_2018' in groupResultStatus) ||
+                        groupResultStatus['NSRDB_2018'] == 'pending'
                       )
                     "
                   >
@@ -144,8 +165,22 @@
                 </router-link>
               </td>
               <td>
-                <router-link
+                <button
+                  v-if="(
+                        !('NSRDB_2019' in groupResultStatus) ||
+                        groupResultStatus['NSRDB_2019'] == 'not started'
+                      )"
+                  @click="queueAll('NSRDB_2019')">
+                  Compute 2019
+                </button>
+                <router-link v-else
                   class="btn-spc"
+                  :disabled="
+                      (
+                        !('NSRDB_2019' in groupResultStatus) ||
+                        groupResultStatus['NSRDB_2019'] == 'pending'
+                      )
+                    "
                   :to="{
                     name: 'Group Dataset Details',
                     params: {
@@ -156,19 +191,22 @@
                 >
                   <button
                     class="group-2019-results"
-                    :disabled="
-                      !(
-                        ('NSRDB_2019' in groupResultStatus) &
-                        groupResultStatus['NSRDB_2019']
-                      )
-                    "
                   >
                     2019 Results
                   </button>
                 </router-link>
               </td>
               <td>
+                <button
+                  v-if="(
+                        !('NSRDB_2020' in groupResultStatus) ||
+                        groupResultStatus['NSRDB_2020'] == 'not started'
+                      )"
+                  @click="queueAll('NSRDB_2020')">
+                  Compute 2020
+                </button>
                 <router-link
+                  v-else
                   class="btn-spc"
                   :to="{
                     name: 'Group Dataset Details',
@@ -181,9 +219,9 @@
                   <button
                     class="group-2020-results"
                     :disabled="
-                      !(
-                        ('NSRDB_2020' in groupResultStatus) &
-                        groupResultStatus['NSRDB_2020']
+                      (
+                        !('NSRDB_2020' in groupResultStatus) ||
+                        groupResultStatus['NSRDB_2020'] == 'pending'
                       )
                     "
                   >
@@ -319,16 +357,26 @@ export default class GroupDetails extends Vue {
     let grs: Record<string, any> = {};
     for (let dataset of this.datasets) {
       let resultsReady = true;
+      let resultsPending = true;
       if (dataset in this.resultStatuses) {
         for (const system in this.resultStatuses[dataset]) {
           resultsReady =
             resultsReady &&
             this.resultStatuses[dataset][system].status == "complete";
+          resultsPending =
+            resultsPending &&
+            !["not started"].includes(this.resultStatuses[dataset][system].status)
         }
       } else {
         resultsReady = false;
       }
-      grs[dataset] = resultsReady;
+      if (resultsReady) {
+        grs[dataset] = "complete";
+      } else if (resultsPending) {
+        grs[dataset] = "pending";
+      } else {
+        grs[dataset] = "notstarted";
+      }
     }
     return grs;
   }
@@ -371,6 +419,12 @@ export default class GroupDetails extends Vue {
       }
     } else {
       this.stopPolling();
+    }
+  }
+  async queueAll(dataset: string): Promise<void> {
+    for (const system of this.group.definition.systems) {
+      const systemId = system.object_id;
+      this.recompute(systemId, dataset);
     }
   }
   async recompute(system_id: string, dataset: string): Promise<void> {
@@ -512,6 +566,14 @@ button.result-link.compute:hover {
 button.result-link.compute {
   color: #fff;
   background-color: #c43434;
+  border: none;
+}
+button.result-link.recompute:hover {
+  background-color: #eec200;
+}
+button.result-link.recompute {
+  color: #fff;
+  background-color: #ccb100;
   border: none;
 }
 </style>
