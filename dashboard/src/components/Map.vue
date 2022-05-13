@@ -47,6 +47,13 @@
         >
         </l-rectangle>
       </l-layer-group>
+      <l-layer-group name="Transmission Lines" layer-type="overlay" v-if="transmission" :visible="false">
+        <l-geo-json
+          :geojson="transmission"
+          :options-style='{"color": "#444", "weight": 2}'
+          @click="testtransmissionclick">
+        </l-geo-json>
+      </l-layer-group>
     </l-map>
     <div class="map-prompt">
       <p v-if="editable && !bounds">
@@ -104,6 +111,7 @@ import {
   LControlLayers,
   LLayerGroup,
   LRectangle,
+  LGeoJson
 } from "vue2-leaflet";
 
 import StaticAreaRectangle from "@/components/leafletLayers/StaticAreaRectangle.vue";
@@ -125,6 +133,7 @@ Vue.component("l-control-scale", LControlScale);
 Vue.component("l-control-layers", LControlLayers);
 Vue.component("l-layer-group", LLayerGroup);
 Vue.component("l-rectangle", LRectangle);
+Vue.component("l-geo-json", LGeoJson);
 Vue.component("static-area-rectangle", StaticAreaRectangle);
 
 @Component
@@ -147,11 +156,17 @@ export default class SystemMap extends Vue {
   aspectX!: number;
   aspectY!: number;
   initialized!: boolean;
+  transmission!: Record<string, any>;
 
   mapReady(): void {
     // @ts-expect-error accessing Leaflet API
     this.map = this.$refs.systemMap.mapObject;
     this.initialize();
+  }
+
+  testtransmissionclick(event:any) {
+    console.log(event.target.setStyle({color: "#444"}));
+    console.log(event.sourceTarget.setStyle({color: "#0F0"}));
   }
 
   initialize(): void {
@@ -169,8 +184,14 @@ export default class SystemMap extends Vue {
     } else if (this.systems) {
       this.centerMap();
     }
-
-    this.initialized = true;
+    this.loadTransmission()
+      .then(() => { this.initialized = true; });
+  }
+  async loadTransmission() {
+    fetch("/Electric_Power_Transmission_Lines.geojson")
+      .then(async (response: Record<string, any>) => {
+        this.transmission = await response.json();
+      })
   }
 
   data(): any {
@@ -184,6 +205,7 @@ export default class SystemMap extends Vue {
       aspectY: 1,
       aspectInputX: 1,
       aspectInputY: 1,
+      transmission: null,
       initialized: false,
     };
   }
