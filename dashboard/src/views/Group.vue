@@ -133,11 +133,12 @@
               <td></td>
               <td>
                 <button
-                  v-if="(
-                        !('NSRDB_2018' in groupResultStatus) ||
-                        groupResultStatus['NSRDB_2018'] == 'not started'
-                      )"
-                  @click="queueAll('NSRDB_2018')">
+                  v-if="
+                    !('NSRDB_2018' in groupResultStatus) ||
+                    groupResultStatus['NSRDB_2018'] == 'not started'
+                  "
+                  @click="queueAll('NSRDB_2018')"
+                >
                   Compute 2018
                 </button>
                 <router-link
@@ -154,10 +155,8 @@
                   <button
                     class="group-2018-results"
                     :disabled="
-                      (
-                        !('NSRDB_2018' in groupResultStatus) ||
-                        groupResultStatus['NSRDB_2018'] == 'pending'
-                      )
+                      !('NSRDB_2018' in groupResultStatus) ||
+                      groupResultStatus['NSRDB_2018'] == 'pending'
                     "
                   >
                     2018 Results
@@ -166,21 +165,21 @@
               </td>
               <td>
                 <button
-                  v-if="(
-                        !('NSRDB_2019' in groupResultStatus) ||
-                        groupResultStatus['NSRDB_2019'] == 'not started'
-                      )"
-                  @click="queueAll('NSRDB_2019')">
+                  v-if="
+                    !('NSRDB_2019' in groupResultStatus) ||
+                    groupResultStatus['NSRDB_2019'] == 'not started'
+                  "
+                  @click="queueAll('NSRDB_2019')"
+                >
                   Compute 2019
                 </button>
-                <router-link v-else
+                <router-link
+                  v-else
                   class="btn-spc"
                   :disabled="
-                      (
-                        !('NSRDB_2019' in groupResultStatus) ||
-                        groupResultStatus['NSRDB_2019'] == 'pending'
-                      )
-                    "
+                    !('NSRDB_2019' in groupResultStatus) ||
+                    groupResultStatus['NSRDB_2019'] == 'pending'
+                  "
                   :to="{
                     name: 'Group Dataset Details',
                     params: {
@@ -189,20 +188,17 @@
                     },
                   }"
                 >
-                  <button
-                    class="group-2019-results"
-                  >
-                    2019 Results
-                  </button>
+                  <button class="group-2019-results">2019 Results</button>
                 </router-link>
               </td>
               <td>
                 <button
-                  v-if="(
-                        !('NSRDB_2020' in groupResultStatus) ||
-                        groupResultStatus['NSRDB_2020'] == 'not started'
-                      )"
-                  @click="queueAll('NSRDB_2020')">
+                  v-if="
+                    !('NSRDB_2020' in groupResultStatus) ||
+                    groupResultStatus['NSRDB_2020'] == 'not started'
+                  "
+                  @click="queueAll('NSRDB_2020')"
+                >
                   Compute 2020
                 </button>
                 <router-link
@@ -219,10 +215,8 @@
                   <button
                     class="group-2020-results"
                     :disabled="
-                      (
-                        !('NSRDB_2020' in groupResultStatus) ||
-                        groupResultStatus['NSRDB_2020'] == 'pending'
-                      )
+                      !('NSRDB_2020' in groupResultStatus) ||
+                      groupResultStatus['NSRDB_2020'] == 'pending'
                     "
                   >
                     2020 Results
@@ -365,7 +359,9 @@ export default class GroupDetails extends Vue {
             this.resultStatuses[dataset][system].status == "complete";
           resultsPending =
             resultsPending &&
-            !["not started"].includes(this.resultStatuses[dataset][system].status)
+            !["not started"].includes(
+              this.resultStatuses[dataset][system].status
+            );
         }
       } else {
         resultsReady = false;

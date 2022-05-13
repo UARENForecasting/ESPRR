@@ -31,11 +31,23 @@
               ><button>2020 Results</button></router-link
             >
             <router-link
+              v-if="dataset"
               :to="{
                 name: 'Update System dataset return',
                 params: {
                   systemId: system.object_id,
                   dataset: this.dataset,
+                },
+                query: { returnTo: 'details' },
+              }"
+              ><button>Update System</button></router-link
+            >
+            <router-link
+              v-else
+              :to="{
+                name: 'Update System',
+                params: {
+                  systemId: system.object_id,
                 },
                 query: { returnTo: 'details' },
               }"

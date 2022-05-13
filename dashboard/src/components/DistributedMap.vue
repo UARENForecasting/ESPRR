@@ -400,7 +400,7 @@ export default class DistributedGroupMap extends Vue {
       this.map.fitBounds(this.bounds!, { animate: true });
     } else {
       let zoom = this.map.getZoom();
-      this.map.setZoom(zoom > 12 ? 12: zoom);
+      this.map.setZoom(zoom > 12 ? 12 : zoom);
     }
   }
   getColor(index: number): string {
