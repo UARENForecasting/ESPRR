@@ -89,7 +89,7 @@
                         class="result-link recompute"
                         @click="recompute(system.object_id, ds)"
                       >
-                        recompute
+                        recompute out of date
                       </button>
                       <router-link
                         v-else
@@ -375,7 +375,7 @@ export default class GroupDetails extends Vue {
       } else if (resultsPending) {
         grs[dataset] = "pending";
       } else {
-        grs[dataset] = "notstarted";
+        grs[dataset] = "not started";
       }
     }
     return grs;
