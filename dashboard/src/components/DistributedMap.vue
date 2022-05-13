@@ -39,13 +39,14 @@
       </l-layer-group>
     </l-map>
     <div class="map-prompt">
+      <button @click="reset" style="width: fit-content">Resite Group</button>
       <fieldset>
         <legend>Placement Strategy</legend>
         <p>
           Select a placement strategy for the distributed plants. The
           <i>Line</i> strategy places plants on a North/South or East/West line.
-          The <i>grid</i> strategy will arrange the plants in an approximate
-          square.
+          The <i>grid</i> strategy will arrange the plants in an approximately
+          square grid.
         </p>
         <label>
           Line
@@ -344,7 +345,9 @@ export default class DistributedGroupMap extends Vue {
       return this.placeGridStrategy(squareSideLength);
     }
   }
-
+  reset(): void {
+    this.groupSystems = [];
+  }
   initializePolygons(): void {
     this.groupSystems = this.getSitePolygons();
     this.$emit(
@@ -393,7 +396,12 @@ export default class DistributedGroupMap extends Vue {
 
   @Watch("bounds", { deep: true })
   fitMapBounds(): void {
-    this.map.fitBounds(this.bounds!, { animate: true });
+    if (this.bounds) {
+      this.map.fitBounds(this.bounds!, { animate: true });
+    } else {
+      let zoom = this.map.getZoom();
+      this.map.setZoom(zoom > 12 ? 12: zoom);
+    }
   }
   getColor(index: number): string {
     return GetColor(index);
