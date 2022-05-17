@@ -23,6 +23,8 @@
         :scaling="false"
         :rotation="false"
         :latLngs="sitePolygon"
+        color="#0A0"
+        fillColor="#0A0"
         @transformed="handleTransformation"
         @scaleend="handleTransformation"
       />
@@ -47,11 +49,13 @@
         >
         </l-rectangle>
       </l-layer-group>
-      <l-layer-group name="Transmission Lines" layer-type="overlay" v-if="transmission" :visible="false">
+      <l-polyline :lat-lngs="transmissionPath" v-if="showTransmissionPath"/>
+      <l-layer-group name="Transmission Lines" layer-type="overlay" v-if="transmission" :visible="false" >
         <l-geo-json
           :geojson="transmission"
           :options-style='{"color": "#444", "weight": 2}'
-          @click="testtransmissionclick">
+          @click="wow"
+          @ready="setTransmissionLayers">
         </l-geo-json>
       </l-layer-group>
     </l-map>
@@ -96,6 +100,18 @@
           >
         </fieldset>
       </div>
+      <div v-if="closestTransmission">
+        <h3>Closest Transmission</h3>
+        <ul>
+          <li><b>Distance:</b> {{ transDistance }} km ({{transDistance * .62 }} mi)
+            <button @click="showTransmissionPath = !showTransmissionPath">Toggle path to transmission</button>
+          </li>
+          <li><b>Owner:</b> {{ closestTransmission.layer.feature.properties.OWNER }}</li>
+          <li><b>Type:</b> {{ closestTransmission.layer.feature.properties.TYPE  }}</li>
+          <li><b>Status:</b> {{ closestTransmission.layer.feature.properties.STATUS }}</li>
+          <li><b>As of:</b> {{ closestTransmission.layer.feature.properties.VAL_DATE }}</li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
@@ -111,8 +127,10 @@ import {
   LControlLayers,
   LLayerGroup,
   LRectangle,
-  LGeoJson
+  LGeoJson,
+  LPolyline
 } from "vue2-leaflet";
+import GeoUtil from "leaflet-geometryutil";
 
 import StaticAreaRectangle from "@/components/leafletLayers/StaticAreaRectangle.vue";
 
@@ -135,6 +153,8 @@ Vue.component("l-layer-group", LLayerGroup);
 Vue.component("l-rectangle", LRectangle);
 Vue.component("l-geo-json", LGeoJson);
 Vue.component("static-area-rectangle", StaticAreaRectangle);
+Vue.component("l-polyline", LPolyline);
+
 
 @Component
 export default class SystemMap extends Vue {
@@ -157,18 +177,19 @@ export default class SystemMap extends Vue {
   aspectY!: number;
   initialized!: boolean;
   transmission!: Record<string, any>;
+  transmissionLayers!: Record<string, any>;
+  closestTransmission!: Record<string, any>;
+  transmissionReady!: boolean;
+  showTransmissionPath!: boolean;
 
   mapReady(): void {
     // @ts-expect-error accessing Leaflet API
     this.map = this.$refs.systemMap.mapObject;
     this.initialize();
   }
-
-  testtransmissionclick(event:any) {
-    console.log(event.target.setStyle({color: "#444"}));
-    console.log(event.sourceTarget.setStyle({color: "#0F0"}));
+  wow(event: any) {
+    event.sourceTarget.setStyle({"color": "#FFF"});
   }
-
   initialize(): void {
     this.draggable = true;
     if (this.editable) {
@@ -193,6 +214,27 @@ export default class SystemMap extends Vue {
         this.transmission = await response.json();
       })
   }
+  setTransmissionLayers(event: any): void {
+    this.transmissionLayers = Object.values(event._layers);
+    this.transmissionReady = true;
+    this.findNearestTransmission();
+  }
+
+  findNearestTransmission(): void {
+    if (this.transmissionReady) {
+      if (this.closestTransmission) {
+        this.closestTransmission.layer.setStyle({color: "#FFF"});
+      }
+      if (this.system) {
+        let closestTransmission = GeoUtil.closestLayer(
+          this.map, this.transmissionLayers, this.centerCoords()
+        );
+        // TODO: WHYYYYY
+        this.closestTransmission = closestTransmission;
+      }
+      this.closestTransmission.layer.setStyle({color:"#BF40BF"});
+    }
+  }
 
   data(): any {
     return {
@@ -207,6 +249,10 @@ export default class SystemMap extends Vue {
       aspectInputY: 1,
       transmission: null,
       initialized: false,
+      transmissionReady: false,
+      closestTransmission: null,
+      transmissionLayers: null,
+      showTransmissionPath: false
     };
   }
 
@@ -263,6 +309,7 @@ export default class SystemMap extends Vue {
       this.initAspectRatio();
     }
     this.centerMap();
+    this.findNearestTransmission();
   }
 
   initAspectRatio(): void {
@@ -442,6 +489,27 @@ export default class SystemMap extends Vue {
   }
   getColor(index: number): string {
     return GetColor(index);
+  }
+  get transDistMetric() {
+    return GeoUtil.readableDistance(this.closestTransmission.distance, 'metric');
+  }
+  get transDistImperial() {
+    return GeoUtil.readableDistance(this.closestTransmission.distance, 'imperial');
+  }
+  get transDistance() {
+    if (this.closestTransmission) {
+      let distKM = (this.centerCoords().distanceTo(
+        this.closestTransmission.latlng)/ 1000);
+      return distKM.toFixed(2);
+    } else {
+      return null;
+    }
+  }
+  get transmissionPath() {
+    if (this.closestTransmission) {
+        return [this.centerCoords(), this.closestTransmission.latlng];
+    }
+    return null;
   }
 }
 </script>
