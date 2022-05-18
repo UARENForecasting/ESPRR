@@ -418,6 +418,7 @@ export default class GroupDetails extends Vue {
     }
   }
   async queueAll(dataset: string): Promise<void> {
+    // @ts-expect-error should only fire when group is defined
     for (const system of this.group.definition.systems) {
       const systemId = system.object_id;
       this.recompute(systemId, dataset);
