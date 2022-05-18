@@ -111,6 +111,7 @@
           <li><b>Status:</b> {{ closestTransmission.layer.feature.properties.STATUS }}</li>
           <li><b>As of:</b> {{ closestTransmission.layer.feature.properties.VAL_DATE }}</li>
         </ul>
+        <p>Transmission line data provided by <a href="https://www.ornl.gov/">Oak Ridge National Lab</a> and accessed through <a href="https://hifld-geoplatform.opendata.arcgis.com/">HIFLD</a>.</p>
       </div>
     </div>
   </div>
@@ -300,6 +301,7 @@ export default class SystemMap extends Vue {
       "bounds-updated",
       this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
     );
+    this.findNearestTransmission();
   }
 
   @Watch("system")
