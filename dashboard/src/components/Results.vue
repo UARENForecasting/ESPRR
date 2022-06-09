@@ -143,7 +143,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { StoredPVSystem, validDatasets } from "@/models";
 import TimeseriesPlot from "@/components/data/Timeseries.vue";
 import StatisticsTable from "@/components/data/StatisticsTable.vue";
@@ -174,7 +174,14 @@ export default class DataSetResults extends Vue {
   isValidDataset(): boolean {
     return validDatasets.indexOf(this.dataset) > -1;
   }
-  created(): void {
+
+  @Watch("dataset")
+  reactToDataset(): void {
+    this.timeseries = null;
+    this.statistics = null;
+    this.setup();
+  }
+  setup(): void {
     if (this.isValidDataset()) {
       this.active = true;
       this.updateStatus();
@@ -184,6 +191,9 @@ export default class DataSetResults extends Vue {
       this.status = "nonexistent";
       return;
     }
+  }
+  created(): void {
+    this.setup();
   }
 
   destroyed(): void {
