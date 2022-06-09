@@ -246,6 +246,8 @@ interface HTMLInputEvent extends Event {
   target: HTMLInputElement & EventTarget;
 }
 
+const roundingPrecision = 2;
+
 @Component
 export default class DistributedGroupDefinition extends Vue {
   @Prop() systemId!: string;
@@ -356,7 +358,7 @@ export default class DistributedGroupDefinition extends Vue {
           ...this.definition,
           name: `${this.definition.name} System ${i + 1}`,
           boundary: bounds,
-          ac_capacity: this.totalAcCapacity / this.numberOfSystems,
+          ac_capacity: (this.totalAcCapacity / this.numberOfSystems).toFixed(roundingPrecision),
         };
       }
     );
@@ -424,7 +426,7 @@ export default class DistributedGroupDefinition extends Vue {
   }
   get dcCapacity(): number | null {
     if (this.totalAcCapacity && this.definition.dc_ac_ratio) {
-      return this.totalAcCapacity * this.definition.dc_ac_ratio;
+      return (this.totalAcCapacity * this.definition.dc_ac_ratio).toFixed(roundingPrecision);
     } else {
       return null;
     }
