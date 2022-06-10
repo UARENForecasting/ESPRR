@@ -358,7 +358,11 @@ export default class DistributedGroupDefinition extends Vue {
           ...this.definition,
           name: `${this.definition.name} System ${i + 1}`,
           boundary: bounds,
-          ac_capacity: (this.totalAcCapacity / this.numberOfSystems).toFixed(roundingPrecision),
+          ac_capacity: parseFloat(
+            (this.totalAcCapacity / this.numberOfSystems).toFixed(
+              roundingPrecision
+            )
+          ),
         };
       }
     );
@@ -424,9 +428,11 @@ export default class DistributedGroupDefinition extends Vue {
   updateBounds(newBounds: Array<BoundingBox>): void {
     this.systemBounds = newBounds;
   }
-  get dcCapacity(): number | null {
+  get dcCapacity(): string | null {
     if (this.totalAcCapacity && this.definition.dc_ac_ratio) {
-      return (this.totalAcCapacity * this.definition.dc_ac_ratio).toFixed(roundingPrecision);
+      return (this.totalAcCapacity * this.definition.dc_ac_ratio).toFixed(
+        roundingPrecision
+      );
     } else {
       return null;
     }
