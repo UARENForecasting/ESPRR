@@ -202,12 +202,23 @@
               </fieldset>
             </fieldset>
           </fieldset>
-          <button type="submit" :disabled="checkName || !boundarySelected">
-            Create Distributed Group</button
-          ><span v-if="!boundarySelected"
-            >You must place the systems on the map to the left before
-            creation.</span
+          <button
+            type="submit"
+            :disabled="checkName || !boundarySelected || !boundsAreValid"
           >
+            Create Distributed Group
+          </button>
+          <div>
+            <span v-if="!boundsAreValid" class="error"
+              >Some of the systems fall outside of the range of the dataset.
+              Please adjust your settings so that plants are inside the black
+              square.
+            </span>
+            <span v-else-if="!boundarySelected" class="error"
+              >You must place the systems on the map to the left before
+              creation.</span
+            >
+          </div>
         </form>
       </div>
       <div id="definition-map" v-if="this.systems">
@@ -219,6 +230,7 @@
           :numSystems="numberOfSystems"
           :distanceBetween="distanceInKM"
           @bounds-updated="updateBounds"
+          @bounds-valid="updateBoundsValidity"
         />
       </div>
     </div>
@@ -265,6 +277,7 @@ export default class DistributedGroupDefinition extends Vue {
   distanceBetweenSystems!: number;
   systemBounds!: Array<BoundingBox>;
   units!: string;
+  boundsAreValid!: boolean;
 
   data(): Record<string, any> {
     return {
@@ -279,6 +292,7 @@ export default class DistributedGroupDefinition extends Vue {
       totalAcCapacity: 1,
       systemBounds: [],
       units: "km",
+      boundsAreValid: true,
     };
   }
 
@@ -459,6 +473,9 @@ export default class DistributedGroupDefinition extends Vue {
       return this.distanceBetweenSystems * 1.60934;
     }
   }
+  updateBoundsValidity(valid: boolean): void {
+    this.boundsAreValid = valid;
+  }
 }
 </script>
 <style scoped>
@@ -478,7 +495,8 @@ label {
   height: 500px;
   width: 50%;
 }
-ul.error-list {
+ul.error-list,
+div.errror-message {
   border: 1px solid #caa;
   border-radius: 0.5em;
   padding: 0.5em;

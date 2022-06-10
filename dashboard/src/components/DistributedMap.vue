@@ -17,6 +17,13 @@
         :imperial="false"
         :metric="true"
       ></l-control-scale>
+      <l-rectangle
+        name="datasetBounds"
+        :bounds="datasetGeoBounds"
+        color="black"
+        :fillOpacity="0"
+        :weight="1"
+      ></l-rectangle>
 
       <template v-if="groupSystems">
         <l-rectangle
@@ -126,6 +133,14 @@ Vue.component("l-control-layers", LControlLayers);
 Vue.component("l-layer-group", LLayerGroup);
 Vue.component("l-rectangle", LRectangle);
 Vue.component("static-area-rectangle", StaticAreaRectangle);
+
+// Declare the dataset geographic bounds here, so we can detect outliers
+// before creating any systems. This lets us avoid creating partial groups
+
+const datasetGeoBounds = L.latLngBounds(
+  L.latLng(38.0, -118.01),
+  L.latLng(31.0, -103.01)
+);
 
 @Component
 export default class DistributedGroupMap extends Vue {
@@ -348,14 +363,29 @@ export default class DistributedGroupMap extends Vue {
   reset(): void {
     this.groupSystems = [];
   }
+  get systemBoundsAreValid(): boolean {
+    // determine if any of the systems fall outsid the NSRDB domain
+    let contained = false;
+    if (this.groupSystems.length > 0) {
+      contained = this.groupSystems.reduce(
+        (curr: boolean, bounds: L.LatLngBounds) =>
+          curr && datasetGeoBounds.contains(bounds),
+        true
+      );
+    }
+    this.$emit("bounds-valid", contained);
+    return contained;
+  }
   initializePolygons(): void {
     this.groupSystems = this.getSitePolygons();
-    this.$emit(
-      "bounds-updated",
-      this.groupSystems.map((bounds: L.LatLngBounds) =>
+    // map the leaflet LatLngBounds to our generic bounding boxes
+    let newBBs: Array<BoundingBox> = [];
+    if (this.systemBoundsAreValid) {
+      newBBs = this.groupSystems.map((bounds: L.LatLngBounds) =>
         this.leafletBoundsToBoundingBox(bounds)
-      )
-    );
+      );
+    }
+    this.$emit("bounds-updated", newBBs);
   }
   placeSystem(event: L.LeafletMouseEvent): void {
     if (this.bounds == null) {
@@ -405,6 +435,10 @@ export default class DistributedGroupMap extends Vue {
   }
   getColor(index: number): string {
     return GetColor(index);
+  }
+  get datasetGeoBounds(): L.LatLngBounds {
+    // allow rendering code to access const
+    return datasetGeoBounds;
   }
 }
 </script>
