@@ -3,6 +3,7 @@ import Systems from "../views/Systems.vue";
 import Groups from "../views/Groups.vue";
 import SystemDefinition from "../views/SystemDefinition.vue";
 import GroupDefinition from "../views/GroupDefinition.vue";
+import DistributedGroupDefinition from "../views/DistributedGroupDefinition.vue";
 import SystemDetails from "../views/System.vue";
 import GroupDetails from "../views/Group.vue";
 
@@ -32,6 +33,13 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard,
   },
   {
+    path: "/system_group/new_distributed",
+    name: "New DistributedGroup",
+    component: DistributedGroupDefinition,
+    beforeEnter: authGuard,
+  },
+
+  {
     path: "/system_group/:groupId/edit",
     name: "Update Group",
     component: GroupDefinition,
@@ -39,8 +47,15 @@ const routes: Array<RouteConfig> = [
     beforeEnter: authGuard,
   },
   {
-    path: "/system/:systemId/:dataset",
+    path: "/system/:systemId",
     name: "System Details",
+    component: SystemDetails,
+    props: true,
+    beforeEnter: authGuard,
+  },
+  {
+    path: "/system/:systemId/:dataset",
+    name: "System Results",
     component: SystemDetails,
     props: true,
     beforeEnter: authGuard,

@@ -7,7 +7,31 @@
         <div class="details">
           <template v-if="system">
             <router-link
-              tag="button"
+              class="btn-spc"
+              :to="{
+                name: 'System Results',
+                params: { systemId: systemId, dataset: 'NSRDB_2018' },
+              }"
+              ><button>2018 Results</button></router-link
+            >
+            <router-link
+              class="btn-spc"
+              :to="{
+                name: 'System Results',
+                params: { systemId: systemId, dataset: 'NSRDB_2019' },
+              }"
+              ><button>2019 Results</button></router-link
+            >
+            <router-link
+              class="btn-spc"
+              :to="{
+                name: 'System Results',
+                params: { systemId: systemId, dataset: 'NSRDB_2020' },
+              }"
+              ><button>2020 Results</button></router-link
+            >
+            <router-link
+              v-if="dataset"
               :to="{
                 name: 'Update System dataset return',
                 params: {
@@ -16,9 +40,23 @@
                 },
                 query: { returnTo: 'details' },
               }"
-              >Update System</router-link
+              ><button>Update System</button></router-link
             >
-            <button class="delete-system" @click="showDeleteDialog = true">
+            <router-link
+              v-else
+              :to="{
+                name: 'Update System',
+                params: {
+                  systemId: system.object_id,
+                },
+                query: { returnTo: 'details' },
+              }"
+              ><button>Update System</button></router-link
+            >
+            <button
+              class="delete-system btn-spc"
+              @click="showDeleteDialog = true"
+            >
               Delete System
             </button>
             <ul class="details-list" v-if="system">
@@ -71,7 +109,7 @@
         </div>
       </div>
       <div>
-        <results v-if="system" :system="system" :dataset="dataset" />
+        <results v-if="system && dataset" :system="system" :dataset="dataset" />
       </div>
       <transition name="fade">
         <div v-if="showDeleteDialog" id="delete-dialog">

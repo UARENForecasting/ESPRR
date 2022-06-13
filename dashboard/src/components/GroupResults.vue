@@ -23,7 +23,7 @@
       table.
     </div>
     <div class="results" v-if="status == 'complete'">
-      <h2>Performance Results</h2>
+      <h2>Performance Results {{ dataset.replace("_", " ") }}</h2>
       <hr />
       <div class="flex-container">
         <div class="description-flex">
