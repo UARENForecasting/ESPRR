@@ -240,7 +240,7 @@ describe("Test System Group Details/Results page", () => {
       },
     });
     await flushPromises();
-    expect(wrapper.find(".group-capacity").text()).toBe("Total Capacity: 0");
+    expect(wrapper.find(".group-capacity").text()).toBe("Total Capacity: 0.00");
   });
   it("Test processing status", async () => {
     // @ts-expect-error mocky mock mock
