@@ -22,7 +22,7 @@
             </button>
           </template>
           <ul>
-            <li class="group-capacity">Total Capacity: {{ totalCapacity }}</li>
+            <li class="group-capacity">Total Capacity: {{ totalCapacity.toFixed(2) }}</li>
           </ul>
         </div>
         <div>
@@ -62,7 +62,16 @@
                 ></span>
               </td>
               <td>
-                {{ system.definition.name }}
+                <router-link
+                  :to="{
+                    name: 'System Details',
+                    params: {systemId: system.object_id }
+                  }"
+                >
+                  <a>
+                   {{ system.definition.name }}
+                  </a>
+                </router-link>
               </td>
               <td>
                 {{ system.definition.ac_capacity }}

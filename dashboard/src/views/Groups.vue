@@ -72,7 +72,7 @@
           <p>
             <b>Name: </b>{{ selected.definition.name }}<br />
             <template v-if="totalCapacity">
-              <b>Total Capacity: </b>{{ totalCapacity }}<br />
+              <b>Total Capacity: </b>{{ totalCapacity.toFixed(2) }}<br />
             </template>
           </p>
           <b>Systems:</b>
