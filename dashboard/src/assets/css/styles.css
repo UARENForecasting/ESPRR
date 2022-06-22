@@ -52,3 +52,6 @@ table.striped-table tr:nth-child(odd) td {
   color: red;
   display: block;
 }
+.btn-spc {
+  padding-right: .5em;
+}

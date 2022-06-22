@@ -293,7 +293,7 @@ export default class SystemDefinition extends Vue {
     if ("returnTo" in this.$route.query) {
       if (this.$route.query.returnTo == "details" && this.dataset) {
         this.$router.push({
-          name: "System Details",
+          name: "System Results",
           params: {
             systemId: this.systemId,
             dataset: this.dataset,
@@ -317,7 +317,7 @@ export default class SystemDefinition extends Vue {
           SystemsApi.startProcessing(
             token,
             systemResponse.object_id,
-            this.dataset
+            this.dataset ? this.dataset : "NSRDB_2019"
           ).then(() => {
             this.navigateToPrevious();
             this.errors = null;

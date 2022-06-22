@@ -1,8 +1,9 @@
 import logging
-from typing import IO
+from typing import IO, Type, Union, Optional, Tuple
 
 
-from fastapi import HTTPException
+from accept_types import AcceptableType  # type: ignore
+from fastapi import HTTPException, Response
 import pandas as pd
 import pandas.api.types as pdtypes  # type: ignore
 import pyarrow as pa  # type: ignore
@@ -58,3 +59,29 @@ def dump_arrow_bytes(table: pa.Table) -> bytes:
     writer.close()
     out: bytes = sink.getvalue().to_pybytes()
     return out
+
+
+class ArrowResponse(Response):
+    media_type = "application/vnd.apache.arrow.file"
+
+
+class CSVResponse(Response):
+    media_type = "text/csv"
+
+
+def _get_return_type(
+    accept: Optional[str],
+) -> Tuple[Union[Type[CSVResponse], Type[ArrowResponse]], str]:
+    if accept is None:
+        accept = "*/*"
+    type_ = AcceptableType(accept)
+
+    if type_.matches("text/csv"):
+        return CSVResponse, "text/csv"
+    elif type_.matches("application/vnd.apache.arrow.file"):
+        return ArrowResponse, "application/vnd.apache.arrow.file"
+    else:
+        raise HTTPException(
+            status_code=406,
+            detail="Only 'text/csv' or 'application/vnd.apache.arrow.file' acceptable",
+        )

@@ -251,3 +251,19 @@ def test_calculate_variable_multiplier(data):
     assert len(m) == (len(data) - 1) / (12 * 24) + 1
     assert m.between(0.5, 1).any()
     pd.testing.assert_series_equal(m, expected_result["ac_power"])
+
+    
+@pytest.mark.parametrize("num_systems", [1, 2, 3])
+def test_compute_group_statistics_geometry_handling(
+    mocker, num_systems, stored_system_group
+):
+    group = stored_system_group.copy()
+    system = group.definition.systems[0]
+    new_systems = [system for i in range(0, num_systems + 1)]
+    group.definition.systems = new_systems
+    mocked_compute = mocker.patch("esprr_api.compute._compute_statistics")
+    compute.compute_group_statistics(group, pd.DataFrame())
+    system_center = system.definition.boundary._rect.centroid
+    center_arg = mocked_compute.call_args[0][0]
+    assert system_center.x == center_arg.x
+    assert system_center.y == center_arg.y

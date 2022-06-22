@@ -326,3 +326,40 @@ class ManagementSystemDataStatus(ThisBase):
                 self.user,
             )
         )
+
+
+class BaseSystemGroup(ThisBase):
+    """Container for multiple systems"""
+
+    name: str = UserString(
+        ...,
+        description="Name of the system group",
+    )
+
+
+class SystemGroup(BaseSystemGroup):
+    systems: List[StoredPVSystem]
+
+
+class StoredSystemGroup(StoredObject):
+    # Use union so that we can omit systems when listing
+    definition: Union[BaseSystemGroup, SystemGroup]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "object_id": "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
+                "object_type": "system",
+                "created_at": "2020-12-01T01:23:00+00:00",
+                "modified_at": "2020-12-01T01:23:00+00:00",
+                "definition": {
+                    "name": "Test system group",
+                    "systems": [StoredPVSystem.Config.schema_extra],
+                },
+            }
+        }
+
+
+class SystemGroupDataMeta(StoredObject):
+    object_type: str = "system_group"
+    system_data_status: Dict[UUID, SystemDataMeta] = {}

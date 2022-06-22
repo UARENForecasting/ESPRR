@@ -1,8 +1,8 @@
 <template>
   <div class="systems" v-if="$auth.isAuthenticated">
     <h2>Systems</h2>
-    <router-link :to="{ name: 'New System' }" class="new-system-link"
-      >Create New System</router-link
+    <router-link :to="{ name: 'New System' }" class="new-system-link btn-spc"
+      ><button>Create New System</button></router-link
     >
     <hr />
     <div class="grid">
@@ -40,8 +40,10 @@
         <!-- update with link to system form -->
         <p v-else>
           No Systems yet.
-          <router-link :to="{ name: 'New System' }" class="new-system-link"
-            >Create a new System</router-link
+          <router-link
+            :to="{ name: 'New System' }"
+            class="new-system-link btn-spc"
+            ><button>Create a new System</button></router-link
           >
         </p>
       </div>
@@ -49,39 +51,26 @@
         <template v-if="selected">
           <h3>System Details</h3>
           <router-link
-            tag="button"
+            class="btn-spc"
             :to="{
               name: 'System Details',
-              params: { systemId: selected.object_id, dataset: 'NSRDB_2018' },
+              params: { systemId: selected.object_id },
             }"
-            >2018 Results</router-link
+            ><button>Results</button></router-link
           >
           <router-link
-            tag="button"
-            :to="{
-              name: 'System Details',
-              params: { systemId: selected.object_id, dataset: 'NSRDB_2019' },
-            }"
-            >2019 Results</router-link
-          >
-          <router-link
-            tag="button"
-            :to="{
-              name: 'System Details',
-              params: { systemId: selected.object_id, dataset: 'NSRDB_2020' },
-            }"
-            >2020 Results</router-link
-          >
-          <router-link
-            tag="button"
+            class="btn-spc"
             :to="{
               name: 'Update System',
               params: { systemId: selected.object_id },
               query: { returnTo: 'systems' },
             }"
-            >Update System</router-link
+            ><button>Update System</button></router-link
           >
-          <button class="delete-system" @click="showDeleteDialog = true">
+          <button
+            class="delete-system button-spc"
+            @click="showDeleteDialog = true"
+          >
             Delete System
           </button>
           <ul ckass="details-list" v-if="selected">

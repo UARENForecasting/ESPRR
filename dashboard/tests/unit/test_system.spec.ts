@@ -24,13 +24,12 @@ describe("Test System Details/Results page", () => {
     if (
       // @ts-expect-error ts complains about history on VueRouter
       router.history.current.path !=
-      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9/NSRDB_2019"
+      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
     ) {
       router.push({
         name: "System Details",
         params: {
           systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-          dataset: "NSRDB_2019",
         },
       });
     }
@@ -93,7 +92,7 @@ describe("Test System Details/Results page", () => {
     await flushPromises();
     // @ts-expect-error ts compains about history on VueRouter
     expect(router.history.current.path).toBe(
-      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9/NSRDB_2019"
+      "/system/6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9"
     );
     appTarget.remove();
   });
@@ -110,7 +109,6 @@ describe("Test System Details/Results page", () => {
       stubs,
       propsData: {
         systemId: "6b61d9ac-2e89-11eb-be2a-4dc7a6bcd0d9",
-        dataset: "NSRDB_2019",
       },
     });
 
