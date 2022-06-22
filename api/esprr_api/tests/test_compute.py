@@ -267,3 +267,4 @@ def test_compute_group_statistics_geometry_handling(
     center_arg = mocked_compute.call_args[0][0]
     assert system_center.x == center_arg.x
     assert system_center.y == center_arg.y
+
