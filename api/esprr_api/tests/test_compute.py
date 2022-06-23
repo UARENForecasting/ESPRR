@@ -252,7 +252,7 @@ def test_calculate_variable_multiplier(data):
     assert m.between(0.5, 1).any()
     pd.testing.assert_series_equal(m, expected_result["ac_power"])
 
-    
+
 @pytest.mark.parametrize("num_systems", [1, 2, 3])
 def test_compute_group_statistics_geometry_handling(
     mocker, num_systems, stored_system_group
@@ -267,4 +267,3 @@ def test_compute_group_statistics_geometry_handling(
     center_arg = mocked_compute.call_args[0][0]
     assert system_center.x == center_arg.x
     assert system_center.y == center_arg.y
-
