@@ -10,6 +10,7 @@ from pvlib.pvsystem import PVSystem  # type: ignore
 from pvlib.tracking import SingleAxisTracker  # type: ignore
 from pvlib.modelchain import ModelChain  # type: ignore
 from pvlib.solarposition import get_solarposition  # type: ignore
+import numpy as np
 from shapely import geometry  # type: ignore
 
 
@@ -102,12 +103,49 @@ def compute_total_system_power(
             out = part
         else:
             out += part  # type: ignore
+
     # hack to make output more consistent with actuals in not-clear conditions
     clear = out["ac_power"] > 0.99 * out["clearsky_ac_power"]
+
+    multiplier = calculate_variable_multiplier(out)
+
+    # apply multiplier to ac_power
     out["ac_power"] = out["ac_power"].where(
-        clear, other=out["ac_power"] * 0.75
+        clear, other=out["ac_power"] * multiplier.reindex(clear.index).ffill()
     )  # type: ignore
+
     return out
+
+
+def calculate_variable_multiplier(out):
+    """
+    Calculate a multiplier that varies given daily standard deviation of
+    irradiance.
+
+    Multiplier is  not applied to low irradiance days
+    """
+    # find clear days
+    clear_days = (
+        out["ac_power"].resample("1D").mean()
+        > 0.99 * out["clearsky_ac_power"].resample("1D").mean()
+    )
+    # find low irradiance days, predicited power is < 50% of clearsky power
+    low_irrad_days = (
+        out["ac_power"].resample("1D").mean()
+        < 0.5 * out["clearsky_ac_power"].resample("1D").mean()
+    )
+    # find daily std devs
+    stds = (out["ac_power"]).groupby(out.index.date).std()
+    stds.index = pd.to_datetime(stds.index).tz_localize("utc")
+    # take std dev from non-clearsky days only for normalization
+    stds = stds.where(~clear_days, other=np.nan)
+    # compute a multiplication factor for non-clear times
+    #         fixed_max  -  normalized daily standard deviation for non-clear
+    #                       days gives variability for remainder of multiplier
+    m = 1.0 - 0.5 * (stds - stds.min()) / (stds.max() - stds.min())
+    # turn off mulitplier on low irradiance days
+    m[low_irrad_days] = 1.0
+    return m
 
 
 def _daytime_limits(period: int, zenith: pd.Series) -> pd.Series:
