@@ -559,7 +559,7 @@ export default class SystemMap extends Vue {
         <li>Owner: ${feature.properties.OWNER}</li>
         <li>Type: ${feature.properties.TYPE}</li>
         <li>Status: ${feature.properties.STATUS}</li>
-        <li>Voltage: ${feature.properties.VOLTAGE}</li>
+        <li>Voltage: ${feature.properties.VOLTAGE} kV</li>
         <li>As of: ${feature.properties.VAL_DATE}</li>
       </ul>
     </div>`);
