@@ -114,9 +114,15 @@ def compute_total_system_power(
 
     multiplier = calculate_variable_multiplier(out)
 
+    multiplier = multiplier.reindex(clear.index).ffill()
+
     # apply multiplier to ac_power
     out["ac_power"] = out["ac_power"].where(
-        clear, other=out["ac_power"] * multiplier.reindex(clear.index).ffill()
+        clear, other=out["ac_power"] * multiplier
+    )  # type: ignore
+
+    out["dc_power"] = out["dc_power"].where(
+        clear, other=out["dc_power"] * multiplier
     )  # type: ignore
 
     return out
