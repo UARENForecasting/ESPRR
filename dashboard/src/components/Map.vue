@@ -1,5 +1,5 @@
 <template>
-  <div class="map-wrapper">
+  <div class="map-component-wrapper">
     <div class="l-wrapper">
       <l-map
         ref="systemMap"
