@@ -80,8 +80,13 @@ def compute_single_location(
     clr_mc = ModelChain.with_pvwatts(system=pvsystem, location=location)
     clr_mc.run_model(data.clearsky_data)
     clr_ac: pd.Series = clr_mc.results.ac
+    clr_dc: pd.Series = clr_mc.results.dc
 
-    out = pd.DataFrame({"ac_power": ac, "clearsky_ac_power": clr_ac})
+    out = pd.DataFrame({
+        "ac_power": ac,
+        "clearsky_ac_power": clr_ac,
+        "dc_power": clr_dc
+    })
     out.index.name = "time"  # type: ignore
     return out
 
