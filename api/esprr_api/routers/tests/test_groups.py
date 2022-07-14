@@ -1,7 +1,6 @@
 """Test some select system endpoint interaction. The majority of testing
 is done via schemathesis in ../../tests/test_app.py
 """
-from base64 import b64encode
 from io import BytesIO
 
 from fastapi import HTTPException
@@ -10,7 +9,6 @@ import pytest
 
 
 from esprr_api import models
-from esprr_api import utils
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
