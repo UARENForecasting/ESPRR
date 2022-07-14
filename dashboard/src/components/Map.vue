@@ -1,53 +1,81 @@
 <template>
-  <div class="l-wrapper">
-    <l-map
-      ref="systemMap"
-      :zoom="zoom"
-      :center="center"
-      @ready="mapReady"
-      @click="placeSystem"
-    >
-      <l-control-layers
-        position="topright"
-        :collapsed="false"
-      ></l-control-layers>
-      <l-tile-layer :url="url" :attribution="attribution"> </l-tile-layer>
-      <l-control-scale
-        position="bottomleft"
-        :imperial="false"
-        :metric="true"
-      ></l-control-scale>
-      <static-area-rectangle
-        v-if="sitePolygon"
-        :draggable="editable"
-        :scaling="false"
-        :rotation="false"
-        :latLngs="sitePolygon"
-        @transformed="handleTransformation"
-        @scaleend="handleTransformation"
-      />
-      <template v-if="systems">
-        <l-rectangle
-          v-for="(system, i) in systems"
-          :key="system.object_id"
-          :name="system.definition.name"
-          :bounds="createRectangle(system.definition.boundary)"
-          :color="getColor(i)"
-          :fillColor="getColor(i)"
-          @click="emitSelection(system)"
+  <div class="map-component-wrapper">
+    <div class="l-wrapper">
+      <l-map
+        ref="systemMap"
+        :zoom="zoom"
+        :center="center"
+        @ready="mapReady"
+        @click="placeSystem"
+      >
+        <l-control-layers
+          position="topright"
+          :collapsed="false"
+        ></l-control-layers>
+        <l-tile-layer :url="url" :attribution="attribution"> </l-tile-layer>
+        <l-control-scale
+          position="bottomleft"
+          :imperial="false"
+          :metric="true"
+        ></l-control-scale>
+        <static-area-rectangle
+          v-if="sitePolygon"
+          :draggable="editable"
+          :scaling="false"
+          :rotation="false"
+          :latLngs="sitePolygon"
+          color="#0A0"
+          fillColor="#0A0"
+          @transformed="handleTransformation"
+          @scaleend="handleTransformation"
+        />
+        <template v-if="systems">
+          <l-rectangle
+            v-for="(system, i) in systems"
+            :key="system.object_id"
+            :name="system.definition.name"
+            :bounds="createRectangle(system.definition.boundary)"
+            :color="getColor(i)"
+            :fillColor="getColor(i)"
+            @click="emitSelection(system)"
+          >
+          </l-rectangle>
+        </template>
+        <l-layer-group
+          name="All Systems"
+          layer-type="overlay"
+          v-if="all_systems"
         >
-        </l-rectangle>
-      </template>
-      <l-layer-group name="All Systems" layer-type="overlay" v-if="all_systems">
-        <l-rectangle
-          v-for="system of all_systems"
-          :key="system.object_id"
-          :bounds="createRectangle(system.definition.boundary)"
-          @click="emitSelection(system)"
+          <l-rectangle
+            v-for="system of all_systems"
+            :key="system.object_id"
+            :bounds="createRectangle(system.definition.boundary)"
+            @click="emitSelection(system)"
+          >
+          </l-rectangle>
+        </l-layer-group>
+        <l-polyline
+          :stroke="true"
+          :lat-lngs="transmissionPath"
+          v-if="showTransmissionPath"
+        />
+        <l-layer-group
+          name="Transmission Lines"
+          layer-type="overlay"
+          v-if="transmission"
+          :visible="false"
         >
-        </l-rectangle>
-      </l-layer-group>
-    </l-map>
+          <l-geo-json
+            :geojson="transmission"
+            :options-style="{ color: '#444', weight: 2 }"
+            :options="options"
+            @ready="setTransmissionLayers"
+            @click="selectTransmission"
+          >
+          </l-geo-json>
+        </l-layer-group>
+      </l-map>
+    </div>
     <div class="map-prompt">
       <p v-if="editable && !bounds">
         Click on the map to place the system. The system will be represented by
@@ -89,6 +117,41 @@
           >
         </fieldset>
       </div>
+      <div v-if="closestTransmission">
+        <h3>Closest Transmission</h3>
+        <ul>
+          <li>
+            <b>Distance:</b> {{ transDistance }} km ({{
+              (transDistance * 0.62).toFixed(2)
+            }}
+            mi)
+            <button @click="showTransmissionPath = !showTransmissionPath">
+              Toggle path to transmission
+            </button>
+          </li>
+          <li>
+            <b>Owner:</b>
+            {{ closestTransmission.layer.feature.properties.OWNER }}
+          </li>
+          <li>
+            <b>Type:</b> {{ closestTransmission.layer.feature.properties.TYPE }}
+          </li>
+          <li>
+            <b>Status:</b>
+            {{ closestTransmission.layer.feature.properties.STATUS }}
+          </li>
+          <li>
+            <b>As of:</b>
+            {{ closestTransmission.layer.feature.properties.VAL_DATE }}
+          </li>
+        </ul>
+        <p>
+          Transmission line data provided by
+          <a href="https://www.ornl.gov/">Oak Ridge National Lab</a> and
+          accessed through
+          <a href="https://hifld-geoplatform.opendata.arcgis.com/">HIFLD</a>.
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -104,7 +167,10 @@ import {
   LControlLayers,
   LLayerGroup,
   LRectangle,
+  LGeoJson,
+  LPolyline,
 } from "vue2-leaflet";
+import GeoUtil from "leaflet-geometryutil";
 
 import StaticAreaRectangle from "@/components/leafletLayers/StaticAreaRectangle.vue";
 
@@ -125,7 +191,9 @@ Vue.component("l-control-scale", LControlScale);
 Vue.component("l-control-layers", LControlLayers);
 Vue.component("l-layer-group", LLayerGroup);
 Vue.component("l-rectangle", LRectangle);
+Vue.component("l-geo-json", LGeoJson);
 Vue.component("static-area-rectangle", StaticAreaRectangle);
+Vue.component("l-polyline", LPolyline);
 
 @Component
 export default class SystemMap extends Vue {
@@ -147,13 +215,23 @@ export default class SystemMap extends Vue {
   aspectX!: number;
   aspectY!: number;
   initialized!: boolean;
+  transmission!: Record<string, any>;
+  transmissionLayers!: Array<any>;
+  closestTransmission!: Record<string, any> | null;
+  transmissionReady!: boolean;
+  showTransmissionPath!: boolean;
+  lastSelectedTransmission!: Record<string, any>;
 
   mapReady(): void {
     // @ts-expect-error accessing Leaflet API
     this.map = this.$refs.systemMap.mapObject;
     this.initialize();
   }
-
+  selectTransmission(event: Record<string, any>): void {
+    // highlight transmission lines as they are clicked
+    event.sourceTarget.setStyle({ color: "#FFF" });
+    this.lastSelectedTransmission = event.sourceTarget;
+  }
   initialize(): void {
     this.draggable = true;
     if (this.editable) {
@@ -169,8 +247,34 @@ export default class SystemMap extends Vue {
     } else if (this.systems) {
       this.centerMap();
     }
+    this.loadTransmission().then(() => {
+      this.initialized = true;
+    });
+  }
+  async loadTransmission(): Promise<void | Record<string, any>> {
+    return fetch("/Electric_Power_Transmission_Lines.geojson").then(
+      async (response: Record<string, any>) => {
+        this.transmission = await response.json();
+      }
+    );
+  }
+  setTransmissionLayers(event: Record<string, any>): void {
+    this.transmissionLayers = Object.values(event._layers);
+    this.transmissionReady = true;
+    this.findNearestTransmission();
+  }
 
-    this.initialized = true;
+  findNearestTransmission(): void {
+    if (this.transmissionReady) {
+      if (this.system) {
+        let closestTransmission = GeoUtil.closestLayer(
+          this.map,
+          this.transmissionLayers,
+          this.centerCoords()
+        );
+        this.closestTransmission = closestTransmission;
+      }
+    }
   }
 
   data(): any {
@@ -184,7 +288,13 @@ export default class SystemMap extends Vue {
       aspectY: 1,
       aspectInputX: 1,
       aspectInputY: 1,
+      transmission: null,
       initialized: false,
+      transmissionReady: false,
+      closestTransmission: null,
+      transmissionLayers: null,
+      showTransmissionPath: false,
+      lastSelectedTransmission: null,
     };
   }
 
@@ -232,6 +342,7 @@ export default class SystemMap extends Vue {
       "bounds-updated",
       this.leafletBoundsToBoundingBox(transformEvent.target.getBounds())
     );
+    this.findNearestTransmission();
   }
 
   @Watch("system")
@@ -241,6 +352,7 @@ export default class SystemMap extends Vue {
       this.initAspectRatio();
     }
     this.centerMap();
+    this.findNearestTransmission();
   }
 
   initAspectRatio(): void {
@@ -421,6 +533,37 @@ export default class SystemMap extends Vue {
   getColor(index: number): string {
     return GetColor(index);
   }
+  get transDistance(): number | null {
+    if (this.closestTransmission) {
+      let distKM =
+        this.centerCoords().distanceTo(this.closestTransmission.latlng) / 1000;
+      return parseFloat(distKM.toFixed(2));
+    } else {
+      return null;
+    }
+  }
+  get transmissionPath(): Array<L.LatLng> | null {
+    if (this.closestTransmission) {
+      return [this.centerCoords(), this.closestTransmission.latlng];
+    }
+    return null;
+  }
+  get options(): Record<string, any> {
+    return {
+      onEachFeature: this.onEachFeature,
+    };
+  }
+  onEachFeature(feature: Record<string, any>, layer: L.Layer): void {
+    layer.bindPopup(`<div>
+      <ul class="selected-transmission-attributes">
+        <li>Owner: ${feature.properties.OWNER}</li>
+        <li>Type: ${feature.properties.TYPE}</li>
+        <li>Status: ${feature.properties.STATUS}</li>
+        <li>Voltage: ${feature.properties.VOLTAGE} kV</li>
+        <li>As of: ${feature.properties.VAL_DATE}</li>
+      </ul>
+    </div>`);
+  }
 }
 </script>
 <style scoped>
@@ -439,6 +582,9 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+ul.selected-transmission-attributes {
+  padding-left: 0;
 }
 
 /* Firefox */
