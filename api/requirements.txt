@@ -8,7 +8,7 @@ geopandas==0.9.0
 h5py==3.2.1
 httpx==0.18.2
 numcodecs==0.8.0
-numpy==1.21.1
+numpy==1.22.0
 pandas==1.3.0
 prometheus-client==0.9.0
 prometheus-fastapi-instrumentator==5.7.1
