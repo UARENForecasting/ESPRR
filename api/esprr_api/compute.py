@@ -82,11 +82,9 @@ def compute_single_location(
     clr_ac: pd.Series = clr_mc.results.ac
     clr_dc: pd.Series = clr_mc.results.dc
 
-    out = pd.DataFrame({
-        "ac_power": ac,
-        "clearsky_ac_power": clr_ac,
-        "dc_power": clr_dc
-    })
+    out = pd.DataFrame(
+        {"ac_power": ac, "clearsky_ac_power": clr_ac, "dc_power": clr_dc}
+    )
     out.index.name = "time"  # type: ignore
     return out
 

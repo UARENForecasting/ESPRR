@@ -1,6 +1,7 @@
 """Test some select system endpoint interaction. The majority of testing
 is done via schemathesis in ../../tests/test_app.py
 """
+from base64 import b64encode
 from io import BytesIO
 
 from fastapi import HTTPException
@@ -9,6 +10,7 @@ import pytest
 
 
 from esprr_api import models
+from esprr_api import utils
 
 
 pytestmark = pytest.mark.usefixtures("add_example_db_data")
@@ -141,11 +143,12 @@ def group_timeseries_df(timeseries_df, system_def, mocker):
         columns={
             "ac_power": sys_name + "_ac_power",
             "clearsky_ac_power": sys_name + "_clearsky_ac_power",
+            "dc_power": sys_name + "_dc_power",
         }
     )
     group_df = group_df.set_index("time")
     ts_df = timeseries_df.set_index("time")
-    all_df = pd.concat([group_df, ts_df], axis=1)
+    all_df = pd.concat([ts_df, group_df], axis=1)
     all_df = all_df.tz_convert("Etc/GMT+7")
     all_df["time"] = all_df.index
     all_df = all_df[["time"] + [col for col in all_df.columns if col != "time"]]
@@ -237,7 +240,7 @@ def test_get_group_timeseries_no_systems(
         f"/system_groups/{group_id}/data/NSRDB_2019/timeseries",
         headers={"accept": "text/csv"},
     ).text
-    assert csv == "time,ac_power,clearsky_ac_power\n"
+    assert csv == "time,ac_power,clearsky_ac_power,dc_power\n"
 
 
 def test_get_group_timeseries_group_dne(client, system_id):
