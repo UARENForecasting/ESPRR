@@ -59,7 +59,7 @@ def test_compute_single_location(system_def, mocker):
     out = compute.compute_single_location(system_def, data)
     assert isinstance(out, pd.DataFrame)
     assert len(out) == 2
-    assert set(out.columns) == {"ac_power", "clearsky_ac_power"}
+    assert set(out.columns) == {"ac_power", "clearsky_ac_power", "dc_power"}
     assert out.ac_power.iloc[0] == 2.0
     assert out.ac_power.iloc[1] == 0.0
     assert out.clearsky_ac_power.iloc[0] == 2.0
@@ -81,7 +81,7 @@ def test_compute_total_system_power(ready_dataset, system_def, mocker, tracker):
     system_def.tracking = tracker
     out = compute.compute_total_system_power(system_def, ready_dataset)
     assert isinstance(out, pd.DataFrame)
-    assert set(out.columns) == {"ac_power", "clearsky_ac_power"}
+    assert set(out.columns) == {"ac_power", "clearsky_ac_power", "dc_power"}
 
     assert abs(out.ac_power.max() - 10.0) < 1e-6
     assert abs(out.clearsky_ac_power.max() - 10.0) < 1e-6
@@ -114,7 +114,11 @@ def test_daytime_limits():
 
 def test_compute_statistics(system_def):
     data = pd.DataFrame(
-        {"ac_power": [10, 11, 12, 11], "clearsky_ac_power": [12, 11, 12, 11]},
+        {
+            "ac_power": [10, 11, 12, 11],
+            "clearsky_ac_power": [12, 11, 12, 11],
+            "dc_power": [13, 12, 13, 12],
+        },
         index=pd.DatetimeIndex(
             [
                 "2019-04-01T12:00-07:00",
