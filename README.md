@@ -11,7 +11,7 @@ support from Salt River Project.
 
 ESPRR has a few dependencies that are required. MySQL and Redis are used for storing
 data and queueing jobs respectively. It is easiest to run these in containers to avoid
-having to adjust versions on your local system. Node and Python are also required, and 
+having to adjust versions on your local system. Node and Python are also required, and
 systems for managing Node and Python versions are shown below. It's advisable not to
 install ESPRR on your system python installation.
 
