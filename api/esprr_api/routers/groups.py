@@ -266,7 +266,6 @@ def _get_group_timeseries_from_systems(
         clearsky_dc_cols = [
             col for col in group_df.columns if "_clearsky_dc_power" in col
         ]
-        clearsky_cols = clearsky_ac_cols + clearsky_dc_cols
         ac_power_cols = [
             col
             for col in group_df.columns
