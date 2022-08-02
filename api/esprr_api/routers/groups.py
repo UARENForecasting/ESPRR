@@ -260,7 +260,13 @@ def _get_group_timeseries_from_systems(
     if len(group_data) > 0:
         group_df = pd.concat(group_data, axis=1)
 
-        clearsky_cols = [col for col in group_df.columns if "_clearsky_ac_power" in col]
+        clearsky_ac_cols = [
+            col for col in group_df.columns if "_clearsky_ac_power" in col
+        ]
+        clearsky_dc_cols = [
+            col for col in group_df.columns if "_clearsky_dc_power" in col
+        ]
+        clearsky_cols = clearsky_ac_cols + clearsky_dc_cols
         ac_power_cols = [
             col
             for col in group_df.columns
@@ -274,20 +280,29 @@ def _get_group_timeseries_from_systems(
         all_cols = list(group_df.columns)
         group_df["ac_power"] = group_df[ac_power_cols].sum(axis=1)
         group_df["dc_power"] = group_df[dc_power_cols].sum(axis=1)
-        group_df["clearsky_ac_power"] = group_df[clearsky_cols].sum(axis=1)
+        group_df["clearsky_ac_power"] = group_df[clearsky_ac_cols].sum(axis=1)
+        group_df["clearsky_dc_power"] = group_df[clearsky_dc_cols].sum(axis=1)
+
         group_df["time"] = group_df.index.tz_convert("Etc/GMT+7")  # type: ignore
 
         ordered_columns = [
             "time",
             "ac_power",
-            "clearsky_ac_power",
             "dc_power",
+            "clearsky_ac_power",
+            "clearsky_dc_power",
         ] + all_cols
         group_df = group_df[ordered_columns]
     else:
         # No data, return an empty dataframe with the correct attributes
         group_df = pd.DataFrame(
-            columns=["time", "ac_power", "clearsky_ac_power", "dc_power"],
+            columns=[
+                "time",
+                "ac_power",
+                "dc_power",
+                "clearsky_ac_power",
+                "clearsky_dc_power",
+            ],
             index=pd.DatetimeIndex([], tz="America/Phoenix"),  # type: ignore
         )
     return group_df

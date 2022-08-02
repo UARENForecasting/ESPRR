@@ -76,6 +76,7 @@ def compute_single_location(
     mc = ModelChain.with_pvwatts(system=pvsystem, location=location)
     mc.run_model(data.weather_data)
     ac: pd.Series = mc.results.ac
+    dc: pd.Series = mc.results.dc
 
     clr_mc = ModelChain.with_pvwatts(system=pvsystem, location=location)
     clr_mc.run_model(data.clearsky_data)
@@ -83,7 +84,12 @@ def compute_single_location(
     clr_dc: pd.Series = clr_mc.results.dc
 
     out = pd.DataFrame(
-        {"ac_power": ac, "clearsky_ac_power": clr_ac, "dc_power": clr_dc}
+        {
+            "ac_power": ac,
+            "dc_power": dc,
+            "clearsky_ac_power": clr_ac,
+            "clearsky_dc_power": clr_dc,
+        }
     )
     out.index.name = "time"  # type: ignore
     return out
@@ -96,7 +102,7 @@ def compute_total_system_power(
     box the system contains"""
     out: pd.DataFrame = pd.DataFrame(
         [],
-        columns=["ac_power", "clearsky_ac_power"],
+        columns=["ac_power", "dc_power", "clearsky_ac_power", "clearsky_dc_power"],
         index=pd.DatetimeIndex([], name="time"),  # type: ignore
         dtype="float64",
     )
