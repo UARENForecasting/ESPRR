@@ -37,8 +37,8 @@ class CachedLocation(Location):
 def compute_single_location(
     system: models.PVSystem, data: models.SystemData
 ) -> pd.DataFrame:
-    """Compute the AC power and clearsky power for a system at the location and with weather
-    from the background dataset
+    """Compute the AC power and clearsky power for a system at the location and
+    with weather from the background dataset
     """
     location = CachedLocation(**data.location.dict())
     fractional_capacity = system.ac_capacity * data.fraction_of_total
@@ -98,8 +98,8 @@ def compute_single_location(
 def compute_total_system_power(
     system: models.PVSystem, dataset: NSRDBDataset
 ) -> pd.DataFrame:
-    """Compute the total AC power from the weather data and fractional capacity of each grid
-    box the system contains"""
+    """Compute the total AC power from the weather data and fractional capacity
+    of each grid box the system contains"""
     out: pd.DataFrame = pd.DataFrame(
         [],
         columns=["ac_power", "dc_power", "clearsky_ac_power", "clearsky_dc_power"],
