@@ -228,8 +228,11 @@ export default class SystemMap extends Vue {
     this.initialize();
   }
   selectTransmission(event: Record<string, any>): void {
+    if (this.lastSelectedTransmission) {
+      this.lastSelectedTransmission.setStyle({ color: "#444" });
+    }
     // highlight transmission lines as they are clicked
-    event.sourceTarget.setStyle({ color: "#FFF" });
+    event.sourceTarget.setStyle({ color: "#8202ca" });
     this.lastSelectedTransmission = event.sourceTarget;
   }
   initialize(): void {
