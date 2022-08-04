@@ -140,8 +140,9 @@ def group_timeseries_df(timeseries_df, system_def, mocker):
     group_df = timeseries_df.rename(
         columns={
             "ac_power": sys_name + "_ac_power",
-            "clearsky_ac_power": sys_name + "_clearsky_ac_power",
             "dc_power": sys_name + "_dc_power",
+            "clearsky_ac_power": sys_name + "_clearsky_ac_power",
+            "clearsky_dc_power": sys_name + "_clearsky_dc_power",
         }
     )
     group_df = group_df.set_index("time")
@@ -238,7 +239,7 @@ def test_get_group_timeseries_no_systems(
         f"/system_groups/{group_id}/data/NSRDB_2019/timeseries",
         headers={"accept": "text/csv"},
     ).text
-    assert csv == "time,ac_power,clearsky_ac_power,dc_power\n"
+    assert csv == "time,ac_power,dc_power,clearsky_ac_power,clearsky_dc_power\n"
 
 
 def test_get_group_timeseries_group_dne(client, system_id):

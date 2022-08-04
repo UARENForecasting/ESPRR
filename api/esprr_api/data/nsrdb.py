@@ -78,8 +78,8 @@ class NSRDBDataset:
     def find_system_locations(
         self, pvsystem: models.PVSystem
     ) -> List[SpatialIndexPoint]:
-        """Find the spatial index and fractiona area of the intersection of the NSRDB and the
-        bounding box of the system
+        """Find the spatial index and fractiona area of the intersection of the
+        NSRDB and the bounding box of the system
         """
         system_rect = pvsystem.boundary._rect
         # first check that the system is within the boundary of the grid

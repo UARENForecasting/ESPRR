@@ -59,7 +59,12 @@ def test_compute_single_location(system_def, mocker):
     out = compute.compute_single_location(system_def, data)
     assert isinstance(out, pd.DataFrame)
     assert len(out) == 2
-    assert set(out.columns) == {"ac_power", "clearsky_ac_power", "dc_power"}
+    assert set(out.columns) == {
+        "ac_power",
+        "dc_power",
+        "clearsky_ac_power",
+        "clearsky_dc_power",
+    }
     assert out.ac_power.iloc[0] == 2.0
     assert out.ac_power.iloc[1] == 0.0
     assert out.clearsky_ac_power.iloc[0] == 2.0
@@ -81,7 +86,12 @@ def test_compute_total_system_power(ready_dataset, system_def, mocker, tracker):
     system_def.tracking = tracker
     out = compute.compute_total_system_power(system_def, ready_dataset)
     assert isinstance(out, pd.DataFrame)
-    assert set(out.columns) == {"ac_power", "clearsky_ac_power", "dc_power"}
+    assert set(out.columns) == {
+        "ac_power",
+        "dc_power",
+        "clearsky_ac_power",
+        "clearsky_dc_power",
+    }
 
     assert abs(out.ac_power.max() - 10.0) < 1e-6
     assert abs(out.clearsky_ac_power.max() - 10.0) < 1e-6
