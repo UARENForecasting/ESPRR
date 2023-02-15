@@ -327,6 +327,7 @@ def _get_group_timeseries_from_systems(
             ),
         },
     },
+    response_model=None
 )
 def get_group_model_timeseries(
     group_id: UUID = grouppath,
@@ -365,12 +366,14 @@ def get_group_model_timeseries(
             ),
         },
     },
+    response_model=None
 )
 def get_group_model_statistics(
     group_id: UUID = grouppath,
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
+
 ) -> Union[utils.CSVResponse, utils.ArrowResponse]:
     resp, meta_type = utils._get_return_type(accept)
     with storage.start_transaction() as st:
