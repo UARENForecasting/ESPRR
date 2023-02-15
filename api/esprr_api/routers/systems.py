@@ -271,14 +271,14 @@ def _convert_data(
             ),
         },
     },
-    response_model=None
+    response_model=None,
 )
 def get_system_model_timeseries(
     system_id: UUID = syspath,
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
-    response_model=Union[CSVResponse, ArrowResponse, None]
+    response_model=Union[CSVResponse, ArrowResponse, None],
 ) -> Union[CSVResponse, ArrowResponse, None]:
     resp, meta_type = _get_return_type(accept)
     with storage.start_transaction() as st:
@@ -301,7 +301,7 @@ def get_system_model_timeseries(
             ),
         },
     },
-    response_model=None
+    response_model=None,
 )
 def get_system_model_statistics(
     system_id: UUID = syspath,
