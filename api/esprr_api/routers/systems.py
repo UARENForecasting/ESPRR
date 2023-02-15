@@ -279,7 +279,7 @@ def get_system_model_timeseries(
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
     response_model=Union[CSVResponse, ArrowResponse, None]
-) ->  Union[CSVResponse, ArrowResponse, None]:
+) -> Union[CSVResponse, ArrowResponse, None]:
     resp, meta_type = _get_return_type(accept)
     with storage.start_transaction() as st:
         data = st.get_system_model_timeseries(system_id, dataset)
