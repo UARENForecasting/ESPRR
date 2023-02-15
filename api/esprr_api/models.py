@@ -204,7 +204,6 @@ class StoredObject(StoredObjectID):
 
 
 class StoredPVSystem(StoredObject):
-
     definition: PVSystem
 
     class Config:

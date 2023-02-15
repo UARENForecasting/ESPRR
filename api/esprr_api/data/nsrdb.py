@@ -40,6 +40,7 @@ class NSRDBDataset:
 
     def open_dataset(self) -> ContextManager[xr.Dataset]:
         """Contextmanager to open the zarr dataset"""
+
         # mypy workaround
         @contextmanager
         def opener():
