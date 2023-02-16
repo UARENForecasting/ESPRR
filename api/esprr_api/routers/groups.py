@@ -327,6 +327,7 @@ def _get_group_timeseries_from_systems(
             ),
         },
     },
+    response_model=None,
 )
 def get_group_model_timeseries(
     group_id: UUID = grouppath,
@@ -365,6 +366,7 @@ def get_group_model_timeseries(
             ),
         },
     },
+    response_model=None,
 )
 def get_group_model_statistics(
     group_id: UUID = grouppath,
