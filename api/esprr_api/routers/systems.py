@@ -278,7 +278,6 @@ def get_system_model_timeseries(
     dataset: models.DatasetEnum = datasetpath,
     storage: StorageInterface = Depends(StorageInterface),
     accept: Optional[str] = Header(None),
-    response_model=Union[CSVResponse, ArrowResponse, None],
 ) -> Union[CSVResponse, ArrowResponse, None]:
     resp, meta_type = _get_return_type(accept)
     with storage.start_transaction() as st:
