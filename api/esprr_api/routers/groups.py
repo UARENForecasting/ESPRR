@@ -159,10 +159,7 @@ async def add_system_to_group(
         response.headers["Location"] = request.url_for(
             "get_system_group", group_id=group_id
         )
-    return models.StoredObjectID(
-        object_id=group_id,
-        object_type="system_group"
-    )
+    return models.StoredObjectID(object_id=group_id, object_type="system_group")
 
 
 @router.delete(
@@ -188,10 +185,7 @@ async def remove_system_from_group(
         response.headers["Location"] = request.url_for(
             "get_system_group", group_id=group_id
         )
-    return models.StoredObjectID(
-        object_id=group_id,
-        object_type="system_group"
-    )
+    return models.StoredObjectID(object_id=group_id, object_type="system_group")
 
 
 datasetpath = Path(
