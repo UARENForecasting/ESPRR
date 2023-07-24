@@ -165,6 +165,11 @@ class PVSystem(ThisBase):
     tracking: Union[FixedTracking, SingleAxisTracking] = Field(
         ..., description="Parameters describing single-axis tracking or fixed mounting"
     )
+    apply_variability_multiplier: bool = Field(
+        default=False,
+        description="Apply a variability multiplier. This option can help to increase accuracy when variability in irradiance is not captured by the NSRDB data."
+    )
+
 
     class Config:
         schema_extra = {"example": SYSTEM_EXAMPLE}
