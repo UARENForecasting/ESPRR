@@ -27,6 +27,7 @@ export interface PVSystem {
   ac_capacity: number;
   dc_ac_ratio: number;
   albedo: number;
+  apply_variability_multiplier: boolean;
 }
 
 export interface StoredPVSystem {
