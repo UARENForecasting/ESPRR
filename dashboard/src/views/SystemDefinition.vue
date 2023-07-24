@@ -68,6 +68,21 @@
               required
               v-model.number="definition.albedo"
           /></label>
+          <label
+            title="Controls whether or not to apply experimental variability multiplier."
+          >
+            Apply Variability Multiplier:
+            <input
+              type="radio"
+              v-model="definition.apply_variability_multiplier"
+              :value="true"
+            />True
+            <input
+              type="radio"
+              v-model="definition.apply_variability_multiplier"
+              :value="false"
+            />False
+          </label>
 
           <fieldset class="tracking">
             <legend>Panel Orientation/Tracking</legend>

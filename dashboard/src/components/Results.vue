@@ -33,6 +33,11 @@
       "
     >
       <h2>Performance Results {{ dataset.replace("_", " ") }}</h2>
+      <div v-if="datasetStatus && datasetStatus.system_modified" class="alert">
+        The system's specification has changed since these results were
+        computed.
+        <button @click="recompute">Recalculate</button>
+      </div>
       <hr />
       <div class="alert" v-if="status == 'timeseries missing'">
         Result timeseries are missing.
@@ -170,6 +175,7 @@ export default class DataSetResults extends Vue {
   errors!: Record<string, any> | null;
   active!: boolean;
   asRampRate!: number;
+  datasetStatus!: Record<string, any> | null;
 
   isValidDataset(): boolean {
     return validDatasets.indexOf(this.dataset) > -1;
@@ -209,6 +215,7 @@ export default class DataSetResults extends Vue {
       statistics: null,
       timeseries: null,
       status: null,
+      datasetStatus: null,
       errors: null,
       active: this.active,
       timeout: null,
@@ -247,6 +254,7 @@ export default class DataSetResults extends Vue {
     SystemsAPI.getResult(token, this.system.object_id, this.dataset)
       .then((statusResponse: any) => {
         this.status = statusResponse.status;
+        this.datasetStatus = statusResponse;
         if (this.status == "error") {
           this.errors = statusResponse.error;
         }

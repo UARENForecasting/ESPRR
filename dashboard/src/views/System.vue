@@ -101,6 +101,10 @@
                   </ul>
                 </template>
               </li>
+              <li>
+                <b>Apply Variability Multiplier: </b>
+                {{ system.definition.apply_variability_multiplier }}
+              </li>
             </ul>
           </template>
         </div>
