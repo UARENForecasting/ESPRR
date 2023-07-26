@@ -167,9 +167,8 @@ class PVSystem(ThisBase):
     )
     apply_variability_multiplier: bool = Field(
         default=False,
-        description="Apply a variability multiplier. This option can help to increase accuracy when variability in irradiance is not captured by the NSRDB data."
+        description="Apply a variability multiplier. This option can help to increase accuracy when variability in irradiance is not captured by the NSRDB data.",
     )
-
 
     class Config:
         schema_extra = {"example": SYSTEM_EXAMPLE}
