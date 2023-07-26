@@ -43,6 +43,7 @@
               <th>2018 Status</th>
               <th>2019 Status</th>
               <th>2020 Status</th>
+              <th>2021 Status</th>
             </tr>
           </thead>
           <tbody>
@@ -164,7 +165,7 @@
                   }"
                 >
                   <button
-                    class="group-2018-results"
+                    class="group-results group-2018-results"
                     :disabled="
                       !('NSRDB_2018' in groupResultStatus) ||
                       groupResultStatus['NSRDB_2018'] == 'pending'
@@ -199,7 +200,7 @@
                     },
                   }"
                 >
-                  <button class="group-2019-results">2019 Results</button>
+                  <button class="group-results group-2019-results">2019 Results</button>
                 </router-link>
               </td>
               <td>
@@ -224,13 +225,45 @@
                   }"
                 >
                   <button
-                    class="group-2020-results"
+                    class="group-results group-2020-results"
                     :disabled="
                       !('NSRDB_2020' in groupResultStatus) ||
                       groupResultStatus['NSRDB_2020'] == 'pending'
                     "
                   >
                     2020 Results
+                  </button>
+                </router-link>
+              </td>
+              <td>
+                <button
+                  v-if="
+                    !('NSRDB_2021' in groupResultStatus) ||
+                    groupResultStatus['NSRDB_2021'] == 'not started'
+                  "
+                  @click="queueAll('NSRDB_2021')"
+                >
+                  Compute 2021
+                </button>
+                <router-link
+                  v-else
+                  class="btn-spc"
+                  :to="{
+                    name: 'Group Dataset Details',
+                    params: {
+                      groupId: group.object_id,
+                      dataset: 'NSRDB_2021',
+                    },
+                  }"
+                >
+                  <button
+                    class="group-results group-2021-results"
+                    :disabled="
+                      !('NSRDB_2021' in groupResultStatus) ||
+                      groupResultStatus['NSRDB_2021'] == 'pending'
+                    "
+                  >
+                    2021 Results
                   </button>
                 </router-link>
               </td>
@@ -536,7 +569,7 @@ table {
 .group.systems-table tr {
   display: grid;
   padding: 0.5em;
-  grid-template-columns: 1fr 3fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 3fr 1fr 1fr 1fr 1fr 1fr 1fr;
   border-bottom: 1px solid #ccc;
 }
 .group.systems-table tr:hover {
@@ -567,6 +600,7 @@ button.result-link.success {
   color: #fff;
   background-color: #2ea62e;
   border: none;
+  width: 100%;
 }
 button.result-link.compute:hover {
   background-color: #d44444;
@@ -583,5 +617,8 @@ button.result-link.recompute {
   color: #fff;
   background-color: #ccb100;
   border: none;
+}
+button.group-results {
+  width: 100%;
 }
 </style>
