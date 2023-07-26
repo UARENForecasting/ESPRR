@@ -41,7 +41,7 @@ describe("Test System Definition", () => {
       stubs,
     });
     await flushPromises();
-    expect(wrapper.findAll("input").length).toBe(8);
+    expect(wrapper.findAll("input").length).toBe(10);
     expect(wrapper.findComponent(SystemMap).exists()).toBe(true);
   });
   it("Test change surface", async () => {
