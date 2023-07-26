@@ -51,4 +51,9 @@ export interface StoredPVSystemGroup {
   definition: PVSystemGroup;
 }
 
-export const validDatasets = ["NSRDB_2018", "NSRDB_2019", "NSRDB_2020", "NSRDB_2021"];
+export const validDatasets = [
+  "NSRDB_2018",
+  "NSRDB_2019",
+  "NSRDB_2020",
+  "NSRDB_2021",
+];

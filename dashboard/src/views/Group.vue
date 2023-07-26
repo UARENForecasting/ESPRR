@@ -200,7 +200,9 @@
                     },
                   }"
                 >
-                  <button class="group-results group-2019-results">2019 Results</button>
+                  <button class="group-results group-2019-results">
+                    2019 Results
+                  </button>
                 </router-link>
               </td>
               <td>
