@@ -113,21 +113,22 @@ def compute_total_system_power(
         else:
             out += part  # type: ignore
 
-    # hack to make output more consistent with actuals in not-clear conditions
-    clear = out["ac_power"] > 0.99 * out["clearsky_ac_power"]
+    if system.apply_variability_multiplier:
+        # hack to make output more consistent with actuals in not-clear conditions
+        clear = out["ac_power"] > 0.99 * out["clearsky_ac_power"]
 
-    multiplier = calculate_variable_multiplier(out)
+        multiplier = calculate_variable_multiplier(out)
 
-    multiplier = multiplier.reindex(clear.index).ffill()
+        multiplier = multiplier.reindex(clear.index).ffill()
 
-    # apply multiplier to ac_power
-    out["ac_power"] = out["ac_power"].where(
-        clear, other=out["ac_power"] * multiplier
-    )  # type: ignore
+        # apply multiplier to ac_power
+        out["ac_power"] = out["ac_power"].where(
+            clear, other=out["ac_power"] * multiplier
+        )  # type: ignore
 
-    out["dc_power"] = out["dc_power"].where(
-        clear, other=out["dc_power"] * multiplier
-    )  # type: ignore
+        out["dc_power"] = out["dc_power"].where(
+            clear, other=out["dc_power"] * multiplier
+        )  # type: ignore
 
     return out
 

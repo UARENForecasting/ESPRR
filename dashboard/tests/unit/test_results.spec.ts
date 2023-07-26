@@ -233,7 +233,7 @@ describe("Test Results component", () => {
     const warning = wrapper.find(".no-dataset-warning");
     expect(warning.text()).toBe(
       "You are trying to access an invalid dataset. Valid datasets are\n" +
-        "    NSRDB_2018, NSRDB_2019, NSRDB_2020."
+        "    NSRDB_2018, NSRDB_2019, NSRDB_2020, NSRDB_2021."
     );
   });
   it("Test result dne", async () => {

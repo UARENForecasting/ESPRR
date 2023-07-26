@@ -81,6 +81,10 @@
             <li><b>DC/AC Ratio: </b>{{ selected.definition.dc_ac_ratio }}</li>
             <li><b>Albedo: </b>{{ selected.definition.albedo }}</li>
             <li>
+              <b>Apply Variability Multiplier: </b
+              >{{ selected.definition.apply_variability_multiplier }}
+            </li>
+            <li>
               <template v-if="'backtracking' in selected.definition.tracking">
                 <b>Tracking: </b>
                 <ul class="tracking-details-list">

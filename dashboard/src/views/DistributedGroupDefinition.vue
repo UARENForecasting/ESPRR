@@ -62,6 +62,21 @@
             /><input type="radio" value="km" v-model="units" />km
             <input type="radio" value="mi" v-model="units" />mi
           </label>
+          <label
+            title="Controls whether or not to apply experimental variability multiplier."
+          >
+            Apply Variability Multiplier:
+            <input
+              type="radio"
+              v-model="definition.apply_variability_multiplier"
+              :value="true"
+            />True
+            <input
+              type="radio"
+              v-model="definition.apply_variability_multiplier"
+              :value="false"
+            />False
+          </label>
           <fieldset>
             <legend>System Parameters</legend>
             <label
@@ -306,6 +321,7 @@ export default class DistributedGroupDefinition extends Vue {
       },
       albedo: 0.2,
       dc_ac_ratio: 1.2,
+      apply_variability_multiplier: false,
     };
     this.trackingType = "fixed";
     this.loadSystems();

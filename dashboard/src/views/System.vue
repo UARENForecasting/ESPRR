@@ -31,6 +31,14 @@
               ><button>2020 Results</button></router-link
             >
             <router-link
+              class="btn-spc"
+              :to="{
+                name: 'System Results',
+                params: { systemId: systemId, dataset: 'NSRDB_2021' },
+              }"
+              ><button>2021 Results</button></router-link
+            >
+            <router-link
               v-if="dataset"
               :to="{
                 name: 'Update System dataset return',
@@ -100,6 +108,10 @@
                     </li>
                   </ul>
                 </template>
+              </li>
+              <li>
+                <b>Apply Variability Multiplier: </b>
+                {{ system.definition.apply_variability_multiplier }}
               </li>
             </ul>
           </template>

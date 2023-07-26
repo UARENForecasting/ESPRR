@@ -27,6 +27,7 @@ export interface PVSystem {
   ac_capacity: number;
   dc_ac_ratio: number;
   albedo: number;
+  apply_variability_multiplier: boolean;
 }
 
 export interface StoredPVSystem {
@@ -50,4 +51,9 @@ export interface StoredPVSystemGroup {
   definition: PVSystemGroup;
 }
 
-export const validDatasets = ["NSRDB_2018", "NSRDB_2019", "NSRDB_2020"];
+export const validDatasets = [
+  "NSRDB_2018",
+  "NSRDB_2019",
+  "NSRDB_2020",
+  "NSRDB_2021",
+];

@@ -91,6 +91,7 @@ const systems: Array<StoredPVSystem> = [
         tilt: 20,
         azimuth: 180,
       },
+      apply_variability_multiplier: false,
     },
   },
   {
@@ -119,6 +120,7 @@ const systems: Array<StoredPVSystem> = [
         gcr: 0.5,
         backtracking: false,
       },
+      apply_variability_multiplier: false,
     },
   },
 ];

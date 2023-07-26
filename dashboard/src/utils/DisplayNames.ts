@@ -19,6 +19,7 @@ export const displayNames: Record<string, any> = {
   NSRDB_2018: "NSRDB 2018",
   NSRDB_2019: "NSRDB 2019",
   NSRDB_2020: "NSRDB 2020",
+  NSRDB_2021: "NSRDB 2021",
 };
 
 export function getDisplayName(machineName: string): string {
