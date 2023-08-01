@@ -1,5 +1,5 @@
 accept-types==0.4.1
-cryptography==3.4.7
+cryptography==41.0.3
 dask==2021.3.1
 fastapi==0.92.0
 Fiona==1.8.18
