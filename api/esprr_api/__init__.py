@@ -33,7 +33,7 @@ class Settings(BaseSettings):
         "NSRDB_2019": Path("/d4/uaren/nsrdb/nsrdb_2019.zarr"),
         "NSRDB_2020": Path("/d4/uaren/nsrdb/nsrdb_2020.zarr"),
         "NSRDB_2021": Path("/d4/uaren/nsrdb/nsrdb_2021.zarr"),
-        "NSRDB_2022": Path("/d4/uaren/nsrdb/nsrdb_2021.zarr")
+        "NSRDB_2022": Path("/d4/uaren/nsrdb/nsrdb_2022.zarr")
     }
     sync_jobs_period: int = 15
 
