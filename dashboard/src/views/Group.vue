@@ -44,6 +44,7 @@
               <th>2019 Status</th>
               <th>2020 Status</th>
               <th>2021 Status</th>
+              <th>2022 Status</th>
             </tr>
           </thead>
           <tbody>
@@ -266,6 +267,38 @@
                     "
                   >
                     2021 Results
+                  </button>
+                </router-link>
+              </td>
+              <td>
+                <button
+                  v-if="
+                    !('NSRDB_2022' in groupResultStatus) ||
+                    groupResultStatus['NSRDB_2022'] == 'not started'
+                  "
+                  @click="queueAll('NSRDB_2022')"
+                >
+                  Compute 2022
+                </button>
+                <router-link
+                  v-else
+                  class="btn-spc"
+                  :to="{
+                    name: 'Group Dataset Details',
+                    params: {
+                      groupId: group.object_id,
+                      dataset: 'NSRDB_2022',
+                    },
+                  }"
+                >
+                  <button
+                    class="group-results group-2022-results"
+                    :disabled="
+                      !('NSRDB_2022' in groupResultStatus) ||
+                      groupResultStatus['NSRDB_2022'] == 'pending'
+                    "
+                  >
+                    2022 Results
                   </button>
                 </router-link>
               </td>
@@ -571,7 +604,7 @@ table {
 .group.systems-table tr {
   display: grid;
   padding: 0.5em;
-  grid-template-columns: 1fr 3fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 3fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
   border-bottom: 1px solid #ccc;
 }
 .group.systems-table tr:hover {
