@@ -278,6 +278,7 @@ class DatasetEnum(str, Enum):
     nsrdb_2019 = "NSRDB_2019"
     nsrdb_2020 = "NSRDB_2020"
     nsrdb_2021 = "NSRDB_2021"
+    nsrdb_2022 = "NSRDB_2022"
 
 
 class DataStatusEnum(str, Enum):

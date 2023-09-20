@@ -56,4 +56,5 @@ export const validDatasets = [
   "NSRDB_2019",
   "NSRDB_2020",
   "NSRDB_2021",
+  "NSRDB_2022"
 ];

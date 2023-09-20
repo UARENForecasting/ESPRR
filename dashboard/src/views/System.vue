@@ -39,6 +39,14 @@
               ><button>2021 Results</button></router-link
             >
             <router-link
+              class="btn-spc"
+              :to="{
+                name: 'System Results',
+                params: { systemId: systemId, dataset: 'NSRDB_2022' },
+              }"
+              ><button>2022 Results</button></router-link
+            >
+            <router-link
               v-if="dataset"
               :to="{
                 name: 'Update System dataset return',
