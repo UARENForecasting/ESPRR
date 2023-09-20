@@ -1,6 +1,6 @@
 [tool.setuptools_scm]
 write_to = "api/esprr_api/_version.py"
-root = "api/../.."
+root = ".."
 
 [build-system]
 requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
