@@ -31,7 +31,7 @@ if __name__ == "__main__":
         ],
         use_scm_version={
             "write_to": "api/esprr_api/_version.py",
-            "root": "api/../..",
+            "root": "..",
         },
         setup_requires=["setuptools_scm"],
         entry_points={"console_scripts": []},
